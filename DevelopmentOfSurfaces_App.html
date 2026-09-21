@@ -181,6 +181,7 @@
         <span class="fs-only fs-nav">
           <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
           <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
+          <button class="fs-btn" id="fsRestart" onclick="restartSteps()">↺ Restart</button>
           <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
         </span>
 
@@ -2589,7 +2590,11 @@
     w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
     if(w===CANVAS_W&&h===CANVAS_H) return;
     CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
-    if(P&&document.getElementById("screen-solve").style.display!=="none") rebuild(false); else clearCanvasWhite();
+    if(P&&document.getElementById("screen-solve").style.display!=="none"){
+      rebuild(false);
+      const st=started&&P.steps[currentStep-1];
+      if(st&&st.demo){ lastSpoken=currentStep; drawStep(currentStep,true); }   // re-laid out mid-animation: play it again instead of jumping to its end
+    } else clearCanvasWhite();
   }
   // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
   // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.

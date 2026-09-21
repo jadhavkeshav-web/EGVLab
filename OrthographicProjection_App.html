@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Orthographic Projections - Problems with Stepwise Solutions</title>
   <style>
     :root{
@@ -86,15 +88,29 @@
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
     .fs-only{display:none;}
-    .mm-note{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:right;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
-    #fs-caption{font-size:.95rem;color:var(--ink);margin-top:6px;max-height:84px;overflow:auto;}
-    #canvas-wrapper:fullscreen{background:#fff;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px;border-radius:0;border:0;}
-    #canvas-wrapper:fullscreen #zoom-toolbar{flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper:fullscreen .fs-nav{display:flex;gap:8px;}
-    #canvas-wrapper:fullscreen #fs-caption{display:block;}
-    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:calc(100vw - 24px);height:calc(100vh - 190px);border-radius:0;}
-    #canvas-wrapper:fullscreen #space-wrap{display:none !important;}
+    /* full screen (real or, where the browser has none, a page-filling overlay) */
+    #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
+    #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
+    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
+    #canvas-wrapper.fs-on #space-wrap{display:none !important;}
+    /* phones and small tablets */
+    @media (max-width:820px){
+      body{padding:8px;}
+      h1{font-size:1.1rem;}
+      #topbar{flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+      #statement{flex:1 1 100%;padding:10px 12px;font-size:.9rem;line-height:1.4rem;}
+      #solve-container{gap:12px;}
+      #left-panel{width:100%;padding:12px;}
+      #canvas-wrapper{width:100%;padding:8px;order:-1;}
+      #zoom-toolbar{flex-wrap:wrap;}
+      #zoom-hint{display:none;}
+      #zoom-toolbar .fs-btn,#zoom-toolbar .fit-btn{padding:8px 12px;}
+      #zoom-toolbar button{min-height:36px;}
+      .btn-group button{padding:11px 8px;}
+      #screen-list .prob-card{padding:14px;}
+    }
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
   </style>
 
@@ -171,8 +187,6 @@
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
-      <div id="fs-caption" class="fs-only"></div>
-      <div class="mm-note">Note: All dimensions are in mm</div>
 
       <div id="space-wrap" style="display:none;">
         <div id="space-head">
@@ -188,6 +202,7 @@
 
 <script>
   let CANVAS_W=820, CANVAS_H=540;
+  const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
   const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
@@ -204,7 +219,10 @@
   /* ---------------- drawing helpers ---------------- */
   function clearCanvasWhite(){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); ctx.restore();
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    ctx.font="11px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+    ctx.fillText("Note: All dimensions are in mm",CANVAS_W-8,CANVAS_H-6);
+    ctx.restore();
   }
   function drawArrowhead(x,y,a,color="#000",hw=ARROW_HALF_W,len=ARROW_LEN){
     ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(x,y);
@@ -274,7 +292,7 @@
     ctx.restore();
   }
   function frame(topH,botH,maxW){
-    const sc=Math.min((CANVAS_H-140)/(topH+botH),(CANVAS_W-330)/(maxW+40),3.2);
+    const sc=Math.min((CANVAS_H-PY(140))/(topH+botH),(CANVAS_W-PX(330))/(maxW+40),3.2);
     const AX=(CANVAS_W-maxW*sc)/2-70;
     const REF=(CANVAS_H-(topH+botH)*sc)/2+topH*sc;
     SCALE_PXMM=sc;
@@ -1041,7 +1059,7 @@
   }
 
   function fitRect(wmm,hmm){
-    const sc=Math.min((CANVAS_W-250)/wmm,(CANVAS_H-130)/hmm,3.2);
+    const sc=Math.min((CANVAS_W-PX(250))/wmm,(CANVAS_H-PY(130))/hmm,3.2);
     SCALE_PXMM=sc;
     return {sc, ox:(CANVAS_W-wmm*sc)/2-45, oy:(CANVAS_H-hmm*sc)/2};
   }
@@ -1381,7 +1399,7 @@
     const L=O.L, B=O.B, H=O.H;
     const GAPX=66;
     const totWmm=L+B, totHmm=H+B;
-    const sc=Math.min((CANVAS_W-170-GAPX)/totWmm,(CANVAS_H-140)/totHmm,3.4);
+    const sc=Math.min((CANVAS_W-PX(170)-GAPX)/totWmm,(CANVAS_H-PY(140))/totHmm,3.4);
     SCALE_PXMM=sc;
     const OX=(CANVAS_W-(totWmm*sc+GAPX))/2+20;
     const REF=(CANVAS_H-totHmm*sc)/2+H*sc-6;
@@ -1442,7 +1460,13 @@
         drawVerticalDim(TVx(0)-22,TVy(0),TVy(B),R1(B));
         drawHorizontalDim(TVy(B)+26,TVx(0),TVx(L),R1(L)); }});
 
-    steps.push({text:"Draw the 45\u00b0 mitre line. Every depth measured in the top view is carried horizontally across to this line and then straight up into the side view - that is how the side view gets its width.",
+    steps.push({text:"Draw the X1\u2013Y1 line: a second reference line, vertical, to the right of the top view, at the place where the side view will begin. It is the reference line for the side view, just as X\u2013Y is for the front and top views.",
+      hl:[],
+      d:()=>{ drawLine(SX,FVy(H)-24,SX,TVy(B)+24,COL_AXIS,LW_THIN);
+        drawText(SX,FVy(H)-30,"X1","#111",FONT_MAIN,"center","bottom");
+        drawText(SX,TVy(B)+30,"Y1","#111",FONT_MAIN,"center","top"); }});
+
+    steps.push({text:"Through the point where X\u2013Y meets X1\u2013Y1, draw the 45\u00b0 mitre line. Every depth measured in the top view is carried horizontally across to this line and then straight up into the side view - that is how the side view gets its width.",
       hl:[],
       d:()=>{ drawSLine(SVx(0),TVy(0),SVx(B)+14,TVy(B)+14,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(SVx(B)+18,TVy(B)+18,"45\u00b0 mitre line",COL_LOCUS,FONT_DIM,"left","middle"); }});
@@ -2339,38 +2363,47 @@
   function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
   /* ---------------- full screen ---------------- */
   function syncFsUI(s,N){
-    const c=document.getElementById("fs-caption"); if(!c) return;
-    c.innerHTML=started?("<b>Step "+s+" of "+N+":</b> "+P.steps[s-1].text):("Ready - "+N+" steps. Press Next to begin.");
+    if(!document.getElementById("fsPrev")) return;
     document.getElementById("fsPrev").disabled=(!started||s<=1);
     document.getElementById("fsNext").disabled=(started&&s>=N);
   }
-  function toggleFullscreen(){
-    const w=document.getElementById("canvas-wrapper");
-    if(document.fullscreenElement||document.webkitFullscreenElement){
-      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
-    } else {
-      const req=w.requestFullscreen||w.webkitRequestFullscreen;
-      if(req){ const r=req.call(w); if(r&&r.catch) r.catch(()=>{}); }
-    }
-  }
-  // In full screen the canvas takes the whole screen: its drawing area is resized to the
-  // screen and the current problem is laid out again to fill it.
-  function sizeCanvasFor(fs){
-    const w=fs?Math.max(480,window.innerWidth-24):820, h=fs?Math.max(300,window.innerHeight-190):540;
+  const fsWrap=document.getElementById("canvas-wrapper");
+  let fsReal=false;
+  function isFs(){ return fsWrap.classList.contains("fs-on"); }
+  function setCanvasSize(w,h){
+    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
     if(w===CANVAS_W&&h===CANVAS_H) return;
-    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h;
-    compassPose=null;
+    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none") rebuild(false); else clearCanvasWhite();
   }
+  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
+  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
+  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  let layoutTimer=0;
+  function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
+  function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }
+  function enterFs(){ fsWrap.classList.add("fs-on"); document.documentElement.style.overflow="hidden"; setFsButton(); layoutSoon(); }
+  function leaveFs(){ fsWrap.classList.remove("fs-on"); document.documentElement.style.overflow=""; setFsButton(); layoutCanvas(); }
+  function toggleFullscreen(){
+    if(isFs()){
+      if(document.fullscreenElement||document.webkitFullscreenElement) (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+      else leaveFs();
+      return;
+    }
+    enterFs();                              // page-filling overlay works everywhere (e.g. iPhone has no element full screen)
+    const req=fsWrap.requestFullscreen||fsWrap.webkitRequestFullscreen;
+    if(req){ try{ const r=req.call(fsWrap); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
+  }
   function onFsChange(){
-    const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
-    document.getElementById("fsBtn").textContent=on?"✕ Exit full screen":"⛶ Full screen";
-    sizeCanvasFor(on);
-    if(on) setTimeout(()=>sizeCanvasFor(true),120);
+    const real=!!(document.fullscreenElement||document.webkitFullscreenElement);
+    if(real) fsReal=true; else if(fsReal){ fsReal=false; if(isFs()) leaveFs(); }
+    layoutSoon();
   }
   document.addEventListener("fullscreenchange",onFsChange);
   document.addEventListener("webkitfullscreenchange",onFsChange);
-  window.addEventListener("resize",()=>{ if(document.fullscreenElement||document.webkitFullscreenElement) sizeCanvasFor(true); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&isFs()&&!document.fullscreenElement) leaveFs(); });
+  window.addEventListener("resize",()=>{ if(isFs()) layoutSoon(); });
+  window.addEventListener("orientationchange",()=>{ if(isFs()) layoutSoon(); });
   function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
   function canvasPos(e){
     const r=canvas.getBoundingClientRect();

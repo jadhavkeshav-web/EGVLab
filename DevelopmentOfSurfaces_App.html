@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
   <title>Development of Lateral Surfaces - Problems with Stepwise Solutions</title>
   <style>
     :root{
-      --ink:#4a1f2b; --ink-2:#7a3448; --accent:#2a6f8a;
-      --line:#dfe5ec; --paper:#f8eff2; --card:#ffffff; --muted:#6b7686;
-      --tint:#f3e5ea;
+      --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
+      --line:#dfe5ec; --paper:#f4f6f9; --card:#ffffff; --muted:#6b7686;
     }
     *{box-sizing:border-box;}
-    body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px 14px;background:linear-gradient(180deg,var(--tint) 0%,var(--paper) 340px,var(--paper) 100%);background-attachment:fixed;color:#16202b;}
+    body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px 14px;background:var(--paper);color:#16202b;}
     h1{font-size:1.3rem;margin:0 auto 6px;text-align:center;color:var(--ink);letter-spacing:.3px;font-weight:700;}
     .h-rule{width:72px;height:3px;background:var(--ink-2);margin:0 auto 12px;border-radius:2px;}
 
@@ -27,9 +25,6 @@
     #topbar{display:flex;gap:14px;align-items:flex-start;max-width:1330px;margin:0 auto 16px;}
     #backBtn{flex:0 0 auto;padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #backBtn:hover{background:#eef2f7;}
-    .dim-note{margin-top:8px;padding:5px 10px;display:inline-block;
-      background:#eef4fb;border:1px solid #cfe0f0;border-left:3px solid var(--ink-2);
-      border-radius:6px;font-size:.82rem;font-weight:600;color:var(--ink);letter-spacing:.2px;}
     #statement{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ink-2);border-radius:10px;font-size:.95rem;line-height:1.5rem;box-shadow:0 1px 3px rgba(22,52,79,.06);}
 
     #solve-container{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;}
@@ -90,46 +85,18 @@
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
+    .fs-only{display:none;}
+    .mm-note{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:right;}
+    #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    #fs-caption{font-size:.95rem;color:var(--ink);margin-top:6px;max-height:84px;overflow:auto;}
+    #canvas-wrapper:fullscreen{background:#fff;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px;border-radius:0;border:0;}
+    #canvas-wrapper:fullscreen #zoom-toolbar{flex-wrap:wrap;margin-bottom:6px;}
+    #canvas-wrapper:fullscreen .fs-nav{display:flex;gap:8px;}
+    #canvas-wrapper:fullscreen #fs-caption{display:block;}
+    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:calc(100vw - 24px);height:calc(100vh - 190px);border-radius:0;}
+    #canvas-wrapper:fullscreen #space-wrap{display:none !important;}
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
-  
-    /* ---- mobile: the sketch on its own, full screen ---------------------- */
-    #fsBtn{margin-left:auto;}
-    /* the sketch sits inside a flex container; hide its siblings, not the
-       container itself, or the canvas goes with it                       */
-    body.fs #solve-container > *:not(#canvas-wrapper){display:none !important;}
-    body.fs #screen-solve > *:not(#solve-container){display:none !important;}
-    body.fs #solve-container{display:block !important;}
-    body.fs #canvas-wrapper{position:fixed;inset:0;z-index:9000;margin:0;padding:0;
-      border:0;border-radius:0;box-shadow:none;background:#fff;
-      display:flex;align-items:center;justify-content:center;}
-    body.fs #zoom-toolbar{position:fixed;top:6px;left:6px;right:6px;z-index:9002;
-      background:rgba(255,255,255,.92);border-radius:8px;padding:4px 6px;}
-    body.fs #zoom-hint,body.fs #fsBtn{display:none;}
-    body.fs #zoom-toolbar{width:auto;right:auto;}
-    /* a flex item will not shrink below its own size unless min-width is
-       cleared, which is why the sketch overflowed a narrow screen      */
-    body.fs #projectionCanvas{max-width:100vw;max-height:calc(100vh - 56px);
-      width:auto;height:auto;min-width:0;min-height:0;flex:0 1 auto;
-      border:0;border-radius:0;}
-    body.fs header,body.fs footer,body.fs h1,body.fs .h-rule{display:none !important;}
-    #fsTapL,#fsTapR{position:fixed;top:0;bottom:0;width:34vw;z-index:9001;display:none;}
-    #fsTapL{left:0;} #fsTapR{right:0;}
-    body.fs #fsTapL,body.fs #fsTapR{display:block;}
-    #fsBar{position:fixed;left:0;right:0;bottom:0;z-index:9003;display:none;
-      background:#ffffff;border-top:1px solid #cfd7e0;box-shadow:0 -2px 8px rgba(0,0,0,.08);
-      padding:8px 10px calc(8px + env(safe-area-inset-bottom));font-size:.9rem;color:#16202b;}
-    body.fs #fsBar{display:block;}
-    #fsBar b{display:block;font-size:.78rem;color:var(--muted);margin-bottom:2px;}
-    #fsExit{position:fixed;top:8px;right:8px;z-index:9004;display:none;
-      background:var(--ink);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:.9rem;}
-    body.fs #fsExit{display:block;}
-    @media (max-width:820px){
-      #screen-solve{display:block;}
-      #canvas-wrapper{margin-top:12px;}
-      .btn-group{flex-wrap:wrap;}
-      button{min-height:40px;}
-    }
-</style>
+  </style>
 
 </head>
 <body>
@@ -172,7 +139,7 @@
       <div class="btn-group">
         <button onclick="restartSteps()">Restart</button>
         <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" onclick="toggleVoice()">🔊 Voice off</button>
+        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
       </div>
       <div class="btn-group speed-row">
         <label for="speedSel">Drawing speed</label>
@@ -194,10 +161,18 @@
         <span id="zoom-level">100%</span>
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
-        <button id="fsBtn" onclick="fsToggle()" title="Full screen sketch">⛶ Full screen</button>
+        <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
+        <span class="fs-only fs-nav">
+          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
+          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
+          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
+        </span>
+
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
+      <div id="fs-caption" class="fs-only"></div>
+      <div class="mm-note">Note: All dimensions are in mm</div>
 
       <div id="space-wrap" style="display:none;">
         <div id="space-head">
@@ -212,7 +187,7 @@
 
 
 <script>
-  const CANVAS_W=820, CANVAS_H=540;
+  let CANVAS_W=820, CANVAS_H=540;
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
   const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
@@ -236,10 +211,6 @@
     ctx.lineTo(x-len*Math.cos(a)+hw*Math.cos(a+Math.PI/2), y-len*Math.sin(a)+hw*Math.sin(a+Math.PI/2));
     ctx.lineTo(x-len*Math.cos(a)+hw*Math.cos(a-Math.PI/2), y-len*Math.sin(a)+hw*Math.sin(a-Math.PI/2));
     ctx.closePath(); ctx.fill();
-  }
-  function drawArrowMark(x,y,a,color){          // a lone arrowhead, e.g. on a cutting-plane line
-    if(REC){REC.push({f:"drawArrowMark",a:Array.from(arguments)});return;}
-    drawArrowhead(x,y,a,color||"#111");
   }
   function drawLine(x1,y1,x2,y2,color,w,dash=SOLID,arrow="none"){
     if(REC){REC.push({f:"drawLine",a:Array.from(arguments)});return;}
@@ -302,74 +273,6 @@
     else       drawText(0,-off,text,"#111",FONT_DIM,"center","top");
     ctx.restore();
   }
-
-  /* ---- calculation box -------------------------------------------------
-     Calculations are NOT drawn over the views. They are collected and
-     printed together in the lower-right corner of the sheet, the way a
-     student writes them in the corner of the drawing. Black and white only. */
-  function calcBox(title,lines){
-    if(REC){ REC.push({f:"calcBox",a:[title,lines]}); return; }
-    SHEET_CALCS.push({title:title,lines:lines});
-  }
-
-  /* everything that belongs in the lower-right corner of the sheet:
-     the calculations first, then the standard note about the units      */
-  function drawSheetCorner(){
-    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    const pad=8, lh=14, mR=14, mB=12;
-    const tf="bold 11px Arial", bf="11px Arial", nf="bold 11.5px Arial";
-    const note="NOTE: All dimensions are in mm.";
-
-    /* measure everything first so the blocks can be stacked upwards */
-    const blocks=SHEET_CALCS.map(c=>{
-      ctx.font=tf; let w=ctx.measureText(c.title).width;
-      ctx.font=bf; c.lines.forEach(t=>{ w=Math.max(w,ctx.measureText(t).width); });
-      return {c:c, w:w+pad*2, h:pad*2+lh*(c.lines.length+1)};
-    });
-    ctx.font=nf;
-    const nw=ctx.measureText(note).width+pad*2, nh=pad*1.6+lh;
-
-    let y=CANVAS_H-mB-nh;
-    /* the note sits right at the bottom */
-    ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=1.1;
-    ctx.beginPath(); ctx.rect(CANVAS_W-mR-nw,y,nw,nh); ctx.fill(); ctx.stroke();
-    ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
-    ctx.font=nf; ctx.fillText(note,CANVAS_W-mR-nw+pad,y+nh/2);
-
-    /* calculations stack up above it, newest lowest */
-    for(let i=blocks.length-1;i>=0;i--){
-      const b=blocks[i]; y-=b.h+8;
-      ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=0.9;
-      ctx.beginPath(); ctx.rect(CANVAS_W-mR-b.w,y,b.w,b.h); ctx.fill(); ctx.stroke();
-      ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
-      ctx.font=tf; ctx.fillText(b.c.title,CANVAS_W-mR-b.w+pad,y+pad+lh/2);
-      ctx.font=bf;
-      b.c.lines.forEach((t,j)=>ctx.fillText(t,CANVAS_W-mR-b.w+pad,y+pad+lh*(j+1)+lh/2));
-    }
-    ctx.restore();
-  }
-
-  /* ---- diameter of a divided circle ------------------------------------
-     The size is not written across the middle of the circle, where it would
-     sit on top of the division lines.  One of the division lines is carried
-     a little way outside the circle, a short horizontal shoulder is turned on
-     the end of it, and the size is written above that shoulder.  pt(j) gives
-     the j-th division point, 0 to 11.                                        */
-  function diameterDimAuto(cx,cy,pt,D,ext=26,sh=26){
-    const cand=[1,2,4,5,7,8,10,11];              // never the four axis points
-    let bestJ=cand[0], best=Infinity;
-    cand.forEach(j=>{ const p=pt(j), q=(p.x-cx)+(p.y-cy);   // the upper-left one is clearest
-      if(q<best){ best=q; bestJ=j; } });
-    const near=pt(bestJ), far=pt((bestJ+6)%12);
-    const a=Math.atan2(near.y-cy,near.x-cx);
-    const e={x:near.x+ext*Math.cos(a), y:near.y+ext*Math.sin(a)};
-    const dir=(Math.cos(a)<0)?-1:1;              // the shoulder runs away from the circle
-    const sx=e.x+dir*sh;
-    drawLine(far.x,far.y,near.x,near.y,COL_DIM,LW_THIN,SOLID,"both");  // the diameter itself
-    drawLine(near.x,near.y,e.x,e.y,COL_DIM,LW_THIN);                   // carried outside
-    drawLine(e.x,e.y,sx,e.y,COL_DIM,LW_THIN);                          // horizontal shoulder
-    drawText((e.x+sx)/2,e.y-4,"\u00d8 "+R1(D),"#111",FONT_DIM,"center","bottom");
-  }
   function frame(topH,botH,maxW){
     const sc=Math.min((CANVAS_H-140)/(topH+botH),(CANVAS_W-330)/(maxW+40),3.2);
     const AX=(CANVAS_W-maxW*sc)/2-70;
@@ -387,24 +290,21 @@
   let animId=0;      // token to cancel a running animation
   let compassPose=null;   // {ax,ay,bx,by} - where the compass legs last were, so it can move (not vanish) to its next job
 
-  let SHEET_CALCS=[];          // calculations queued for the sheet corner
   const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
               drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
               drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
-              drawCut,drawArcPlain,lineSet,calcBox,eraseSpan,eraseSet,drawArrowMark};
+              drawCut,drawArcPlain,lineSet};
   function execItem(it){ EXEC[it.f].apply(null,it.a); }
 
   // draw: full steps 0..baseCount-1, then items[0..k-1], then an optional partial element
   function frameDraw(baseCount,items,k,partial){
     clearCanvasWhite();
-    SHEET_CALCS=[];
     ctx.save();
     ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
     for(let i=0;i<baseCount;i++) P.steps[i].d();
     for(let i=0;i<k;i++) execItem(items[i]);
     if(partial) partial();
     ctx.restore();
-    drawSheetCorner();          // calculations + units note, clear of the views
   }
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -459,35 +359,6 @@
   function lineSet(arr,color,w,dash){
     if(REC){REC.push({f:"lineSet",a:Array.from(arguments)});return;}
     arr.forEach(L=>drawLine(L[0],L[1],L[2],L[3],color,w,dash));
-  }
-
-  /* ---- eraser -----------------------------------------------------------
-     Rubs out the part of a construction line that runs past the finished
-     outline, exactly as a draughtsman cleans up the sheet before inking.
-     Because every frame redraws the steps in order, an erase placed in a
-     later step correctly wipes what the earlier steps drew.               */
-  function eraseSpan(x1,y1,x2,y2,w){
-    if(REC){REC.push({f:"eraseSpan",a:Array.from(arguments)});return;}
-    ctx.save(); ctx.setLineDash([]);
-    ctx.strokeStyle="#fff"; ctx.lineWidth=w||8; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-    ctx.restore();
-  }
-  function eraseSet(arr,w){
-    if(REC){REC.push({f:"eraseSet",a:Array.from(arguments)});return;}
-    arr.forEach(L=>eraseSpan(L[0],L[1],L[2],L[3],w));
-  }
-
-  /* the rubber itself - an instrument, so it may carry colour */
-  function drawEraser(x,y,ang,alpha){
-    const A=(alpha===undefined?1:alpha), W=36, Hh=18;
-    ctx.save(); ctx.globalAlpha=A; ctx.setLineDash([]);
-    ctx.translate(x,y); ctx.rotate(ang||0);
-    ctx.fillStyle="#f4ddc8"; ctx.strokeStyle="#7d5c46"; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.rect(-W/2,-Hh-4,W,Hh); ctx.fill(); ctx.stroke();
-    ctx.fillStyle="#9dbdd8";
-    ctx.beginPath(); ctx.rect(-W/2,-Hh-4,W*0.34,Hh); ctx.fill(); ctx.stroke();
-    ctx.restore();
   }
   function drawCut(cx,cy,r,ang,color){
     if(REC){REC.push({f:"drawCut",a:Array.from(arguments)});return;}
@@ -936,7 +807,6 @@
     }
     if(it.f==="markAngles"||it.f==="drawAngleDimOutward") return "protractor";
     if(it.f==="stepOff") return "divider";
-    if(it.f==="eraseSpan"||it.f==="eraseSet") return "eraser";
     if(it.f==="rollSet") return "roller";
     if(it.f==="lineSet") return "scale";
     if(it.f==="scaleMarks") return "scale";
@@ -1084,30 +954,6 @@
   function restingCompassDraw(){
     if(compassPose) drawCompass(compassPose.ax,compassPose.ay,compassPose.bx,compassPose.by);
   }
-  async function animErase(s,items,k,it,myId){
-    const x1=it.a[0], y1=it.a[1], x2=it.a[2], y2=it.a[3], w=it.a[4];
-    const ang=Math.atan2(y2-y1,x2-x1);
-    await animateFrames(430*SPEED,t=>{
-      if(animId!==myId) return false;
-      const cx=x1+(x2-x1)*t, cy=y1+(y2-y1)*t;
-      frameDraw(s-1,items,k,()=>{ eraseSpan(x1,y1,cx,cy,w); drawEraser(cx,cy,ang,1); });
-    });
-  }
-  async function animEraseSet(s,items,k,it,myId){
-    const arr=it.a[0], w=it.a[1];
-    for(let i=0;i<arr.length;i++){
-      if(animId!==myId) return;
-      const L=arr[i], ang=Math.atan2(L[3]-L[1],L[2]-L[0]);
-      await animateFrames(240*SPEED,t=>{
-        if(animId!==myId) return false;
-        const cx=L[0]+(L[2]-L[0])*t, cy=L[1]+(L[3]-L[1])*t;
-        frameDraw(s-1,items,k,()=>{
-          for(let q=0;q<i;q++) eraseSpan(arr[q][0],arr[q][1],arr[q][2],arr[q][3],w);
-          eraseSpan(L[0],L[1],cx,cy,w); drawEraser(cx,cy,ang,1); });
-      });
-    }
-  }
-
   async function runAnimation(s,items,myId){
     let prev=null, compassResting=false;
     for(let k=0;k<items.length;k++){
@@ -1132,8 +978,6 @@
           k+=ex;
         }
       }
-      else if(it.f==="eraseSpan") await animErase(s,items,k,it,myId);
-      else if(it.f==="eraseSet")  await animEraseSet(s,items,k,it,myId);
       else if(it.f==="markAngles") await animMarkAngles(s,items,k,it,myId);
       else if(it.f==="stepOff")    await animStepOff(s,items,k,it,myId);
       else if(it.f==="rollSet")    await animRollSet(s,items,k,it,myId);
@@ -1251,23 +1095,6 @@
   }
 
   /* ---- n-sided pyramid, apex on the axis ---- */
-  /* a pyramid on an explicit base outline - the corners must be given in the
-     same anticlockwise sense as polyPts, or the faces will be culled */
-  function m_pyrFrom(P,H){
-    const n=P.length, verts=[], faces=[], hard=[];
-    P.forEach(p=>verts.push(V(p.x,0,p.z)));
-    verts.push(V(0,H,0));
-    const ap=n, bot=[]; for(let i=0;i<n;i++) bot.push(i);
-    faces.push({v:bot,tag:"base"});
-    for(let i=0;i<n;i++){
-      const j=(i+1)%n;
-      faces.push({v:[j,i,ap],tag:"lat"+(i+1)});
-      hard.push([i,j,"base"],[i,ap,"edge"+(i+1)]);
-    }
-    const R=Math.max.apply(null,P.map(p=>Math.hypot(p.x,p.z)));
-    return {verts,faces,hard,kind:"pyr",n:n,R:R,H:H,apex:ap};
-  }
-
   function m_pyr(n,s,H,ph){
     const R=polyR(n,s), P=polyPts(n,R,(ph===undefined?-Math.PI/2:ph));
     const verts=[], faces=[], hard=[];
@@ -1332,49 +1159,6 @@
     return {verts:v,faces:f,hard:h};
   }
 
-  /* =========================================================
-     dimensioning of a 3-D model
-     A dim entry is {p,q,off,text,tag}; p and q are the two points
-     being measured and off shifts the dimension line clear of the solid,
-     exactly as witness lines do on a drawing board.
-  ========================================================= */
-  function bboxM(m){
-    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
-    m.verts.forEach(p=>{
-      if(p.x<x0)x0=p.x; if(p.x>x1)x1=p.x;
-      if(p.y<y0)y0=p.y; if(p.y>y1)y1=p.y;
-      if(p.z<z0)z0=p.z; if(p.z>z1)z1=p.z; });
-    return {x0,x1,y0,y1,z0,z1,L:x1-x0,H:y1-y0,B:z1-z0};
-  }
-
-  /* overall length / height / depth, taken straight from the bounding box */
-  function dimsBox(m,o){
-    o=o||{};
-    const b=bboxM(m), g=Math.max(b.L,b.H,b.B)*0.16+4, D=[];
-    const N=v=>{ const r=Math.round(v*10)/10; return (Math.abs(r-Math.round(r))<0.05)?String(Math.round(r)):r.toFixed(1); };
-    if(o.L!==false) D.push({p:{x:b.x0,y:b.y0,z:b.z1}, q:{x:b.x1,y:b.y0,z:b.z1},
-      off:{x:0,y:-g,z:g*0.55}, text:o.Ltext||N(b.L), tag:o.Ltag});
-    if(o.H!==false) D.push({p:{x:b.x0,y:b.y0,z:b.z1}, q:{x:b.x0,y:b.y1,z:b.z1},
-      off:{x:-g,y:0,z:g*0.55}, text:o.Htext||N(b.H), tag:o.Htag});
-    if(o.B!==false) D.push({p:{x:b.x1,y:b.y0,z:b.z1}, q:{x:b.x1,y:b.y0,z:b.z0},
-      off:{x:g*0.55,y:-g,z:0}, text:o.Btext||N(b.B), tag:o.Btag});
-    m.dims=(m.dims||[]).concat(D);
-    return m;
-  }
-
-  /* a single free dimension between two points */
-  function dimAdd(m,p,q,text,off,tag){
-    m.dims=(m.dims||[]).concat([{p:p,q:q,text:text,off:off||{x:0,y:0,z:0},tag:tag}]);
-    return m;
-  }
-
-  /* a diameter, measured across the circle on the level y, centred on (cx,cz) */
-  function dimDia(m,cx,cz,y,dia,text,off,tag){
-    const r=dia/2;
-    return dimAdd(m,{x:cx-r,y:y,z:cz},{x:cx+r,y:y,z:cz},
-                  text||("\u00d8 "+(Math.round(dia*10)/10)),off,tag);
-  }
-
   /* ---- merge several part-models into one ---- */
   function mergeM(){
     const verts=[],faces=[],hard=[];
@@ -1422,10 +1206,6 @@
       for(let i=0;i<P.length;i++){
         const A=P[i], B=P[(i+1)%P.length], da=sd(A), db=sd(B);
         if(da<=EPS) out.push(A);
-        /* a vertex lying exactly ON the plane belongs to the cut face too.
-           Without this a plane taken through a base edge or a base corner
-           produces a cap of only two points and no section at all.      */
-        if(Math.abs(da)<=EPS) capPts.push(A);
         if((da<-EPS&&db>EPS)||(da>EPS&&db<-EPS)){
           const t=da/(da-db);
           const X=V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t);
@@ -1454,14 +1234,9 @@
                             (q.x-c.x)*ux.x+(q.y-c.y)*ux.y+(q.z-c.z)*ux.z);
         return ap-aq;
       });
-      /* fewer than three distinct points is a plane that merely grazes the
-         solid: there is no face to add, and adding one would leave a
-         two-vertex polygon that the renderer cannot take a normal from */
-      if(uniq.length>=3){
-        const idx=uniq.map(push);
-        faces.push({v:idx,tag:capTag||"cut"});
-        for(let i=0;i<idx.length;i++) hard.push([idx[i],idx[(i+1)%idx.length],capTag||"cut"]);
-      }
+      const idx=uniq.map(push);
+      faces.push({v:idx,tag:capTag||"cut"});
+      for(let i=0;i<idx.length;i++) hard.push([idx[i],idx[(i+1)%idx.length],capTag||"cut"]);
     }
     /* keep original hard edges whose both ends survived */
     (m.hard||[]).forEach(e=>{
@@ -1515,126 +1290,6 @@
       }
     });
 
-
-    /* --- occlusion --------------------------------------------------------
-       Back-face culling alone marks an edge visible as soon as ANY adjoining
-       face is turned towards us. On a stepped or notched solid such an edge
-       can still lie behind another part of the same object, which is why
-       hidden edges were showing through. Each edge is therefore sampled and
-       every sample tested against the faces in front of it.              */
-    const occFaces=[];
-    if(o.noHidden){
-      m.faces.forEach(f=>{
-        if(!f._front) return;
-        const a=S[f.v[0]];
-        const e1={x:S[f.v[1]].x-a.x,y:S[f.v[1]].y-a.y};
-        const e2={x:S[f.v[2]].x-a.x,y:S[f.v[2]].y-a.y};
-        const det=e1.x*e2.y-e1.y*e2.x;
-        if(Math.abs(det)<1e-9) return;             // seen edge-on: hides nothing
-        occFaces.push({poly:f.v.map(i=>S[i]),a:a,e1:e1,e2:e2,det:det,
-                       dA:S[f.v[0]].z,dB:S[f.v[1]].z-S[f.v[0]].z,
-                       dC:S[f.v[2]].z-S[f.v[0]].z});
-      });
-    }
-    const inPoly=(poly,p)=>{ let inside=false;
-      for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-        const a=poly[i], b=poly[j];
-        if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) inside=!inside; }
-      return inside; };
-    const coverZ=(F,q)=>{ if(!inPoly(F.poly,q)) return null;
-      const rx=q.x-F.a.x, ry=q.y-F.a.y;
-      const u=( rx*F.e2.y-ry*F.e2.x)/F.det, w=(-rx*F.e1.y+ry*F.e1.x)/F.det;
-      return F.dA+u*F.dB+w*F.dC; };
-    let zSpan=1; S.forEach(p=>{zSpan=Math.max(zSpan,Math.abs(p.z));});
-    const zTol=zSpan*3e-3+1e-6;
-    /* draw only the parts of an edge that nothing covers */
-    const LV=(A,B,col,w,drop)=>{
-      if(!occFaces.length&&!drop){ L(A,B,col,w); return; }
-      const N=28, vis=[], at=t=>({x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t});
-      for(let i=0;i<=N;i++){
-        const t=(i+0.5)/(N+1), q=at(t), dz=A.z+(B.z-A.z)*t;
-        let hid=drop?drop(t):false;
-        for(let j=0;j<occFaces.length&&!hid;j++){
-          const dc=coverZ(occFaces[j],q); if(dc!==null&&dc>dz+zTol) hid=true; }
-        vis.push(!hid);
-      }
-      let s0=0;
-      for(let i=1;i<=N+1;i++){
-        if(i===N+1||vis[i]!==vis[s0]){
-          if(vis[s0]) L(at(s0/(N+1)),at(i/(N+1)),col,w);
-          s0=i;
-        }
-      }
-    };
-
-    /* --- edges that do not exist on the finished solid --------------------
-       These objects are built by merging boxes, so an edge belonging to one
-       part can fall in the middle of a flat face of another: the base box
-       ends where the upright box begins, but their side faces are flush, so
-       the surface there is smooth and no line belongs on it. An edge is
-       dropped when the surface simply continues flat across it.          */
-    const fNorm=f=>{
-      const A=m.verts[f.v[0]],B=m.verts[f.v[1]],C=m.verts[f.v[2]];
-      const u={x:B.x-A.x,y:B.y-A.y,z:B.z-A.z}, w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
-      const n={x:u.y*w.z-u.z*w.y,y:u.z*w.x-u.x*w.z,z:u.x*w.y-u.y*w.x};
-      const q=Math.hypot(n.x,n.y,n.z)||1;
-      return {x:n.x/q,y:n.y/q,z:n.z/q};
-    };
-    const FI=m.faces.map(f=>{ const n=fNorm(f), A=m.verts[f.v[0]];
-      return {f:f,n:n,d:n.x*A.x+n.y*A.y+n.z*A.z,
-              vs:f.v.reduce((o,i)=>{o[i]=1;return o;},{})}; });
-    const inFace=(F,p)=>{
-      const n=F.n, ax=Math.abs(n.x), ay=Math.abs(n.y), az=Math.abs(n.z);
-      const k=(ax>=ay&&ax>=az)?["y","z"]:((ay>=az)?["x","z"]:["x","y"]);
-      const poly=F.f.v.map(i=>({x:m.verts[i][k[0]],y:m.verts[i][k[1]]}));
-      const q={x:p[k[0]],y:p[k[1]]};
-      let inside=false;
-      for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-        const a=poly[i],b=poly[j];
-        if(((a.y>q.y)!==(b.y>q.y))&&(q.x<(b.x-a.x)*(q.y-a.y)/(b.y-a.y)+a.x)) inside=!inside;
-      }
-      return inside;
-    };
-    /* An edge may be flat over only PART of its length - the top edge of the
-       base box runs the whole length of the block, but only the stretch
-       behind the upright is buried in a smooth face. The test is therefore
-       made point by point, and only the stretches that are genuine creases
-       get drawn.                                                        */
-    const flatTest=(i0,i1)=>{
-      const P=m.verts[i0], Q=m.verts[i1];
-      const t={x:Q.x-P.x,y:Q.y-P.y,z:Q.z-P.z};
-      const tl=Math.hypot(t.x,t.y,t.z);
-      if(tl<1e-9) return null;
-      t.x/=tl; t.y/=tl; t.z/=tl;
-      const e=Math.min(tl*0.12,0.4)+1e-3;
-      const probes=[];
-      for(let a=0;a<FI.length;a++){
-        const F=FI[a];
-        if(!F.vs[i0]||!F.vs[i1]) continue;                 // edge not on this face
-        const b={x:F.n.y*t.z-F.n.z*t.y, y:F.n.z*t.x-F.n.x*t.z, z:F.n.x*t.y-F.n.y*t.x};
-        const co=[];
-        for(let g=0;g<FI.length;g++){
-          const G=FI[g]; if(G===F) continue;
-          if(G.n.x*F.n.x+G.n.y*F.n.y+G.n.z*F.n.z<0.999) continue;
-          if(Math.abs(G.d-F.d)>1e-4) continue;
-          co.push(G);
-        }
-        if(co.length) probes.push({F:F,b:b,co:co});
-      }
-      if(!probes.length) return null;
-      return u=>{
-        const p={x:P.x+(Q.x-P.x)*u, y:P.y+(Q.y-P.y)*u, z:P.z+(Q.z-P.z)*u};
-        for(let a=0;a<probes.length;a++){
-          const pr=probes[a], b=pr.b;
-          let s=1;
-          if(!inFace(pr.F,{x:p.x+b.x*e,y:p.y+b.y*e,z:p.z+b.z*e})) s=-1;
-          const out={x:p.x-b.x*e*s, y:p.y-b.y*e*s, z:p.z-b.z*e*s};
-          for(let g=0;g<pr.co.length;g++)
-            if(inFace(pr.co[g],out)) return true;          // the surface carries on
-        }
-        return false;
-      };
-    };
     /* shaded highlighted faces, painted back to front */
     m.faces.filter(f=>f._front&&f._on).forEach(f=>{
       cc.beginPath();
@@ -1646,7 +1301,7 @@
     Object.keys(curvedF).forEach(key=>{
       if(!curvedB[key]) return;
       const p=key.split("_");
-      LV(S[+p[0]],S[+p[1]],hot[key]?HL:INK,hot[key]?2.6:1.5);
+      L(S[+p[0]],S[+p[1]],hot[key]?HL:INK,hot[key]?2.6:1.5);
     });
 
     /* hard edges */
@@ -1655,21 +1310,18 @@
       const key=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
       if(drawn[key]) return; drawn[key]=1;
       const on=hot[key]||(e[2]&&hl&&hl.indexOf(e[2])>=0&&front[key]);
-      const rim=(e[2]==="holerim");          // a hole mouth is always a full ellipse
-      if(front[key]||rim)
-        LV(S[e[0]],S[e[1]],on?HL:INK,on?2.6:1.5,flatTest(e[0],e[1]));
-      else if(back[key]&&!o.noHidden) L(S[e[0]],S[e[1]],HID,1,[5,4]);
+      if(front[key]) L(S[e[0]],S[e[1]],on?HL:INK,on?2.6:1.5);
+      else if(back[key]) L(S[e[0]],S[e[1]],HID,1,[5,4]);
     });
 
-    /* dimensions - d.a/d.b are vertex numbers, d.p/d.q are free points */
+    /* dimensions */
     (m.dims||[]).forEach(d=>{
       const on=!!(d.tag&&hl&&hl.indexOf(d.tag)>=0);
-      const va=d.p||m.verts[d.a], vb=d.q||m.verts[d.b], f=d.off||{x:0,y:0,z:0};
-      const A0=d.p?pr(d.p):S[d.a], B0=d.q?pr(d.q):S[d.b];
+      const va=m.verts[d.a], vb=m.verts[d.b], f=d.off||{x:0,y:0,z:0};
+      const A0=S[d.a], B0=S[d.b];
       const A=pr({x:va.x+f.x,y:va.y+f.y,z:va.z+f.z});
       const B=pr({x:vb.x+f.x,y:vb.y+f.y,z:vb.z+f.z});
-      /* projection/extension lines are thin CONTINUOUS lines */
-      L(A0,A,"#93a2b1",0.8); L(B0,B,"#93a2b1",0.8);
+      L(A0,A,HID,0.8,[3,3]); L(B0,B,HID,0.8,[3,3]);
       const ang=Math.atan2(B.y-A.y,B.x-A.x);
       L(A,B,on?HL:"#93a2b1",on?1.7:1);
       const ar=(x,y,a,col)=>{ cc.fillStyle=col; cc.beginPath(); cc.moveTo(x,y);
@@ -1693,146 +1345,9 @@
      Radial-line method   : pyramids and cones
   ========================================================= */
   const LET="ABCDEFGHIJKL", let_="abcdefghijkl";
-  const COL_DEV="#111";
-  /* The drawing itself is strictly black and white.  COL_TL is the ONE
-     sanctioned exception: a thin coloured line used only to identify the
-     true length of a slant edge obtained by rotation.  The cutting-plane
-     line is black, drawn to the standard convention below.               */
-  const COL_CUT="#111", COL_TL="#b8541f";
-  const PATTERN_CL=[16,3,3,3];
-
-  /* --- axis of the solid: a permanent black centre-line, drawn once in FV
-     (and, for a circular base, as a cross in TV) right after the X-Y line.
-     It must never be overwritten by a construction/projection line - only a
-     genuine corner/edge line is allowed to coincide with it. AX_OFF is the
-     small sideways nudge given to a projector that would otherwise land
-     exactly on it. --- */
-  const PATTERN_AXIS=[16,3,3,3], AX_OFF=5, AX_OVER=9;
-  function drawAxisFV(x,yTop,yBase){                 // vertical centre-line, FV
-    drawLine(x,yBase+AX_OVER,x,yTop-AX_OVER,"#111",LW_THIN,PATTERN_AXIS);
-  }
-  function drawAxisPointTV(x,y,r){                    // polygon base: a small cross at the centroid
-    const g=r||10;
-    drawLine(x-g,y,x+g,y,"#111",LW_THIN,PATTERN_AXIS);
-    drawLine(x,y-g,x,y+g,"#111",LW_THIN,PATTERN_AXIS);
-  }
-  function drawAxisCrossTV(x,y,r){                    // circular base: a cross through the centre
-    const g=r+AX_OVER;
-    drawLine(x-g,y,x+g,y,"#111",LW_THIN,PATTERN_AXIS);
-    drawLine(x,y-g,x,y+g,"#111",LW_THIN,PATTERN_AXIS);
-  }
-  /* if sx sits on the axis (asx), nudge it aside so a projector is drawn
-     BESIDE the axis rather than on top of it - only for construction /
-     projection lines. A genuine corner or edge line is left alone. */
-  function axSafe(sx,asx){ return Math.abs(sx-asx)<0.6 ? sx+AX_OFF : sx; }
-
-  /* --- the cutting-plane line, drawn to the standard convention ---
-     a thin chain line, made thick and dark for a short length at each end,
-     with an arrow at each end showing the direction of sight.  In every one
-     of these problems the upper portion is the part cut away, so the
-     observer looks down on to the retained solid and both arrows point
-     downwards, normal to the plane.  Built from the ordinary recordable
-     primitives so that each part animates with the scale as usual.      */
-  const CPL_END=15, CPL_ARROW=17;      // thick dark end, and the stalk of the arrow
-  function cutPlaneLine(x1,y1,x2,y2,label){
-    const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L;
-    const e=Math.min(CPL_END,L/3);
-    const p1x=x1+ux*e, p1y=y1+uy*e, p2x=x2-ux*e, p2y=y2-uy*e;
-    drawSLine(p1x,p1y,p2x,p2y,COL_CUT,LW_THIN,PATTERN_CL);   // thin chain line
-    drawSLine(x1,y1,p1x,p1y,COL_CUT,LW_THICK);               // thickened dark ends
-    drawSLine(p2x,p2y,x2,y2,COL_CUT,LW_THICK);
-    /* normal to the plane, pointing down the sheet: the part cut away is the
-       upper one, so the observer looks down on to the retained solid    */
-    const nx=-uy, ny=ux, a=Math.atan2(ny,nx);
-    [[x1,y1],[x2,y2]].forEach(q=>{                           // stalk, then the head
-      const tx=q[0]+nx*CPL_ARROW, ty=q[1]+ny*CPL_ARROW;
-      drawLine(q[0],q[1],tx,ty,COL_CUT,LW_THIN);
-      drawArrowMark(tx,ty,a,COL_CUT);
-      /* the plane is identified by a capital letter set just beyond each
-         arrow, as on a drawing sheet.  A floating caption was tried first
-         and kept falling across either the view or the development.     */
-      if(label) drawText(tx+nx*12,ty+ny*12,label,
-                         COL_CUT,FONT_MAIN,"center","middle"); });
-  }
-
-  /* --- bounding box of a development sector of UNIT radius, apex at the
-     origin, swept anticlockwise from a0 through `sweep` radians, y measured
-     upwards.  Once the first line of the development is tied to the true
-     length seen in the FV the fan no longer hangs symmetrically below the
-     apex, so its extent has to be measured before the sheet is laid out. */
-  function sectorBox(a0,sweep){
-    const xs=[0,Math.cos(a0),Math.cos(a0+sweep)];
-    const ys=[0,Math.sin(a0),Math.sin(a0+sweep)];
-    for(let k=-2;k<=2;k++)
-      for(const q of [0,Math.PI/2,Math.PI,-Math.PI/2]){
-        const t=q+2*Math.PI*k;                      // every axis direction the fan crosses
-        if(t>=a0-1e-9 && t<=a0+sweep+1e-9){ xs.push(Math.cos(t)); ys.push(Math.sin(t)); }
-      }
-    return {xMin:Math.min.apply(null,xs),xMax:Math.max.apply(null,xs),
-            yMin:Math.min.apply(null,ys),yMax:Math.max.apply(null,ys)};
-  }
-
-  /* --- number the points where the plane crosses the edges.  Two edges can
-     project to the very same point in the front view, so coincident numbers
-     are grouped and written once instead of printing on top of each other. */
-  function cutPts(n,at){
-    const g={};
-    for(let i=0;i<n;i++){ const P=at(i), key=P.x.toFixed(1)+","+P.y.toFixed(1);
-      (g[key]=g[key]||{P:P,ns:[]}).ns.push(i+1); }
-    Object.keys(g).forEach(k=>drawPoint(g[k].P.x,g[k].P.y,
-      g[k].ns.map(t=>t+"\u2032").join(""),{x:5,y:-11}));
-  }
+  const COL_DEV="#111", COL_CUT="#b8541f";
 
   /* --- layout: FV above XY, TV below XY, development to the right --- */
-
-  /* ---- measure before drawing, in the development views -----------------
-     A step is not allowed to draw a line and give its size afterwards. Each
-     step is run once with the drawing suppressed while FX and YH record the
-     model co-ordinates they are asked for; the heights and distances that
-     fix the step's lines are then set off and marked in a step of its own,
-     before any line of that step is drawn.                             */
-  function withMeasureSteps(steps,api){
-    const out=[], seenH={}, seenX={};
-    steps.forEach(st=>{
-      const hs=[], xs=[];
-      const keep=REC; REC=[];
-      const done=api.capture(hs,xs);
-      try{ st.d(); }catch(e){}
-      done(); REC=keep;
-      const uh=[], ux=[];
-      /* only a size that is GIVEN in the problem is set off with the scale.
-         A height where the cutting plane crosses an edge is found by
-         projection, not measured, so it is never offered as a measurement. */
-      const isGiven=v=>api.given.some(t=>Math.abs(t-v)<0.35);
-      const add=(a,v,lim,seen,tag)=>{
-        /* the overall height and width ARE set off with the scale, so the
-           limits are inclusive; only a nonsense value is thrown away    */
-        if(!isFinite(v)||v<=0.6||v>lim+0.6) return;
-        if(!isGiven(v)) return;
-        const k=tag+Math.round(v*10); if(seen[k]) return;
-        if(a.some(t=>Math.abs(t-v)<0.5)) return;
-        seen[k]=1; a.push(v);
-      };
-      hs.forEach(v=>add(uh,v,api.H,seenH,"h"));
-      xs.forEach(v=>add(ux,v-api.xMin,api.width,seenX,"x"));
-      if(uh.length||ux.length){
-        const w=[];
-        if(uh.length) w.push(uh.map(t=>R1(t)).join(" and ")+" mm above the base");
-        if(ux.length) w.push(ux.map(t=>R1(t)).join(" and ")+" mm from the left-hand end");
-        out.push({
-          text:"Set off "+w.join(", and ")+" with the scale, and mark the points. "
-              +"The line itself is drawn in the next step, along the marks now made.",
-          hl:st.hl||[],
-          d:()=>{
-            uh.forEach(t=>{ api.markH(t); });
-            ux.forEach(t=>{ api.markX(api.xMin+t); });
-          }});
-      }
-      out.push(st);
-    });
-    return out;
-  }
-
   function layoutPL(fvW,upH,dnH,devW,devUp){
     const gap=Math.max(20,fvW*0.30);
     const totW=fvW+gap+devW;
@@ -1856,60 +1371,34 @@
     return {
       aux:[x0,y,ax(n),ay(n)],
       closing:[ax(n),ay(n),x1,y],
-      paras:Array.from({length:n-1},(_,i)=>n-1-i).map(i=>[ax(i),ay(i),pts[i],y]),
+      paras:Array.from({length:n-1},(_,i)=>[ax(i+1),ay(i+1),pts[i+1],y]),
       drop:Math.abs(ay(n)-y),
       pts:pts
     };
   }
 
   /* ================= PARALLEL LINE : PRISM ================= */
-  /* --- orientation of the base polygon in the top view -----------------
-     "par"  : a base edge PARALLEL to the XY line - the usual position
-     "perp" : a base edge PERPENDICULAR to the XY line
-     "inc"  : the base turned through a stated angle to the VP, so that no
-              slant edge shows its true length and rotation is needed     */
-  function basePhase(n,ori,ang){
-    if(ori==="perp") return -Math.PI/n;
-    if(ori==="inc")  return Math.PI/2-Math.PI/n+toRad(ang||0);
-    return Math.PI/2-Math.PI/n;
-  }
-  const ORI_TXT={
-    par :"a base edge parallel to the VP",
-    perp:"a base edge perpendicular to the VP",
-    inc :"a base edge inclined to the VP"};
-
-  function buildPrism(v,n,cut,ori){
+  function buildPrism(v,n,cut){
     const s=v.s, H=v.h;
-    const R=polyR(n,s), ph=basePhase(n,ori,v.oa);
+    const R=polyR(n,s), ph=Math.PI/2-Math.PI/n;
     const A=Array.from({length:n},(_,i)=>ph+TAU*i/n);
     const cx=A.map(a=>R*Math.cos(a)), cz=A.map(a=>R*Math.sin(a));
     const xMin=Math.min.apply(null,cx), xMax=Math.max.apply(null,cx);
     const zMin=Math.min.apply(null,cz), zMax=Math.max.apply(null,cz);
     const fvW=xMax-xMin, tvD=zMax-zMin;
 
-    /* cut heights at every corner.
-       "horiz" - a horizontal plane at a stated height
-       "incl"  - inclined, positioned by a point on the axis
-       "top"   - inclined, positioned by the distance of the point at which
-                 it passes through the TOP face, measured from the vertical
-                 rectangular face that is perpendicular to the VP.  Beyond
-                 that point the plane is clear of the solid, so those edges
-                 keep their full height.                                  */
+    /* cut heights at every corner */
     const tan=cut?Math.tan(toRad(v.ang)):0;
-    const xTop=(cut&&cut.type==="top")?xMin+v.dist:0;
-    const hAt=x=>!cut ? H
-      : cut.type==="horiz" ? v.hc
-      : cut.type==="top"   ? Math.min(H,H+(x-xTop)*tan)
-      : v.hc+x*tan;
+    const hAt=x=>cut? (cut.type==="horiz"? v.hc : v.hc+x*tan) : H;
     const hc=cx.map(hAt);
     const devW=n*s;
     const f=layoutPL(fvW,H,tvD+14,devW,Math.max.apply(null,hc));
     const sc=f.sc, REF=f.REF;
-    let FX=x=>f.fvL+(x-xMin)*sc;                   // model x -> canvas x (FV & TV)
+    const FX=x=>f.fvL+(x-xMin)*sc;                 // model x -> canvas x (FV & TV)
     const TVY=REF+34;                              // top of the TV band
     const TY=z=>TVY+(zMax-z)*sc;
     const DX=q=>f.devL+q*sc;                       // distance along stretch-out
-    let YH=h=>REF-h*sc;
+    const YH=h=>REF-h*sc;
 
     /* development order : start at the shortest lateral edge */
     let k0=0; for(let i=1;i<n;i++) if(hc[i]<hc[k0]-1e-9) k0=i;
@@ -1919,202 +1408,109 @@
       let m=m_prism(n,s,H,ph);
       if(cut){
         if(cut.type==="horiz") m=clipModel(m,0,1,0,v.hc,"cut");
-        else if(cut.type==="top") m=clipModel(m,-tan,1,0,H-xTop*tan,"cut");
         else m=clipModel(m,-tan,1,0,v.hc,"cut");
       }
       return m;
     };
     const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
 
-    const AXX=FX(0);
-    let steps=[];
+    const steps=[];
     steps.push({text:"Draw the X–Y reference line. The prism rests on the HP with its axis vertical, so the top view is drawn below X–Y and the front view above it.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
         drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:"Mark the axis: a vertical centre-line through the middle of the base, perpendicular to X–Y. Keep it clear of construction lines throughout.",
-      hl:[],
-      d:()=>{ drawAxisFV(AXX,YH(H),REF);
-        drawAxisPointTV(AXX,TY(0)); }});
-
-    steps.push({text:`Draw the top view: start with the first side of the base, ${let_[0]}-${let_[1]} = ${R1(s)} mm, and dimension it at once.`,
-      hl:["base"],
-      d:()=>{ lineSet([[FX(cx[0]),TY(cz[0]),FX(cx[1]),TY(cz[1])]],COL_THICK,LW_THICK);
-        drawPoint(FX(cx[0]),TY(cz[0]),let_[0],radOff(FX(0),TY(0),FX(cx[0]),TY(cz[0]),13));
-        drawPoint(FX(cx[1]),TY(cz[1]),let_[1],radOff(FX(0),TY(0),FX(cx[1]),TY(cz[1]),13));
-        /* with a base edge perpendicular to XY the first side is vertical in
-           the top view, so a horizontal dimension would collapse to nothing */
-        const ax=FX(cx[0]), bx=FX(cx[1]), ay=TY(cz[0]), by=TY(cz[1]);
-        if(Math.abs(bx-ax)>=Math.abs(by-ay))
-          drawHorizontalDim(Math.max(ay,by)+24,Math.min(ax,bx),Math.max(ax,bx),R1(s)+" mm");
-        else
-          drawVerticalDim(Math.max(ax,bx)+26,Math.min(ay,by),Math.max(ay,by),R1(s)+" mm"); }});
-
-    steps.push({text:`Complete the regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":n===6?"hexagon":n+"-gon"}, with ${ORI_TXT[ori||"par"]}. Name the remaining corners ${let_.slice(2,n).split("").join(", ")}.`,
+    steps.push({text:`Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":n===6?"hexagon":n+"-gon"} of side ${R1(s)} mm, with one face parallel to the VP. Name the corners ${let_.slice(0,n).split("").join(", ")}.`,
       hl:["base"],
       d:()=>{ const L=[];
-        for(let i=1;i<n;i++){ const j=(i+1)%n;
+        for(let i=0;i<n;i++){ const j=(i+1)%n;
           L.push([FX(cx[i]),TY(cz[i]),FX(cx[j]),TY(cz[j])]); }
         lineSet(L,COL_THICK,LW_THICK);
-        for(let i=2;i<n;i++) drawPoint(FX(cx[i]),TY(cz[i]),let_[i],radOff(FX(0),TY(0),FX(cx[i]),TY(cz[i]),13)); }});
+        for(let i=0;i<n;i++) drawPoint(FX(cx[i]),TY(cz[i]),let_[i],radOff(FX(0),TY(0),FX(cx[i]),TY(cz[i]),13)); }});
 
-    /* the base is seen in the TV, so the projectors must be carried up from
-       the TV corners themselves, through XY, before any FV line is drawn   */
-    steps.push({text:`The base is seen in the top view. Take a thin projector up from EVERY corner of the TV, through X–Y, before drawing any dark line of the front view.`,
-      hl:["base"],
-      d:()=>{ const P=[];
-        for(let i=0;i<n;i++){ const px=axSafe(FX(cx[i]),AXX);
-          P.push([px,TY(cz[i]),px,YH(H)+8]); }
-        lineSet(P,COL_PROJ,LW_THIN); }});
-
-    steps.push({text:`Draw the front view on those projectors: ${R1(fvW)} mm wide, ${R1(H)} mm high. Name the base corners a\u2032, b\u2032, c\u2032 \u2026${cut?"":" and the top corners directly above them a\u2081\u2032, b\u2081\u2032, c\u2081\u2032 \u2026, so that every vertical edge reads a\u2032\u2013a\u2081\u2032, b\u2032\u2013b\u2081\u2032, and so on"}. Each lateral edge is a TRUE LENGTH${cut?"":", and the prism being uncut each one is visible, so all are dark"}.`,
+    steps.push({text:`Project every corner of the top view upwards and draw the front view: a rectangle ${R1(fvW)} mm wide and ${R1(H)} mm high. The vertical lines are the lateral edges ${let_[0]}′, ${let_[1]}′, … Each of them is a TRUE LENGTH.`,
       hl:latAll,
       d:()=>{ const P=[];
-        for(let i=0;i<n;i++){ const px=axSafe(FX(cx[i]),AXX);
-          P.push([px,TY(cz[i]),px,YH(H)]); }
-        lineSet(P,COL_PROJ,LW_THIN);
-        drawRLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
-        drawRLine(FX(xMin),YH(H),FX(xMax),YH(H),COL_THICK,LW_THICK);
-        rollSet([[FX(xMin),REF,FX(xMin),YH(H)],[FX(xMax),REF,FX(xMax),YH(H)]],COL_THICK,LW_THICK);
-        eraseSet([[FX(xMin),YH(H)-2,FX(xMin),YH(H)-12],
-                  [FX(xMax),YH(H)-2,FX(xMax),YH(H)-12]],9);
-        drawRLine(FX(xMin),YH(H),FX(xMax),YH(H),COL_THICK,LW_THICK);
+        for(let i=0;i<n;i++) P.push([FX(cx[i]),REF,FX(cx[i]),YH(H)]);
+        lineSet(P,COL_PROJ,LW_THIN,[6,4]);
+        drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+        drawSLine(FX(xMin),YH(H),FX(xMax),YH(H),COL_THICK,LW_THICK);
+        drawSLine(FX(xMin),REF,FX(xMin),YH(H),COL_THICK,LW_THICK);
+        drawSLine(FX(xMax),REF,FX(xMax),YH(H),COL_THICK,LW_THICK);
         const grp={};
         for(let i=0;i<n;i++){ const key=cx[i].toFixed(2);
           (grp[key]=grp[key]||[]).push(i); }
         Object.keys(grp).forEach(key=>{
           const g=grp[key], x=FX(+key);
           drawLine(x,REF,x,YH(H),COL_THIN,LW_THIN);
-          drawPoint(x,REF,g.map(i=>let_[i]+"′").join(""),{x:-5*g.length,y:-13});
-          /* the top face is named only when it survives; on a truncated prism
-             the corners of the cut section are numbered 1′, 2′, 3′ … instead */
-          if(!cut) drawPoint(x,YH(H),g.map(i=>let_[i]+"\u2081\u2032").join(""),
-                             {x:-7*g.length,y:-13}); });
-        drawVerticalDim(FX(xMin)-40,YH(H),REF,R1(H)); }});
+          drawPoint(x,REF,g.map(i=>let_[i]+"′").join(""),{x:-5*g.length,y:-13}); });
+        drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H)); }});
 
     if(cut){
       if(cut.type==="horiz"){
-        steps.push({text:`Draw the cutting-plane line A\u2013A in the front view: a horizontal line ${R1(v.hc)} mm above the base. It cuts every lateral edge, giving the points 1′, 2′, 3′ …`,
+        steps.push({text:`Draw the cutting plane in the front view: a horizontal line ${R1(v.hc)} mm above the base. It cuts every lateral edge, giving the points 1′, 2′, 3′ …`,
           hl:["cut"],
-          d:()=>{ cutPlaneLine(FX(xMin)-24,YH(v.hc),FX(xMax)+24,YH(v.hc),"A");
-            cutPts(n,i=>({x:FX(cx[i]),y:YH(hc[i])})); }});
-      } else if(cut.type==="top"){
-        steps.push({text:`Draw the cutting-plane line A\u2013A in the front view. It is inclined at ${R1(v.ang)}° to the HP and passes through the TOP face at a point ${R1(v.dist)} mm from the near rectangular face, so it leaves the solid through the top instead of cutting right across it. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
-          hl:["cut"],
-          d:()=>{ const eL=xMin-24/sc, eR=xTop+24/sc;
-            /* the angle is set off with the PROTRACTOR first; the cutting-plane
-               line is then drawn along the angle already marked */
-            drawLine(FX(xMin),YH(H-v.dist*tan),FX(xMin)+58,YH(H-v.dist*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-            drawAngleDimOutward(FX(xMin),YH(H-v.dist*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            cutPlaneLine(FX(eL),YH(H+(eL-xTop)*tan),FX(eR),YH(H+(eR-xTop)*tan),"A");
-            drawHorizontalDim(YH(H)-30,FX(xMin),FX(xTop),R1(v.dist)+" mm");
-            cutPts(n,i=>({x:FX(cx[i]),y:YH(hc[i])})); }});
+          d:()=>{ drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
+            drawText(FX(xMax)+18,YH(v.hc),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
+            for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
       } else {
-        steps.push({text:`Set off ${R1(v.ang)}° from a horizontal reference line with the PROTRACTOR, and only then draw the cutting-plane line A\u2013A along the angle marked through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
+        steps.push({text:`Draw the cutting plane in the front view: a line inclined at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
           hl:["cut"],
           d:()=>{ const yL=YH(hAt(xMin)), yR=YH(hAt(xMax));
-            const eL=xMin-24/sc, eR=xMax+24/sc;
-            /* the angle is set off with the PROTRACTOR first; the cutting-plane
-               line is then drawn along the angle already marked */
+            const eL=xMin-8/sc, eR=xMax+8/sc;
+            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
             drawLine(FX(xMin),yL,FX(xMin)+58,yL,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(xMin),yL,44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            cutPlaneLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),"A");
-            cutPts(n,i=>({x:FX(cx[i]),y:YH(hc[i])})); }});
+            drawText(FX(eR)+6,YH(hAt(eR)),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
+            for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
       }
     }
 
-    steps.push({text:`Draw the stretch-out line to the right of the front view, on the level of the base line. Its length is the perimeter of the base: ${n} × ${R1(s)} = ${R1(n*s)} mm.`,
+    steps.push({text:`Draw the stretch-out line for the development. Its length is the perimeter of the base = ${n} × ${R1(s)} = ${R1(n*s)} mm, set out on the level of the base line, to the right of the front view.`,
       hl:["base"],
       d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_THICK,LW_THICK);
-        drawHorizontalDim(REF+52,DX(0),DX(devW),"perimeter = "+R1(n*s)+" mm");
-        calcBox("Length of development",
-          ["Perimeter of base = n \u00d7 s",
-           "= "+n+" \u00d7 "+R1(s),
-           "= "+R1(n*s)+" mm"]); }});
+        drawHorizontalDim(REF+34,DX(0),DX(devW),"perimeter = "+R1(n*s)); }});
 
-    steps.push({text:`Set the compass to the TRUE side length, ${LET[ord[0]]}-${LET[ord[1]]} = ${R1(s)} mm, taken directly from the top view.`,
+    steps.push({text:`Step off ${n} equal divisions of ${R1(s)} mm - the TRUE side length taken straight from the top view - and name the points ${ord.map(i=>LET[i]).join(", ")}. The seam is taken on the shortest edge ${LET[k0]}.`,
       hl:["base"],
-      d:()=>{ measureSpan(FX(cx[ord[0]]),TY(cz[ord[0]]),FX(cx[ord[1]]),TY(cz[ord[1]])); }});
-
-    steps.push({text:`Starting from ${LET[ord[0]]}, step that same compass setting along the stretch-out line ${n} times, marking each division in turn: ${ord.slice(1).map(i=>LET[i]).join(", ")}. The seam is taken on the shortest edge ${LET[k0]}.`,
-      hl:["base"],
-      d:()=>{ for(let j=1;j<=n;j++) drawCut(DX((j-1)*s),REF,s*sc,0,COL_THIN);
+      d:()=>{ stepOff(DX(0),REF,DX(devW),REF,n);
         for(let j=0;j<=n;j++) drawPoint(DX(j*s),REF,LET[ord[j]],{x:-4,y:15}); }});
-
-    /* the developed cut line, taken face by face.  When the plane leaves the
-       solid through the TOP face the line has an extra corner on the face
-       where it crosses the top edge, so it is not a simple chain of the
-       corner heights and the break has to be inserted.                   */
-    const devCut=()=>{
-      const pts=[];
-      for(let j=0;j<=n;j++){
-        const i=ord[j];
-        pts.push({q:j*s,h:hc[i]});
-        if(j<n&&cut&&cut.type==="top"){
-          const a=cx[i], b=cx[ord[j+1]];
-          if((a-xTop)*(b-xTop)<-1e-9){          // the top edge is crossed here
-            const u=(xTop-a)/(b-a);
-            pts.push({q:(j+u)*s,h:H}); }
-        }
-      }
-      return pts;
-    };
 
     steps.push({text:"Erect a perpendicular at every division point. These are the lateral edges of the opened-out surface, and each one shows its true length.",
       hl:latAll,
       d:()=>{ const P=[];
         const top=Math.max.apply(null,hc);
         for(let j=0;j<=n;j++) P.push([DX(j*s),REF,DX(j*s),YH(top)-10]);
-        rollSet(P,COL_THIN,LW_THIN); }});
+        lineSet(P,COL_THIN,LW_THIN); }});
 
     if(!cut){
-      steps.push({text:`The height is already there in the front view. Roll the scale across from the top edge of the FV, drawing one line parallel to X–Y at ${R1(H)} mm.`,
+      steps.push({text:`Cut every perpendicular to the height of the prism, ${R1(H)} mm, transferring the height from the front view with the compass.`,
         hl:latAll,
-        d:()=>{ drawRLine(FX(xMin),YH(H),DX(devW)+12,YH(H),COL_PROJ,LW_THIN);
-          for(let j=0;j<=n;j++) drawPoint(DX(j*s),YH(H),"",{x:0,y:0}); }});
-      steps.push({text:`The prism is NOT cut, so every vertical edge is visible - roll the scale along and draw them ALL dark. Rub out the overshoot. Development = ${R1(n*s)} × ${R1(H)} mm.`,
+        d:()=>{ for(let j=0;j<=n;j++){
+            measureSpan(DX(j*s),REF,DX(j*s),YH(H));
+            drawPoint(DX(j*s),YH(H),"",{x:0,y:0}); } }});
+      steps.push({text:`Join the top points. The development of the lateral surface is a rectangle ${R1(n*s)} mm × ${R1(H)} mm.`,
         hl:latAll.concat(["top"]),
         d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
-          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK);
-          const E=[];                              // EVERY edge dark, all parallel
-          for(let j=0;j<=n;j++) E.push([DX(j*s),REF,DX(j*s),YH(H)]);
-          rollSet(E,COL_DEV,LW_THICK);
-          const X=[];                              // rub out the construction overshoot
-          for(let j=0;j<=n;j++) X.push([DX(j*s),YH(H)-2,DX(j*s),YH(H)-14]);
-          X.push([DX(devW)+2,YH(H),DX(devW)+14,YH(H)]);
-          eraseSet(X,9);
-          drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
-          for(let j=0;j<=n;j++){
-            drawPoint(DX(j*s),YH(H),LET[ord[j]]+"\u2081",{x:-6,y:-12});
-            /* same offset as the stepping-off step, so the base letters
-               overprint exactly instead of showing as a double strike */
-            drawPoint(DX(j*s),REF,LET[ord[j]],{x:-4,y:15}); }
+          drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
+          for(let j=0;j<=n;j++) drawPoint(DX(j*s),YH(H),LET[ord[j]]+"1",{x:-6,y:-12});
           drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
     } else {
-      steps.push({text:"This is the parallel-line method: instead of the compass, draw a horizontal projector from every cut point in the front view, parallel to X–Y, extended across to the matching perpendicular in the development. Mark 1, 2, 3 …",
+      steps.push({text:"Transfer the height of every cut point from the front view to the matching perpendicular in the development, using the compass or the scale. Mark 1, 2, 3 …",
         hl:["cut"],
         d:()=>{ for(let j=0;j<=n;j++){
             const i=ord[j];
-            drawLine(FX(cx[i]),YH(hc[i]),DX(j*s),YH(hc[i]),COL_PROJ,LW_THIN);
+            measureSpan(DX(j*s),REF,DX(j*s),YH(hc[i]));
             drawPoint(DX(j*s),YH(hc[i]),String(i+1),{x:5,y:-11}); } }});
-      steps.push({text:cut.type==="top"
-          ? `Join the points 1-2-3-… by straight lines. Each lateral face is a plane, so the cut develops as a straight line on it - but on the face where the plane runs out through the TOP, the line turns a corner and then follows the top edge at ${R1(H)} mm. Close the figure with the two end edges.`
-          : `Join the points 1-2-3-… by straight lines: each lateral face of a prism is a plane, so the cut edge develops as a straight line. Close the figure with the two end edges.`,
+      steps.push({text:`Join the points 1-2-3-… by straight lines: each lateral face of a prism is a plane, so the cut edge develops as a straight line. Close the figure with the two end edges.`,
         hl:["cut"],
-        d:()=>{ const pts=devCut(), L=[];
-          for(let k=0;k<pts.length-1;k++)
-            L.push([DX(pts[k].q),YH(pts[k].h),DX(pts[k+1].q),YH(pts[k+1].h)]);
+        d:()=>{ const L=[];
+          for(let j=0;j<n;j++) L.push([DX(j*s),YH(hc[ord[j]]),DX((j+1)*s),YH(hc[ord[j+1]])]);
           lineSet(L,COL_DEV,LW_THICK);
-          const E=[];        // every edge dark, parallel, but only up to its cut point
-          for(let j=0;j<=n;j++) E.push([DX(j*s),REF,DX(j*s),YH(hc[ord[j]])]);
-          rollSet(E,COL_DEV,LW_THICK);
-          const X=[];        // rub out the construction line above each cut point
-          const top=Math.max.apply(null,hc);
-          for(let j=0;j<=n;j++) X.push([DX(j*s),YH(hc[ord[j]])-2,DX(j*s),YH(top)-12]);
-          eraseSet(X,9);
-          lineSet(L,COL_DEV,LW_THICK);
+          drawSLine(DX(0),REF,DX(0),YH(hc[ord[0]]),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(hc[ord[n]]),COL_DEV,LW_THICK);
           drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the lateral surface of the truncated prism is complete. The shortest edge measures ${R1(Math.min.apply(null,hc))} mm and the longest ${R1(Math.max.apply(null,hc))} mm.`,
         hl:["cut"].concat(latAll),
@@ -2132,34 +1528,8 @@
           <tr><td>Development</td><td colspan="3">rectangle ${R1(n*s)} mm × ${R1(H)} mm</td></tr>
           <tr><td>Perimeter</td><td>${R1(n*s)} mm</td><td>Height</td><td>${R1(H)} mm</td></tr></table>`;
 
-    /* the hooks the measuring pass needs: record what FX and YH are asked
-       for, and mark a height or a distance on the front view            */
-    const MEASURE_API={
-      given:Object.keys(v).map(k=>v[k]).filter(t=>typeof t==="number"&&isFinite(t)),
-      H:H, xMin:xMin, width:xMax-xMin,
-      capture:(hs,xs)=>{ const fx=FX, yh=YH;
-        FX=x=>{ xs.push(x); return fx(x); };
-        YH=h=>{ hs.push(h); return yh(h); };
-        return ()=>{ FX=fx; YH=yh; }; },
-      markH:t=>{ drawLine(FX(xMin)-12,YH(t),FX(xMin)+10,YH(t),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawVerticalDim(FX(xMin)-18,YH(t),REF,R1(t)); },
-      markX:x=>{ drawLine(FX(x),REF+10,FX(x),REF-10,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawHorizontalDim(REF+22,FX(xMin),FX(x),R1(x-(xMin))); }
-    };
-    steps=withMeasureSteps(steps,MEASURE_API);
     return {steps,results,
-      given:{type:"3d",title:"Given solid",model:model,box:false,
-        dimExtra:mm=>{
-          const g=Math.max(2*R,H)*0.20+4;
-          const c=i=>({x:R*Math.cos(ph+TAU*i/n), y:0, z:R*Math.sin(ph+TAU*i/n)});
-          let k=0; for(let i=1;i<n;i++) if(cz[i]>cz[k]) k=i;      // the side facing us
-          dimAdd(mm,c(k),c((k+1)%n),R1(s),{x:0,y:-g*0.5,z:g*0.30},"base");
-          const hT=cut?v.hc:H;
-          dimAdd(mm,{x:xMin,y:0,z:0},{x:xMin,y:hT,z:0},R1(hT),
-                 {x:-g,y:0,z:0},cut?"cut":"top");
-        }},
-      space:{title:"The solid in 3-D - drag to turn it, scroll to zoom",model:model,
-             note:"Turn it to see the lateral faces you have just unrolled."}};
+      given:{type:"3d",title:"Given solid",model:model}};
   }
 
   /* ================= PARALLEL LINE : CYLINDER ================= */
@@ -2173,11 +1543,11 @@
     const devW=Math.PI*D;
     const f=layoutPL(D,H,D+14,devW,Math.max.apply(null,hg));
     const sc=f.sc, REF=f.REF;
-    let FX=x=>f.fvL+(x+R)*sc;
+    const FX=x=>f.fvL+(x+R)*sc;
     const TVY=REF+34;
     const TY=z=>TVY+(R-z)*sc;
     const DX=q=>f.devL+q*sc;
-    let YH=h=>REF-h*sc;
+    const YH=h=>REF-h*sc;
 
     const model=()=>{
       let m=m_cyl(R,H,48);
@@ -2186,119 +1556,79 @@
       return m;
     };
 
-    const AXX=FX(0);
-    let steps=[];
+    const steps=[];
     steps.push({text:"Draw the X–Y reference line. The cylinder stands on the HP with its axis vertical.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
         drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:"Mark the axis: a vertical centre-line through the middle, perpendicular to X–Y, crossed by a centre-line through the plan. Keep it clear of construction lines throughout.",
-      hl:[],
-      d:()=>{ drawAxisFV(AXX,YH(H),REF);
-        drawAxisCrossTV(AXX,TY(0),R*sc); }});
-
     steps.push({text:`Draw the top view: a circle of diameter ${R1(D)} mm.`,
       hl:["base"],
-      d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
+      d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK);
+        drawHorizontalDim(TY(0),FX(-R),FX(R),"Ø "+R1(D)); }});
 
-    if(cut){
-      steps.push({text:`The cylinder is cut, so the curved surface must be opened out through a series of points. Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1, 2, 3 … 12 starting from the extreme left. Carry one division line a little way outside the circle, turn a short horizontal shoulder on it and write the diameter Ø ${R1(D)} mm there, clear of the construction.`,
-        hl:["base"],
-        d:()=>{ markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
-          for(let i=0;i<N;i++)
-            drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14));
-          diameterDimAuto(FX(0),TY(0),j=>({x:FX(gx[j%N]),y:TY(gz[j%N])}),D); }});
-    } else {
-      steps.push({text:`Mark the diameter: carry a centre line outside the circle, turn a short horizontal shoulder and write Ø ${R1(D)} mm there. The cylinder is NOT cut, so no equal divisions or generators are needed.`,
-        hl:["base"],
-        d:()=>{ diameterDimAuto(FX(0),TY(0),j=>({x:FX(gx[j%N]),y:TY(gz[j%N])}),D); }});
-    }
+    steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1, 2, 3 … 12 starting from the extreme left.",
+      hl:["base"],
+      d:()=>{ markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
+        for(let i=0;i<N;i++)
+          drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14)); }});
 
-    steps.push({text:cut
-        ? `Project the 12 points upwards and draw the front view: a rectangle ${R1(D)} mm × ${R1(H)} mm containing the 12 generators 1′, 2′ … 12′.`
-        : `Take projectors up from the extreme left and right of the circle and draw the front view: ${R1(D)} mm × ${R1(H)} mm, all four edges dark.`,
+    steps.push({text:`Project the 12 points upwards and draw the front view: a rectangle ${R1(D)} mm × ${R1(H)} mm containing the 12 generators 1′, 2′ … 12′.`,
       hl:["lat"],
       d:()=>{ const P=[];
-        if(cut){ for(let i=0;i<N;i++){ const px=axSafe(FX(gx[i]),AXX);
-            P.push([px,REF,px,YH(H)]); } }
-        else   { [-R,R].forEach(q=>P.push([FX(q),TY(0),FX(q),YH(H)])); }
+        for(let i=0;i<N;i++) P.push([FX(gx[i]),REF,FX(gx[i]),YH(H)]);
         lineSet(P,COL_THIN,LW_THIN);
         drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
         drawSLine(FX(-R),YH(H),FX(R),YH(H),COL_THICK,LW_THICK);
         drawSLine(FX(-R),REF,FX(-R),YH(H),COL_THICK,LW_THICK);
         drawSLine(FX(R),REF,FX(R),YH(H),COL_THICK,LW_THICK);
-        drawVerticalDim(FX(-R)-40,YH(H),REF,R1(H)); }});
+        drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H)); }});
 
     if(cut){
       if(cut.type==="horiz"){
-        steps.push({text:`Draw the cutting-plane line A\u2013A: a horizontal line ${R1(v.hc)} mm above the base, cutting every generator.`,
+        steps.push({text:`Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting every generator.`,
           hl:["cut"],
-          d:()=>{ cutPlaneLine(FX(-R)-24,YH(v.hc),FX(R)+24,YH(v.hc),"A"); }});
+          d:()=>{ drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
+            drawText(FX(R)+18,YH(v.hc),"cutting plane",COL_CUT,FONT_DIM,"left","middle"); }});
       } else {
-        steps.push({text:`Set the protractor on a horizontal reference line and mark ${R1(v.ang)}° FIRST, then draw the cutting-plane line A–A along it, through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ where it crosses the generators.`,
+        steps.push({text:`Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ where it crosses the generators.`,
           hl:["cut"],
-          d:()=>{ const eL=-R-24/sc, eR=R+24/sc;
-            /* the angle is set off with the PROTRACTOR first; the cutting-plane
-               line is then drawn along the angle already marked */
+          d:()=>{ const eL=-R-8/sc, eR=R+8/sc;
+            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
             drawLine(FX(-R),YH(hAt(-R)),FX(-R)+58,YH(hAt(-R)),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(-R),YH(hAt(-R)),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            cutPlaneLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),"A");
             for(let i=0;i<N;i++) drawPoint(FX(gx[i]),YH(hg[i]),"",{x:0,y:0}); }});
       }
     }
 
-    steps.push({text:`Draw the stretch-out line to the right of the front view. Its length is the circumference: πD = π × ${R1(D)} = ${R1(devW)} mm.`,
+    steps.push({text:`Draw the stretch-out line to the right of the front view. Its length is the circumference of the base, π × ${R1(D)} = ${R1(devW)} mm.`,
       hl:["base"],
       d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_THICK,LW_THICK);
-        drawHorizontalDim(REF+div30(DX(0),REF,DX(devW),N,true).drop+30,DX(0),DX(devW),"πD = "+R1(devW)+" mm");
-        calcBox("Length of development",
-          ["Circumference of base = \u03c0D",
-           "\u03c0D = \u03c0 \u00d7 "+R1(D),
-           "\u03c0D = "+R1(devW)+" mm"]); }});
+        drawHorizontalDim(REF+div30(DX(0),REF,DX(devW),N,true).drop+30,DX(0),DX(devW),"πD = "+R1(devW)); }});
 
-    if(cut){
-      steps.push({text:`πD rarely divides into 12 equal parts conveniently, so use the auxiliary-line method. P–Q is the auxiliary line. Set the protractor at P, the left end of πD, and mark 30° below the base to fix its direction; the line must be long enough for 12 convenient divisions (say ${5*N} mm and 5 mm each, or ${10*N} mm and 10 mm each).`,
-        hl:["base"],
-        d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
-          markAngles(DX(0),REF,84,[Math.PI/6],true);
-          drawSLine(g.aux[0],g.aux[1],g.aux[2],g.aux[3],COL_THIN,LW_THIN);
-          drawPoint(g.aux[2],g.aux[3],"Q",{x:9,y:11}); }});
+    steps.push({text:"Divide the stretch-out into 12 equal parts by the auxiliary-line method: draw a line at 30° from the left end, step off 12 equal convenient divisions on it with the divider, join the last division to the right end of πD, and draw parallels to that closing line.",
+      hl:["base"],
+      d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
+        drawSLine(g.aux[0],g.aux[1],g.aux[2],g.aux[3],COL_THIN,LW_THIN);
+        stepOff(g.aux[0],g.aux[1],g.aux[2],g.aux[3],N);
+        drawText(g.aux[2]+6,g.aux[3]+4,"30° auxiliary line",COL_DIM,FONT_DIM,"left","middle");
+        drawSLine(g.closing[0],g.closing[1],g.closing[2],g.closing[3],COL_THIN,LW_THIN);
+        lineSet(g.paras,COL_PROJ,LW_THIN);
+        for(let i=0;i<=N;i++) drawPoint(DX(devW*i/N),REF,String(i+1>12?1:i+1),{x:-4,y:-14}); }});
 
-      steps.push({text:`Lay the scale along P–Q and mark off 12 equal divisions with it.`,
-        hl:["base"],
-        d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
-          scaleMarks(g.aux[0],g.aux[1],g.aux[2],g.aux[3],N); }});
-
-      steps.push({text:"Join Q to the right end of πD, then roll the scale back along that closing line, from the longest parallel down to the shortest, drawing a parallel through every division - this cuts πD into 12 equal parts whatever its true length.",
-        hl:["base"],
-        d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
-          drawSLine(g.closing[0],g.closing[1],g.closing[2],g.closing[3],COL_THIN,LW_THIN);
-          rollSet(g.paras,COL_PROJ,LW_THIN);
-          for(let i=0;i<=N;i++) drawPoint(DX(devW*i/N),REF,String(i+1>12?1:i+1),{x:-4,y:-14}); }});
-
-      steps.push({text:"Erect a perpendicular at every division. These are the 12 generators of the opened-out surface.",
-        hl:["lat"],
-        d:()=>{ const P=[], top=Math.max.apply(null,hg);
-          for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(top)-10]);
-          lineSet(P,COL_THIN,LW_THIN); }});
-    }
+    steps.push({text:"Erect a perpendicular at every division. These are the 12 generators of the opened-out surface.",
+      hl:["lat"],
+      d:()=>{ const P=[], top=Math.max.apply(null,hg);
+        for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(top)-10]);
+        lineSet(P,COL_THIN,LW_THIN); }});
 
     if(!cut){
-      steps.push({text:`The height is already there in the front view. Roll the scale across from the top edge of the FV, drawing a line parallel to X–Y at ${R1(H)} mm.`,
+      steps.push({text:`Cut each generator to the height ${R1(H)} mm and join the tops. The development is a rectangle πD × H = ${R1(devW)} mm × ${R1(H)} mm.`,
         hl:["lat","top"],
-        d:()=>{ drawRLine(FX(-R),YH(H),DX(devW)+12,YH(H),COL_PROJ,LW_THIN); }});
-
-      steps.push({text:`Roll the scale round for the two end edges - parallel to the FV edges and to each other. All four edges are visible, so all are dark. Rub out the overshoot. Development = ${R1(devW)} × ${R1(H)} mm.`,
-        hl:["lat","top"],
-        d:()=>{ const E=[[DX(0),REF,DX(0),YH(H)],[DX(devW),REF,DX(devW),YH(H)]];
-          rollSet(E,COL_DEV,LW_THICK);
-          drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
-          eraseSet([[DX(0),YH(H)-2,DX(0),YH(H)-14],
-                    [DX(devW),YH(H)-2,DX(devW),YH(H)-14],
-                    [DX(devW)+2,YH(H),DX(devW)+14,YH(H)]],9);
-          drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
+        d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
           drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
     } else {
       steps.push({text:"Transfer the height of every cut point 1′, 2′ … from the front view on to the matching generator of the development.",
@@ -2337,113 +1667,60 @@
       : `<b>Result:</b><table>
           <tr><td>Development</td><td colspan="3">rectangle ${R1(devW)} mm × ${R1(H)} mm</td></tr></table>`;
 
-    /* the hooks the measuring pass needs: record what FX and YH are asked
-       for, and mark a height or a distance on the front view            */
-    const MEASURE_API={
-      given:Object.keys(v).map(k=>v[k]).filter(t=>typeof t==="number"&&isFinite(t)),
-      H:H, xMin:-R, width:2*R,
-      capture:(hs,xs)=>{ const fx=FX, yh=YH;
-        FX=x=>{ xs.push(x); return fx(x); };
-        YH=h=>{ hs.push(h); return yh(h); };
-        return ()=>{ FX=fx; YH=yh; }; },
-      markH:t=>{ drawLine(FX(-R)-12,YH(t),FX(-R)+10,YH(t),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawVerticalDim(FX(-R)-18,YH(t),REF,R1(t)); },
-      markX:x=>{ drawLine(FX(x),REF+10,FX(x),REF-10,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawHorizontalDim(REF+22,FX(-R),FX(x),R1(x-(-R))); }
-    };
-    steps=withMeasureSteps(steps,MEASURE_API);
     return {steps,results,
-      given:{type:"3d",title:"Given solid",model:model,box:false,
-        dimExtra:mm=>{
-          const g=Math.max(D,H)*0.20+4;
-          dimAdd(mm,{x:-R,y:0,z:0},{x:R,y:0,z:0},"\u00d8 "+R1(D),
-                 {x:0,y:-g*0.5,z:g*0.55},"base");
-          const hT=cut?v.hc:H;
-          dimAdd(mm,{x:-R,y:0,z:0},{x:-R,y:hT,z:0},R1(hT),
-                 {x:-g,y:0,z:0},cut?"cut":"top");
-        }},
-      space:{title:"The solid in 3-D - drag to turn it, scroll to zoom",model:model,
-             note:"Turn it to see the curved surface you have just unrolled."}};
+      given:{type:"3d",title:"Given solid",model:model}};
   }
 
   /* ================= RADIAL LINE : PYRAMID ================= */
-  function buildPyramid(v,n,cut,ori,geom){
-    /* `geom`, when supplied, replaces the regular polygon by an explicit base -
-       used for the rectangular-base pyramid, whose four corners are still all
-       the same distance from the centre (so the slant edges are equal) but
-       whose sides alternate between two different lengths.                  */
+  function buildPyramid(v,n,cut){
     const s=v.s, H=v.h;
-    const rect=!!geom;
-    const ph=rect?0:basePhase(n,ori,v.oa);
-    const R=rect?geom.R:polyR(n,s);
+    const R=polyR(n,s), ph=Math.PI/2-Math.PI/n;
     const A=Array.from({length:n},(_,i)=>ph+TAU*i/n);
-    const cx=rect?geom.cx:A.map(a=>R*Math.cos(a));
-    const cz=rect?geom.cz:A.map(a=>R*Math.sin(a));
-    const sd=i=>rect?geom.side(i%n):s;              // TRUE length of base side i
+    const cx=A.map(a=>R*Math.cos(a)), cz=A.map(a=>R*Math.sin(a));
     const xMin=Math.min.apply(null,cx), xMax=Math.max.apply(null,cx);
     const zMin=Math.min.apply(null,cz), zMax=Math.max.apply(null,cz);
     const TL=Math.hypot(R,H);                       // true length of a slant edge
-    const halfOf=i=>Math.asin(Math.min(1,sd(i)/(2*TL)));
-    const half=halfOf(0);
-    let SEC=0; for(let i=0;i<n;i++) SEC+=2*halfOf(i);   // total angle of the development
+    const half=Math.asin(Math.min(1,s/(2*TL)));
+    const SEC=2*half*n;                             // total angle of the development
     const tan=cut?Math.tan(toRad(v.ang)):0;
     /* cut point on edge i : parametric along the edge from base corner to apex  */
     const cutT=i=>{
       if(!cut) return 1;
       if(cut.type==="horiz") return v.hc/H;
-      /* edge : P(t) = ((1-t)cx , tH) */
-      if(cut.type==="base"){
-        /* the plane pivots on the nearest base corner or edge, at x = xMin,
-           and rises away from it :  y = (x - xMin) tan                    */
-        return (cx[i]-xMin)*tan/(H+cx[i]*tan);
-      }
-      /* plane y = hc + x tan  */
+      /* edge : P(t) = ((1-t)cx , tH) ; plane y = hc + x tan  */
       const x0=cx[i];
       return (v.hc+x0*tan)/(H+x0*tan);
     };
     const tt=Array.from({length:n},(_,i)=>cutT(i));
     const tlCut=tt.map(t=>TL*(1-t));                // true length from APEX to the cut point
     const devR=TL;
-    /* The first line of the development is drawn PARALLEL to the true-length
-       slant edge o′a₁′ of the front view, exactly as it is set out on the
-       board.  The angle depends only on the ratio H : R, so it can be fixed
-       before the sheet is scaled.                                        */
-    const DA0=Math.atan2(-H,R);
-    const dBox=sectorBox(DA0,SEC);
-    const devW=(dBox.xMax-dBox.xMin)*devR;
-    const devUp=(dBox.yMax-dBox.yMin)*devR;
+    const devW=(SEC>=Math.PI)?2*devR:2*devR*Math.sin(SEC/2);
+    const devUp=devR;
     const kRot=(function(){let k=0;for(let i=1;i<n;i++) if(cz[i]>=-1e-9&&cx[i]>cx[k]) k=i; return k;})();
     const needRot=(R-xMax)>0.5;
     const f=layoutPL(Math.max(xMax,R)-xMin,H,zMax-zMin+14,devW,devUp);
     const sc=f.sc, REF=f.REF;
-    let FX=x=>f.fvL+(x-xMin)*sc;
+    const FX=x=>f.fvL+(x-xMin)*sc;
     const TVY=REF+34, TY=z=>TVY+(zMax-z)*sc;
-    let YH=h=>REF-h*sc;
-    /* apex placed so that the lowest point of the fan sits on the base line
-       and its left-hand extreme sits on the left edge of the development */
-    const APX=f.devL-dBox.xMin*devR*sc, APY=REF+dBox.yMin*devR*sc;
+    const YH=h=>REF-h*sc;
+    const APX=f.devL+devW*sc/2, APY=REF-devR*sc;    // apex of the development
+    const DA=j=>-Math.PI/2+(-SEC/2+2*half*j);       // canvas angle of development edge j
+    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
+
     let k0=0; for(let i=1;i<n;i++) if(tlCut[i]<tlCut[k0]-1e-9) k0=i;
     const ord=Array.from({length:n+1},(_,j)=>(k0+j)%n);
-    /* each triangle of the fan subtends the angle of ITS OWN base side, so the
-       development angles are accumulated in the order the sides are stepped
-       off rather than taken as a constant multiple                          */
-    const cum=[0]; for(let j=0;j<n;j++) cum.push(cum[j]+2*halfOf(ord[j]));
-    const DA=j=>DA0+cum[j];                         // canvas angle of development edge j
-    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
     const apexFV={x:FX(0),y:YH(H)};
     const tlEndFV={x:FX(R),y:REF};                  // o′a₁ = TRUE LENGTH of a slant edge
 
     const model=()=>{
-      let m=rect?m_pyrFrom(cx.map((x,i)=>({x:x,z:cz[i]})),H):m_pyr(n,s,H,ph);
+      let m=m_pyr(n,s,H,ph);
       if(cut){ if(cut.type==="horiz") m=clipModel(m,0,1,0,v.hc,"cut");
-               else if(cut.type==="base") m=clipModel(m,-tan,1,0,-xMin*tan,"cut");
                else m=clipModel(m,-tan,1,0,v.hc,"cut"); }
       return m;
     };
     const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
 
-    const AXX=FX(0);
-    let steps=[];
+    const steps=[];
     const xyEnd=f.devL-16;
     steps.push({text:"Draw the X–Y reference line. The pyramid rests on the HP on its base with the axis vertical, so the top view goes below X–Y and the front view above it.",
       hl:[],
@@ -2451,14 +1728,7 @@
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
         drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:"Mark the axis: a vertical centre-line from the base to the apex, perpendicular to X–Y. Keep it clear of construction lines throughout.",
-      hl:[],
-      d:()=>{ drawAxisFV(AXX,apexFV.y,REF);
-        drawAxisPointTV(AXX,TY(0)); }});
-
-    steps.push({text:rect
-        ? `Draw the top view: a rectangle ${R1(geom.L)} mm × ${R1(geom.B)} mm, with the longer side parallel to the VP. Mark the centre o and join it to every corner - these are the slant edges seen in plan. All four corners lie on one circle about o, so all four slant edges have the SAME true length even though the base sides are not equal.`
-        : `Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":n===6?"hexagon":n+"-gon"} of side ${R1(s)} mm with ${ORI_TXT[ori||"par"]}. Mark the centre o and join it to every corner - these are the slant edges seen in plan.`,
+    steps.push({text:`Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":"hexagon"} of side ${R1(s)} mm with one side parallel to the VP. Mark the centre o and join it to every corner - these are the slant edges seen in plan.`,
       hl:["base"],
       d:()=>{ const L=[];
         for(let i=0;i<n;i++){ const j=(i+1)%n; L.push([FX(cx[i]),TY(cz[i]),FX(cx[j]),TY(cz[j])]); }
@@ -2471,15 +1741,14 @@
     steps.push({text:`Project the corners up to X–Y and mark the apex o′ on the axis, ${R1(H)} mm above the base. Join o′ to every base corner: this is the front view.`,
       hl:latAll,
       d:()=>{ const P=[];
-        for(let i=0;i<n;i++){ const px=axSafe(FX(cx[i]),AXX);
-          P.push([px,TY(cz[i]),px,REF]); }
-        lineSet(P,COL_PROJ,LW_THIN);
+        for(let i=0;i<n;i++) P.push([FX(cx[i]),TY(cz[i]),FX(cx[i]),REF]);
+        lineSet(P,COL_PROJ,LW_THIN,[6,4]);
         drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
         drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         const E=[]; for(let i=0;i<n;i++) E.push([apexFV.x,apexFV.y,FX(cx[i]),REF]);
         lineSet(E,COL_THICK,LW_THICK);
         drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12});
-        drawVerticalDim(FX(xMin)-40,YH(H),REF,R1(H)); }});
+        drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H)); }});
 
     if(needRot){
       steps.push({text:`Find the TRUE LENGTH of a slant edge. A slant edge is inclined to both planes, so neither view shows it true. In the TOP VIEW, with centre o and radius o${let_[kRot]}, swing the corner round to a\u2081 on the horizontal line through o - the edge is now parallel to the VP.`,
@@ -2491,49 +1760,30 @@
         hl:latAll,
         d:()=>{ drawLine(FX(R),TY(0),FX(R),REF,COL_PROJ,LW_THIN,SOLID,"mid");
           drawPoint(FX(R),REF,"a\u2081\u2032",{x:6,y:-12});
-          drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_TL,LW_THIN);
+          drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
           drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
     } else {
       steps.push({text:`Find the TRUE LENGTH of a slant edge. Here the extreme edge o\u2032${let_[kRot]}\u2032 of the front view is already parallel to the VP, so it shows the true length directly: TL = \u221a(R\u00b2 + H\u00b2) = ${R1(TL)} mm.`,
         hl:latAll,
-        d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_TL,LW_THIN);
+        d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
           drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
     }
 
     if(cut){
-      /* whether the plane pivots on a base EDGE or on a single base CORNER
-         depends on how many corners stand at the extreme left, which in turn
-         depends on both the number of sides and the position of the base   */
-      const nMin=cx.filter(x=>Math.abs(x-xMin)<1e-6).length;
-      const pivot=nMin>1
-        ? "the base edge at the extreme left, which is perpendicular to the VP"
-        : "the base corner at the extreme left";
       const ct=cut.type==="horiz"
-        ? `Draw the cutting-plane line A\u2013A: a horizontal line ${R1(v.hc)} mm above the base. It cuts the slant edges at 1′, 2′, 3′ …`
-        : cut.type==="base"
-        ? `Draw the cutting-plane line A\u2013A at ${R1(v.ang)}° to the HP, passing THROUGH THE BASE at ${pivot}. The plane therefore starts on the base line itself and rises across the pyramid, so the section runs right down into the base. Mark 1′, 2′, 3′ … on the slant edges.`
-        : `Set the protractor on a horizontal reference line and mark ${R1(v.ang)}° FIRST, then draw the cutting-plane line A–A along it, through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … on the slant edges.`;
+        ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base. It cuts the slant edges at 1′, 2′, 3′ …`
+        : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … on the slant edges.`;
       steps.push({text:ct, hl:["cut"],
         d:()=>{ if(cut.type==="horiz")
-            cutPlaneLine(FX(xMin)-24,YH(v.hc),FX(xMax)+24,YH(v.hc),"A");
-          else if(cut.type==="base"){
-            /* pivots on the base at xMin and rises to the right; carried a
-               little past the last slant edge it crosses                  */
-            const tE=Math.max.apply(null,tt);
-            const eR=Math.min(xMax,xMax*(1-tE))+24/sc, eL=xMin-18/sc;
-            /* the angle is set off with the PROTRACTOR first; the cutting-plane
-               line is then drawn along the angle already marked */
-            drawLine(FX(xMin),REF,FX(xMin)+58,REF,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-            drawAngleDimOutward(FX(xMin),REF,44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            cutPlaneLine(FX(eL),YH((eL-xMin)*tan),FX(eR),YH((eR-xMin)*tan),"A"); }
+            drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
           else{
-            const eL=xMin-24/sc, eR=xMax+24/sc;
-            /* the angle is set off with the PROTRACTOR first; the cutting-plane
-               line is then drawn along the angle already marked */
+            const eL=xMin-8/sc, eR=xMax+8/sc;
+            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK);
             drawLine(FX(xMin),YH(v.hc+xMin*tan),FX(xMin)+58,YH(v.hc+xMin*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-            drawAngleDimOutward(FX(xMin),YH(v.hc+xMin*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            cutPlaneLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),"A"); }
-          cutPts(n,i=>({x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])})); }});
+            drawAngleDimOutward(FX(xMin),YH(v.hc+xMin*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true); }
+          for(let i=0;i<n;i++){
+            const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
+            drawPoint(P.x,P.y,String(i+1),{x:5,y:-11}); } }});
 
       steps.push({text:"To get the TRUE distance of every cut point from the apex, draw a horizontal from each point 1′, 2′ … to meet the true-length edge. The intercept measured from o′ is the true length required.",
         hl:["cut"],
@@ -2542,7 +1792,7 @@
             const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
             const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
             L.push([P.x,P.y,Q.x,Q.y]); }
-          lineSet(L,COL_PROJ,LW_THIN);
+          lineSet(L,COL_PROJ,LW_THIN,[5,4]);
           for(let i=0;i<n;i++){
             const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
             drawPoint(Q.x,Q.y,"",{x:0,y:0}); } }});
@@ -2553,34 +1803,23 @@
       d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
         drawArcPlain(APX,APY,devR*sc,-DA(0),-DA(n),true,COL_THIN); }});
 
-    steps.push({text:rect
-        ? `Set the compass to the TRUE length of the first base side, ${LET[ord[0]]}-${LET[ord[1]]} = ${R1(sd(ord[0]))} mm, taken from the top view. On a rectangular base the sides are NOT all equal, so the compass has to be reset for each side in turn.`
-        : `Set the compass to the TRUE side length, ${LET[ord[0]]}-${LET[ord[1]]} = ${R1(s)} mm, taken directly from the top view.`,
-      hl:["base"],
-      d:()=>{ measureSpan(FX(cx[ord[0]]),TY(cz[ord[0]]),FX(cx[ord[1]]),TY(cz[ord[1]])); }});
-
-    steps.push({text:rect
-        ? `Starting from ${LET[ord[0]]} on the arc, step off the base sides round it in turn - ${Array.from({length:n},(_,j)=>R1(sd(ord[j]))).join(", ")} mm - cutting the arc at ${ord.slice(1).map(i=>LET[i]).join(", ")}. Join every division to O. The seam is at the shortest edge ${LET[k0]}.`
-        : `Starting from ${LET[ord[0]]} on the arc, step that same compass setting round it ${n} times, cutting the arc at each division in turn: ${ord.slice(1).map(i=>LET[i]).join(", ")}. Join every division to O. The seam is at the shortest edge ${LET[k0]}.`,
+    steps.push({text:`Step off ${n} chords of ${R1(s)} mm - the true side of the base - along that arc, and join every division to O. Name the points ${ord.map(i=>LET[i]).join(", ")}; the seam is at the shortest edge ${LET[k0]}.`,
       hl:["base"],
       d:()=>{ const L=[];
         for(let j=0;j<=n;j++){ const P=DP(j,devR); L.push([APX,APY,P.x,P.y]); }
         lineSet(L,COL_THIN,LW_THIN);
-        for(let j=1;j<=n;j++){ const prev=DP(j-1,devR), cur=DP(j,devR);
-          const ang=Math.atan2(cur.y-prev.y,cur.x-prev.x);
-          drawCut(prev.x,prev.y,sd(ord[j-1])*sc,ang,COL_THIN); }
         for(let j=0;j<=n;j++){ const P=DP(j,devR);
           drawPoint(P.x,P.y,LET[ord[j]],radOff(APX,APY,P.x,P.y,14)); } }});
 
     if(!cut){
-      steps.push({text:`Join ${LET[ord[0]]}–${LET[ord[1]]}–… by straight lines. The pyramid is NOT cut, so every slant edge is visible - draw them ALL dark. A fan of ${n} triangles, total angle ${R1(SEC*180/Math.PI)}°.`,
+      steps.push({text:`Join the divisions ${LET[ord[0]]}–${LET[ord[1]]}–… by straight lines. The development of the lateral surface is a fan of ${n} equal isosceles triangles, total angle ${R1(SEC*180/Math.PI)}°.`,
         hl:latAll,
         d:()=>{ const L=[];
           for(let j=0;j<n;j++){ const P=DP(j,devR), Q=DP(j+1,devR); L.push([P.x,P.y,Q.x,Q.y]); }
           lineSet(L,COL_DEV,LW_THICK);
-          for(let j=0;j<=n;j++){        // EVERY slant edge dark - the pyramid is not cut
-            const P=DP(j,devR);
-            drawSLine(APX,APY,P.x,P.y,COL_DEV,LW_THICK); } }});
+          const P0=DP(0,devR), Pn=DP(n,devR);
+          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
     } else {
       steps.push({text:"With centre O and the true lengths found in the front view as radii, cut the corresponding development edges at 1, 2, 3 …",
         hl:["cut"],
@@ -2596,9 +1835,9 @@
           const B=[];
           for(let j=0;j<n;j++){ const P=DP(j,devR), Q=DP(j+1,devR); B.push([P.x,P.y,Q.x,Q.y]); }
           lineSet(B,COL_DEV,LW_THICK);
-          for(let j=0;j<=n;j++){   // every slant edge dark, but only up to its cut point
-            const P=DP(j,tlCut[ord[j]]);
-            drawSLine(APX,APY,P.x,P.y,COL_DEV,LW_THICK); }
+          const P0=DP(0,devR), Pn=DP(n,devR);
+          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK);
           for(let j=0;j<=n;j++){ const P=DP(j,tlCut[ord[j]]);
             drawPoint(P.x,P.y,String(ord[j]+1),radOff(APX,APY,P.x,P.y,-13)); } }});
       steps.push({text:`The development of the lateral surface of the truncated pyramid is complete. O–1 (shortest) = ${R1(Math.min.apply(null,tlCut))} mm and the longest = ${R1(Math.max.apply(null,tlCut))} mm.`,
@@ -2611,37 +1850,11 @@
           <tr><td>True slant length</td><td>${R1(TL)} mm</td><td>Development angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
           <tr><td>Shortest O–point</td><td>${R1(Math.min.apply(null,tlCut))} mm</td><td>Longest</td><td>${R1(Math.max.apply(null,tlCut))} mm</td></tr></table>`
       : `<b>Result:</b><table>
-          <tr><td>True slant length</td><td>${R1(TL)} mm</td><td>Chord</td><td>${rect?R1(geom.L)+" / "+R1(geom.B):R1(s)} mm</td></tr>
+          <tr><td>True slant length</td><td>${R1(TL)} mm</td><td>Chord</td><td>${R1(s)} mm</td></tr>
           <tr><td>Development angle</td><td>${R1(SEC*180/Math.PI)}°</td><td>Faces</td><td>${n}</td></tr></table>`;
 
-    /* the hooks the measuring pass needs: record what FX and YH are asked
-       for, and mark a height or a distance on the front view            */
-    const MEASURE_API={
-      given:Object.keys(v).map(k=>v[k]).filter(t=>typeof t==="number"&&isFinite(t)),
-      H:H, xMin:xMin, width:xMax-xMin,
-      capture:(hs,xs)=>{ const fx=FX, yh=YH;
-        FX=x=>{ xs.push(x); return fx(x); };
-        YH=h=>{ hs.push(h); return yh(h); };
-        return ()=>{ FX=fx; YH=yh; }; },
-      markH:t=>{ drawLine(FX(xMin)-12,YH(t),FX(xMin)+10,YH(t),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawVerticalDim(FX(xMin)-18,YH(t),REF,R1(t)); },
-      markX:x=>{ drawLine(FX(x),REF+10,FX(x),REF-10,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawHorizontalDim(REF+22,FX(xMin),FX(x),R1(x-(xMin))); }
-    };
-    steps=withMeasureSteps(steps,MEASURE_API);
     return {steps,results,
-      given:{type:"3d",title:"Given solid",model:model,box:false,
-        dimExtra:mm=>{
-          const g=Math.max(2*R,H)*0.20+4;
-          const c=i=>({x:R*Math.cos(ph+TAU*i/n), y:0, z:R*Math.sin(ph+TAU*i/n)});
-          let k=0; for(let i=1;i<n;i++) if(cz[i]>cz[k]) k=i;      // the side facing us
-          dimAdd(mm,c(k),c((k+1)%n),R1(s),{x:0,y:-g*0.5,z:g*0.30},"base");
-          const hT=cut?v.hc:H;
-          dimAdd(mm,{x:xMin,y:0,z:0},{x:xMin,y:hT,z:0},R1(hT),
-                 {x:-g,y:0,z:0},cut?"cut":"top");
-        }},
-      space:{title:"The solid in 3-D - drag to turn it, scroll to zoom",model:model,
-             note:"Turn it to see the lateral faces you have just unrolled."}};
+      given:{type:"3d",title:"Given solid",model:model}};
   }
 
   /* ================= RADIAL LINE : CONE ================= */
@@ -2660,18 +1873,14 @@
     };
     const tt=Array.from({length:N},(_,i)=>cutT(i));
     const lCut=tt.map(t=>L*(1-t));
-    /* first generator of the development parallel to the outer generator
-       o′1′ of the front view; the fan is then measured for the sheet */
-    const DA0=Math.atan2(-H,-R);
-    const dBox=sectorBox(DA0,SEC);
-    const devW=(dBox.xMax-dBox.xMin)*L, devUp=(dBox.yMax-dBox.yMin)*L;
-    const f=layoutPL(D,H,D+14,devW,devUp);
+    const devW=(SEC>=Math.PI)?2*L:2*L*Math.sin(SEC/2);
+    const f=layoutPL(D,H,D+14,devW,L);
     const sc=f.sc, REF=f.REF;
-    let FX=x=>f.fvL+(x+R)*sc;
+    const FX=x=>f.fvL+(x+R)*sc;
     const TVY=REF+34, TY=z=>TVY+(R-z)*sc;
-    let YH=h=>REF-h*sc;
-    const APX=f.devL-dBox.xMin*L*sc, APY=REF+dBox.yMin*L*sc;
-    const DA=j=>DA0+SEC*j/N;       // canvas angle of development generator j - anchored to the outer FV generator o′1′
+    const YH=h=>REF-h*sc;
+    const APX=f.devL+devW*sc/2, APY=REF-L*sc;
+    const DA=j=>-Math.PI/2+(-SEC/2+SEC*j/N);
     const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
     const apexFV={x:FX(0),y:YH(H)}, tlEndFV={x:FX(R),y:REF};
 
@@ -2682,8 +1891,7 @@
       return m;
     };
 
-    const AXX=FX(0);
-    let steps=[];
+    const steps=[];
     const xyEnd=f.devL-16;
     steps.push({text:"Draw the X–Y reference line. The cone rests on the HP on its base with the axis vertical.",
       hl:[],
@@ -2691,53 +1899,39 @@
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
         drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:"Mark the axis: a vertical centre-line from the base to the apex, perpendicular to X–Y. Keep it clear of construction lines throughout.",
-      hl:[],
-      d:()=>{ drawAxisFV(AXX,apexFV.y,REF);
-        drawAxisCrossTV(AXX,TY(0),R*sc); }});
-
-    steps.push({text:cut
-        ? `Draw the top view: a circle of diameter ${R1(D)} mm. Divide it into 12 equal parts and number them 1 to 12 from the extreme left.`
-        : `Draw the top view: a circle of diameter ${R1(D)} mm. Mark its centre o - the plan of the apex.`,
+    steps.push({text:`Draw the top view: a circle of diameter ${R1(D)} mm. Divide it into 12 equal parts and number them 1 to 12 from the extreme left.`,
       hl:["base"],
       d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK);
-        if(cut){
-          markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
-          for(let i=0;i<N;i++)
-            drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14));
-        }
-        drawPoint(FX(0),TY(0),"o",{x:6,y:12});
-        diameterDimAuto(FX(0),TY(0),j=>({x:FX(gx[j%N]),y:TY(gz[j%N])}),D); }});
+        markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
+        for(let i=0;i<N;i++)
+          drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14));
+        drawHorizontalDim(TY(0),FX(-R),FX(R),"Ø "+R1(D)); }});
 
-    steps.push({text:cut
-        ? `Project the base up to X–Y and mark the apex o′ ${R1(H)} mm above it. Join o′ to the ends of the base: the front view is a triangle. Draw the 12 generators o′1′ … o′12′.`
-        : `Project the base up to X–Y and mark the apex o′ ${R1(H)} mm above it. Join o′ to the extreme left and right points: the front view is a triangle, and both slant sides are visible, so both are dark.`,
+    steps.push({text:`Project the base up to X–Y and mark the apex o′ ${R1(H)} mm above it. Join o′ to the ends of the base: the front view is a triangle. Draw the 12 generators o′1′ … o′12′.`,
       hl:["lat"],
       d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
         drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawSLine(apexFV.x,apexFV.y,FX(-R),REF,COL_THICK,LW_THICK);
         drawSLine(apexFV.x,apexFV.y,FX(R),REF,COL_THICK,LW_THICK);
-        if(cut){
-          const G=[]; for(let i=0;i<N;i++){ const bx=axSafe(FX(gx[i]),AXX);
-            G.push([apexFV.x,apexFV.y,bx,REF]); }
-          lineSet(G,COL_THIN,LW_THIN);
-        }
+        const G=[]; for(let i=0;i<N;i++) G.push([apexFV.x,apexFV.y,FX(gx[i]),REF]);
+        lineSet(G,COL_THIN,LW_THIN);
         drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12});
-        drawVerticalDim(FX(-R)-40,YH(H),REF,R1(H)); }});
+        drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H)); }});
 
     steps.push({text:`The extreme generator o′1′ is parallel to the VP, so it gives the TRUE slant length directly: L = √(R² + H²) = ${R1(L)} mm. Every generator of a cone is this same length.`,
       hl:["lat"],
-      d:()=>{ drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"L = "+R1(L),9,0.55); }});
+      d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
+        drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"L = "+R1(L),9,0.55); }});
 
     if(cut){
       steps.push({text:cut.type==="horiz"
-          ? `Draw the cutting-plane line A\u2013A: a horizontal line ${R1(v.hc)} mm above the base, cutting all the generators.`
-          : `Set the protractor on a horizontal reference line and mark ${R1(v.ang)}° FIRST, then draw the cutting-plane line A–A along it, through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ on the generators.`,
+          ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting all the generators.`
+          : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ on the generators.`,
         hl:["cut"],
         d:()=>{ if(cut.type==="horiz")
-            cutPlaneLine(FX(-R)-24,YH(v.hc),FX(R)+24,YH(v.hc),"A");
-          else{ const eL=-R-24/sc, eR=R+24/sc;
-            cutPlaneLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),"A");
+            drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
+          else{ const eL=-R-8/sc, eR=R+8/sc;
+            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK);
             drawLine(FX(-R),YH(v.hc-R*tan),FX(-R)+58,YH(v.hc-R*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(-R),YH(v.hc-R*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true); }
           for(let i=0;i<N;i++){
@@ -2751,33 +1945,25 @@
             const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])};
             const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
             Ls.push([P.x,P.y,Q.x,Q.y]); }
-          lineSet(Ls,COL_PROJ,LW_THIN); }});
+          lineSet(Ls,COL_PROJ,LW_THIN,[5,4]); }});
     }
 
-    steps.push({text:`Calculate the sector angle. The arc is the base circle opened out, so arc = πD = L × θ. Hence θ° = 360 × R / L = ${R1(SEC*180/Math.PI)}°. See the corner.`,
+    steps.push({text:`Before drawing the development, calculate the angle of the sector: θ = 360° × R / L = 360° × ${R1(R)} / ${R1(L)} = ${R1(SEC*180/Math.PI)}°.`,
       hl:["lat"],
-      d:()=>{ calcBox("Sector angle \u03b8",
-          ["Arc = L \u00d7 \u03b8      and   Arc = \u03c0D",
-           "\u2234 L \u00d7 \u03b8 = \u03c0D",
-           "\u2234 \u03b8 = \u03c0D / L        (radians)",
-           "\u03b8\u00b0 = 360 \u00d7 R / L",
-           "\u03b8\u00b0 = 360 \u00d7 "+R1(R)+" / "+R1(L),
-           "\u03b8\u00b0 = "+R1(SEC*180/Math.PI)+"\u00b0"]); }});
+      d:()=>{}});
 
     steps.push({text:`Start the development. With centre O and radius L = ${R1(L)} mm draw an arc through angle θ = ${R1(SEC*180/Math.PI)}°.`,
       hl:["lat"],
       d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
         drawArcPlain(APX,APY,L*sc,-DA(0),-DA(N),true,COL_DEV,LW_THICK); }});
 
-    if(cut){
-      steps.push({text:"Divide the sector into the same 12 equal parts and join every division to O. These are the 12 generators of the opened-out surface, and the cut points will be marked along them.",
-        hl:["lat"],
-        d:()=>{ const Ls=[];
-          for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
-          lineSet(Ls,COL_THIN,LW_THIN);
-          for(let j=0;j<=N;j++){ const P=DP(j,L);
-            drawPoint(P.x,P.y,String(j+1>12?1:j+1),radOff(APX,APY,P.x,P.y,14)); } }});
-    }
+    steps.push({text:"Divide the sector into the same 12 equal parts and join every division to O. These are the 12 generators of the opened-out surface.",
+      hl:["lat"],
+      d:()=>{ const Ls=[];
+        for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
+        lineSet(Ls,COL_THIN,LW_THIN);
+        for(let j=0;j<=N;j++){ const P=DP(j,L);
+          drawPoint(P.x,P.y,String(j+1>12?1:j+1),radOff(APX,APY,P.x,P.y,14)); } }});
 
     if(!cut){
       steps.push({text:`Close the sector with the two end generators. The development of the cone is a sector of radius ${R1(L)} mm and angle ${R1(SEC*180/Math.PI)}°.`,
@@ -2813,33 +1999,8 @@
           <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
           <tr><td>Arc length</td><td colspan="3">πD = ${R1(Math.PI*D)} mm</td></tr></table>`;
 
-    /* the hooks the measuring pass needs: record what FX and YH are asked
-       for, and mark a height or a distance on the front view            */
-    const MEASURE_API={
-      given:Object.keys(v).map(k=>v[k]).filter(t=>typeof t==="number"&&isFinite(t)),
-      H:H, xMin:-R, width:2*R,
-      capture:(hs,xs)=>{ const fx=FX, yh=YH;
-        FX=x=>{ xs.push(x); return fx(x); };
-        YH=h=>{ hs.push(h); return yh(h); };
-        return ()=>{ FX=fx; YH=yh; }; },
-      markH:t=>{ drawLine(FX(-R)-12,YH(t),FX(-R)+10,YH(t),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawVerticalDim(FX(-R)-18,YH(t),REF,R1(t)); },
-      markX:x=>{ drawLine(FX(x),REF+10,FX(x),REF-10,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-                 drawHorizontalDim(REF+22,FX(-R),FX(x),R1(x-(-R))); }
-    };
-    steps=withMeasureSteps(steps,MEASURE_API);
     return {steps,results,
-      given:{type:"3d",title:"Given solid",model:model,box:false,
-        dimExtra:mm=>{
-          const g=Math.max(D,H)*0.20+4;
-          dimAdd(mm,{x:-R,y:0,z:0},{x:R,y:0,z:0},"\u00d8 "+R1(D),
-                 {x:0,y:-g*0.5,z:g*0.55},"base");
-          const hT=cut?v.hc:H;
-          dimAdd(mm,{x:-R,y:0,z:0},{x:-R,y:hT,z:0},R1(hT),
-                 {x:-g,y:0,z:0},cut?"cut":"top");
-        }},
-      space:{title:"The solid in 3-D - drag to turn it, scroll to zoom",model:model,
-             note:"Turn it to see the curved surface you have just unrolled."}};
+      given:{type:"3d",title:"Given solid",model:model}};
   }
 
   /* ================= problem list ================= */
@@ -2847,32 +2008,7 @@
         FD={id:"d",label:"Base diameter",unit:"mm"},
         FH={id:"h",label:"Height of solid",unit:"mm"},
         FA={id:"ang",label:"Cutting plane angle",unit:"°"},
-        FC={id:"hc",label:"Cut point on axis, above base",unit:"mm"},
-        FT={id:"dist",label:"Distance from near face, on the top",unit:"mm"},
-        FO={id:"oa",label:"Base edge turned from the VP",unit:"°"},
-        FL={id:"bl",label:"Base length",unit:"mm"},
-        FB={id:"bb",label:"Base breadth",unit:"mm"};
-
-  /* a rectangular base: the four corners still lie on one circle, so the four
-     slant edges stay equal, but the sides alternate between two lengths     */
-  const RECT=v=>({L:v.bl,B:v.bb,R:Math.hypot(v.bl/2,v.bb/2),
-    cx:[ v.bl/2,-v.bl/2,-v.bl/2, v.bl/2],
-    cz:[ v.bb/2, v.bb/2,-v.bb/2,-v.bb/2],
-    side:i=>(i%2===0)?v.bl:v.bb});
-  function vRect(v){ if(v.bl<=0||v.bb<=0) return "Base length and breadth must be positive.";
-    if(v.h<=0) return "Height must be positive.";
-    if(Math.abs(v.bl-v.bb)<0.5) return "Length and breadth are equal - that is a square pyramid, Problem 8.";
-    return null; }
-
-  /* one dropdown serves every prism and pyramid problem: the base polygon */
-  const POLY_NAME={3:"Triangular",4:"Square",5:"Pentagonal",6:"Hexagonal",
-                   7:"Heptagonal",8:"Octagonal"};
-  const FN={id:"n",label:"Shape of base",unit:"",choices:[
-    {v:3,t:"Triangle (3)"},{v:4,t:"Square (4)"},{v:5,t:"Pentagon (5)"},
-    {v:6,t:"Hexagon (6)"},{v:8,t:"Octagon (8)"}]};   /* the heptagon is not
-    set in the syllabus, so it is left out of the list; the geometry behind
-    it still works for any n from 3 to 8 should it ever be wanted again */
-  const NN=v=>Math.max(3,Math.min(8,Math.round(v.n||4)));
+        FC={id:"hc",label:"Cut point on axis, above base",unit:"mm"};
 
   function vPoly(v){ if(v.s<=0) return "Base side must be positive.";
     if(v.h<=0) return "Height must be positive."; return null; }
@@ -2884,30 +2020,6 @@
     if(v.hc-R*t<=0.5) return "The plane cuts below the base - raise the point on the axis or reduce the angle.";
     if(v.hc+R*t>=v.h-0.5) return "The plane passes above the top face - lower the point on the axis or reduce the angle.";
     return null; }; }
-  /* the plane is placed by where it leaves the TOP face, so it must both
-     reach the far side of the top and still meet the near face above the base */
-  function vTopP(n,ori){ return v=>{ const e=vPoly(v); if(e) return e;
-    if(v.ang<=0||v.ang>=90) return "The cutting plane angle must be between 0° and 90°.";
-    const R=polyR(n,v.s), ph=basePhase(n,ori,v.oa);
-    const cx=Array.from({length:n},(_,i)=>R*Math.cos(ph+TAU*i/n));
-    const xMin=Math.min.apply(null,cx), xMax=Math.max.apply(null,cx);
-    if(v.dist<=1) return "The distance from the near face must be more than 1 mm.";
-    if(v.dist>=xMax-xMin-1) return "That distance is wider than the solid - the plane would miss the top face.";
-    if(v.h-v.dist*Math.tan(toRad(v.ang))<=1)
-      return "The plane runs out below the base - reduce the angle or the distance.";
-    return null; }; }
-
-  /* a plane through the base: it pivots on the nearest base corner or edge,
-     so it must not reach as high as the apex                              */
-  function vBaseP(n,ori){ return v=>{ const e=vPoly(v); if(e) return e;
-    if(v.ang<=0||v.ang>=90) return "The cutting plane angle must be between 0° and 90°.";
-    const R=polyR(n,v.s), ph=basePhase(n,ori,v.oa);
-    const cx=Array.from({length:n},(_,i)=>R*Math.cos(ph+TAU*i/n));
-    const xMin=Math.min.apply(null,cx);
-    if(-xMin*Math.tan(toRad(v.ang))>=v.h-0.5)
-      return "At that angle the plane passes above the apex - reduce the angle.";
-    return null; }; }
-
   function vCutC(v){ const e=vCirc(v); if(e) return e;
     if(v.ang<=0||v.ang>=90) return "The cutting plane angle must be between 0° and 90°.";
     const R=v.d/2, t=Math.tan(toRad(v.ang));
@@ -2927,95 +2039,105 @@
   const polyName={3:"triangular",4:"square",5:"pentagonal",6:"hexagonal"};
 
   const PROBLEMS=[
-    { title:"Problem 1 - Development of a prism",
-      fields:[FN,FS,FH], defaults:{n:4,s:30,h:65},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base, with a rectangular face parallel to the VP. Draw the development of its lateral surface. The shape of the base may be changed in the given data to obtain any prism from a triangle up to an octagon.`,
-      validate:vPoly, build:v=>buildPrism(v,NN(v),null,"par") },
+    { title:"Problem 1 - Development of a square prism",
+      fields:[FS,FH], defaults:{s:30,h:65},
+      statement:v=>`A square prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base with a rectangular face parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPrism(v,4,null) },
 
-    { title:"Problem 2 - Development of a cylinder",
+    { title:"Problem 2 - Development of a pentagonal prism",
+      fields:[FS,FH], defaults:{s:26,h:60},
+      statement:v=>`A pentagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP with one rectangular face parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPrism(v,5,null) },
+
+    { title:"Problem 3 - Development of a hexagonal prism",
+      fields:[FS,FH], defaults:{s:24,h:60},
+      statement:v=>`A hexagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base with a rectangular face parallel to the VP. Draw the development of the lateral surface of the prism.`,
+      validate:vPoly, build:v=>buildPrism(v,6,null) },
+
+    { title:"Problem 4 - Development of a cylinder",
       fields:[FD,FH], defaults:{d:50,h:65},
       statement:v=>`A cylinder of base diameter ${R1(v.d)} mm and height ${R1(v.h)} mm stands on the HP on its base. Draw the development of its lateral surface.`,
       validate:vCirc, build:v=>buildCylinder(v,null) },
 
-    { title:"Problem 3 - Truncated prism, base edge parallel to XY",
-      fields:[FN,FS,FH,FA,FC], defaults:{n:4,s:30,h:75,ang:25,hc:42},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base, with a base edge parallel to the XY line. It is cut by a section plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP, and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated prism. The shape of the base may be changed in the given data.`,
-      validate:v=>vCutP(NN(v))(v), build:v=>buildPrism(v,NN(v),{type:"incl"},"par") },
+    { title:"Problem 5 - Truncated square prism (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:30,h:70,ang:40,hc:45},
+      statement:v=>`A square prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP with a face parallel to the VP. It is cut by a plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated prism.`,
+      validate:vCutP(4), build:v=>buildPrism(v,4,{type:"incl"}) },
 
-    { title:"Problem 4 - Truncated prism, base edge perpendicular to XY",
-      fields:[FN,FS,FH,FA,FC], defaults:{n:6,s:26,h:75,ang:30,hc:42},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base, with a base edge PERPENDICULAR to the XY line. It is cut by a section plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP, and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated prism. Compare the front view with that of Problem 3, in which a base edge is parallel to XY.`,
-      validate:v=>vCutP(NN(v))(v), build:v=>buildPrism(v,NN(v),{type:"incl"},"perp") },
+    { title:"Problem 6 - Truncated pentagonal prism (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:26,h:70,ang:35,hc:45},
+      statement:v=>`A pentagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP with a rectangular face parallel to the VP. A section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP cuts the prism through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the remaining lateral surface.`,
+      validate:vCutP(5), build:v=>buildPrism(v,5,{type:"incl"}) },
 
-    { title:"Problem 5 - Prism cut by a plane through the top face",
-      fields:[FN,FS,FH,FA,FT], defaults:{n:4,s:34,h:70,ang:40,dist:22},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base, with a base edge perpendicular to the XY line. It is cut by a section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP. The position of the plane is given, not by a point on the axis, but by the distance ${R1(v.dist)} mm measured along the top face from the vertical rectangular face that is perpendicular to the VP. The plane therefore leaves the solid through the TOP surface, and the edges beyond it keep their full height. Draw the development of the lateral surface of the remaining portion.`,
-      validate:v=>vTopP(NN(v),"perp")(v), build:v=>buildPrism(v,NN(v),{type:"top"},"perp") },
+    { title:"Problem 7 - Truncated hexagonal prism (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:24,h:70,ang:35,hc:45},
+      statement:v=>`A hexagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base with a face parallel to the VP. It is cut by a plane inclined at ${R1(v.ang)}° to the HP, perpendicular to the VP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
+      validate:vCutP(6), build:v=>buildPrism(v,6,{type:"incl"}) },
 
-    { title:"Problem 6 - Truncated cylinder, inclined cut",
+    { title:"Problem 8 - Truncated cylinder (inclined cut)",
       fields:[FD,FH,FA,FC], defaults:{d:50,h:70,ang:35,hc:45},
-      statement:v=>`A cylinder of diameter ${R1(v.d)} mm and height ${R1(v.h)} mm stands on the HP on its base. It is cut by a section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated cylinder.`,
+      statement:v=>`A cylinder of diameter ${R1(v.d)} mm and height ${R1(v.h)} mm stands on the HP. It is cut by a plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated cylinder.`,
       validate:vCutC, build:v=>buildCylinder(v,{type:"incl"}) },
 
-    { title:"Problem 7 - Cylinder cut by a horizontal plane",
-      fields:[FD,FH,FC], defaults:{d:50,h:70,hc:45},
-      statement:v=>`A cylinder of diameter ${R1(v.d)} mm and height ${R1(v.h)} mm rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
-      validate:v=>vHoriz(v,false), build:v=>buildCylinder(v,{type:"horiz"}) },
+    { title:"Problem 9 - Development of a square pyramid",
+      fields:[FS,FH], defaults:{s:34,h:60},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base with a base edge parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPyramid(v,4,null) },
 
-    { title:"Problem 8 - Development of a pyramid",
-      fields:[FN,FS,FH], defaults:{n:4,s:34,h:60},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with a base edge parallel to the VP. Draw the development of its lateral surface by the radial-line method. The shape of the base may be changed in the given data to obtain any pyramid from a triangle up to an octagon.`,
-      validate:vPoly, build:v=>buildPyramid(v,NN(v),null,"par") },
+    { title:"Problem 10 - Development of a pentagonal pyramid",
+      fields:[FS,FH], defaults:{s:28,h:60},
+      statement:v=>`A pentagonal pyramid of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base with one base edge parallel to the VP. Draw the development of the lateral surface.`,
+      validate:vPoly, build:v=>buildPyramid(v,5,null) },
 
-    { title:"Problem 9 - Truncated pyramid, base edge parallel to VP",
-      fields:[FN,FS,FH,FA,FC], defaults:{n:4,s:34,h:65,ang:30,hc:32},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with a base edge parallel to the VP. It is cut by a section plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP, and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated pyramid by the radial-line method.`,
-      validate:v=>vCutP(NN(v))(v), build:v=>buildPyramid(v,NN(v),{type:"incl"},"par") },
+    { title:"Problem 11 - Development of a hexagonal pyramid",
+      fields:[FS,FH], defaults:{s:25,h:60},
+      statement:v=>`A hexagonal pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on its base on the HP with a base edge parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPyramid(v,6,null) },
 
-    { title:"Problem 10 - Truncated pyramid, base edge perpendicular to VP",
-      fields:[FN,FS,FH,FA,FC], defaults:{n:6,s:28,h:65,ang:30,hc:30},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with a base edge PERPENDICULAR to the VP. It is cut by a section plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP, and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface by the radial-line method. Note how the change of position alters which slant edge shows its true length.`,
-      validate:v=>vCutP(NN(v))(v), build:v=>buildPyramid(v,NN(v),{type:"incl"},"perp") },
-
-    { title:"Problem 11 - Truncated pyramid, base edge inclined to the VP",
-      fields:[FN,FS,FH,FO,FA,FC], defaults:{n:4,s:34,h:65,oa:20,ang:30,hc:30},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with a base edge inclined at ${R1(v.oa)}° to the VP. It is cut by a section plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP, and passing through a point on the axis ${R1(v.hc)} mm above the base. In this position NO slant edge is parallel to the VP, so the TRUE LENGTH of a slant edge must first be found by rotating it in the top view. Draw the development of the lateral surface by the radial-line method.`,
-      validate:v=>vCutP(NN(v))(v), build:v=>buildPyramid(v,NN(v),{type:"incl"},"inc") },
-
-    { title:"Problem 12 - Pyramid cut by a plane through the base edge",
-      fields:[FN,FS,FH,FA], defaults:{n:4,s:36,h:70,ang:35},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with a base edge parallel to the VP. It is cut by a section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, the plane passing THROUGH THE BASE EDGE at the extreme left of the front view - the edge that is itself perpendicular to the VP. A pyramid has no rectangular face, so the position of the plane cannot be given from a face; it is fixed instead by making the plane pass through the base. Draw the development of the lateral surface of the remaining portion.`,
-      validate:v=>vBaseP(NN(v),"par")(v), build:v=>buildPyramid(v,NN(v),{type:"base"},"par") },
-
-    { title:"Problem 13 - Pyramid cut by a plane through the base corner",
-      fields:[FN,FS,FH,FA], defaults:{n:6,s:28,h:70,ang:32},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with a base edge parallel to the VP, so that a base CORNER stands at each end of the front view. It is cut by a section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, the plane passing through the base corner at the extreme left. Here the section runs down to a single point of the base instead of along a whole edge - compare it with Problem 12.`,
-      validate:v=>vBaseP(NN(v),"par")(v), build:v=>buildPyramid(v,NN(v),{type:"base"},"par") },
-
-    { title:"Problem 14 - Frustum of a pyramid, horizontal cut",
-      fields:[FN,FS,FH,FC], defaults:{n:4,s:36,h:60,hc:35},
-      statement:v=>`A ${POLY_NAME[NN(v)].toLowerCase()} pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the frustum. The shape of the base may be changed in the given data.`,
-      validate:v=>vHoriz(v,true), build:v=>buildPyramid(v,NN(v),{type:"horiz"},"par") },
-
-    { title:"Problem 15 - Development of a rectangular-base pyramid",
-      fields:[FL,FB,FH], defaults:{bl:44,bb:28,h:62},
-      statement:v=>`A pyramid having a RECTANGULAR base ${R1(v.bl)} mm × ${R1(v.bb)} mm and axis ${R1(v.h)} mm long rests on the HP on its base, with the longer base edge parallel to the VP. Draw the development of its lateral surface by the radial-line method. The base is not a regular polygon, so the four faces are of two different widths; but all four corners lie on one circle about the centre, so every slant edge is of the same true length.`,
-      validate:vRect, build:v=>buildPyramid(v,4,null,"par",RECT(v)) },
-
-    { title:"Problem 16 - Development of a cone",
+    { title:"Problem 12 - Development of a cone",
       fields:[FD,FH], defaults:{d:50,h:60},
       statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. Draw the development of its lateral surface and state the angle of the sector.`,
       validate:vCirc, build:v=>buildCone(v,null) },
 
-    { title:"Problem 17 - Truncated cone, inclined cut",
+    { title:"Problem 13 - Truncated square pyramid (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:34,h:65,ang:30,hc:32},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP with a base edge parallel to the VP. It is cut by a plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated pyramid.`,
+      validate:vCutP(4), build:v=>buildPyramid(v,4,{type:"incl"}) },
+
+    { title:"Problem 14 - Truncated pentagonal pyramid (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:28,h:65,ang:30,hc:32},
+      statement:v=>`A pentagonal pyramid of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base. A section plane inclined at ${R1(v.ang)}° to the HP and perpendicular to the VP passes through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the remaining solid.`,
+      validate:vCutP(5), build:v=>buildPyramid(v,5,{type:"incl"}) },
+
+    { title:"Problem 15 - Truncated hexagonal pyramid (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:25,h:65,ang:30,hc:30},
+      statement:v=>`A hexagonal pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base with an edge of the base parallel to the VP. It is cut by a plane inclined at ${R1(v.ang)}° to the HP passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
+      validate:vCutP(6), build:v=>buildPyramid(v,6,{type:"incl"}) },
+
+    { title:"Problem 16 - Truncated cone (inclined cut)",
       fields:[FD,FH,FA,FC], defaults:{d:50,h:65,ang:30,hc:30},
-      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated cone.`,
+      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated cone.`,
       validate:vCutCone, build:v=>buildCone(v,{type:"incl"}) },
 
-    { title:"Problem 18 - Frustum of a cone, horizontal cut",
+    { title:"Problem 17 - Frustum of a square pyramid (horizontal cut)",
+      fields:[FS,FH,FC], defaults:{s:36,h:60,hc:35},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the frustum.`,
+      validate:v=>vHoriz(v,true), build:v=>buildPyramid(v,4,{type:"horiz"}) },
+
+    { title:"Problem 18 - Frustum of a hexagonal pyramid (horizontal cut)",
+      fields:[FS,FH,FC], defaults:{s:25,h:60,hc:35},
+      statement:v=>`A hexagonal pyramid of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base. A horizontal section plane ${R1(v.hc)} mm above the base removes the top. Draw the development of the lateral surface of the frustum.`,
+      validate:v=>vHoriz(v,true), build:v=>buildPyramid(v,6,{type:"horiz"}) },
+
+    { title:"Problem 19 - Frustum of a cone (horizontal cut)",
       fields:[FD,FH,FC], defaults:{d:56,h:60,hc:35},
       statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the frustum.`,
-      validate:v=>vHoriz(v,false), build:v=>buildCone(v,{type:"horiz"}) }
+      validate:v=>vHoriz(v,false), build:v=>buildCone(v,{type:"horiz"}) },
+
+    { title:"Problem 20 - Cylinder cut by a horizontal plane",
+      fields:[FD,FH,FC], defaults:{d:50,h:70,hc:45},
+      statement:v=>`A cylinder of diameter ${R1(v.d)} mm and height ${R1(v.h)} mm rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
+      validate:v=>vHoriz(v,false), build:v=>buildCylinder(v,{type:"horiz"}) }
   ];
 
   /* ---------------- engine / UI ---------------- */
@@ -3069,35 +2191,10 @@
     gctx.fillStyle="#fff"; gctx.fillRect(0,0,GW,GH);
   }
 
-  /* -------- how the question figure is presented --------------------
-     This panel is the drawing the student is HANDED, so it behaves like a
-     printed question figure: it carries its sizes, it hides nothing behind
-     dotted lines, and it does not turn.  The rotatable, zoomable view of the
-     same solid belongs at the end of the construction, not here.
-     Flip these three switches to change that.                          */
-  const GIVEN_DIMS=true, GIVEN_HIDDEN=false, GIVEN_STATIC=true;
-
-  /* the sizes written on the question figure - overall box first, then any
-     feature dimension the problem adds for itself through given.dimExtra   */
-  function dimsGiven(m){
-    if(!m||m._dimd) return m; m._dimd=1;
-    try{
-      if(gGiven&&gGiven.dims===false) return m;
-      if(!gGiven||gGiven.box!==false) dimsBox(m,(gGiven&&gGiven.box)||{});
-      if(gGiven&&typeof gGiven.dimExtra==="function") gGiven.dimExtra(m,values);
-    }catch(e){}
-    return m;
-  }
-
   /* ---- wireframe 3-D renderer (shared with the big 3-D panel) ---- */
   function render3D(m,hl){
-    if(GIVEN_DIMS) dimsGiven(m);
-    wireRender(gctx,GW,GH,m,hl,gRotY,gRotX,gZoom,gPanX,gPanY,
-               {fill:GIVEN_DIMS?0.30:0.38, noHidden:!GIVEN_HIDDEN});
+    wireRender(gctx,GW,GH,m,hl,gRotY,gRotX,gZoom,gPanX,gPanY,{fill:0.38});
   }
-
-  /* true while the question figure is pinned to its isometric attitude */
-  function gLocked(){ return GIVEN_STATIC&&gGiven&&gGiven.type==="3d"; }
 
   function renderGiven(hl){
     if(hl) gHL=hl;
@@ -3120,7 +2217,7 @@
     if(!gGiven){ box.style.display="none"; return; }
     box.style.display="block";
     document.getElementById("given-fig-title").innerText=gGiven.title||"Given figure";
-    document.getElementById("given-hint").innerText=(gGiven.type==="3d"&&!gLocked())
+    document.getElementById("given-hint").innerText=(gGiven.type==="3d")
       ? "Drag to rotate · Scroll to zoom · Double-click to reset"
       : "Drag to pan · Scroll to zoom · Double-click to reset";
     if(reset){ gRotY=-0.62; gRotX=0.42; gZoom=1; gPanX=0; gPanY=0; gHL=[]; }
@@ -3138,7 +2235,7 @@
     window.addEventListener("mousemove",e=>{
       if(!gd||!gGiven) return;
       const p=pos(e), dx=p.x-glx, dy=p.y-gly; glx=p.x; gly=p.y;
-      if(gGiven.type==="3d"&&!gLocked()){ gRotY+=dx*0.012; gRotX+=dy*0.012;
+      if(gGiven.type==="3d"){ gRotY+=dx*0.012; gRotX+=dy*0.012;
         gRotX=Math.max(-1.35,Math.min(1.35,gRotX)); }
       else { gPanX+=dx; gPanY+=dy; }
       renderGiven();
@@ -3158,7 +2255,7 @@
       if(!gd||!gGiven||e.touches.length!==1) return;
       e.preventDefault();
       const p=pos(e), dx=p.x-glx, dy=p.y-gly; glx=p.x; gly=p.y;
-      if(gGiven.type==="3d"&&!gLocked()){ gRotY+=dx*0.012; gRotX=Math.max(-1.35,Math.min(1.35,gRotX+dy*0.012)); }
+      if(gGiven.type==="3d"){ gRotY+=dx*0.012; gRotX=Math.max(-1.35,Math.min(1.35,gRotX+dy*0.012)); }
       else { gPanX+=dx; gPanY+=dy; }
       renderGiven();
     },{passive:false});
@@ -3238,8 +2335,7 @@
 
   function rebuild(resetStep){
     const prob=PROBLEMS[probIndex];
-    document.getElementById("statement").innerHTML="<b>"+prob.title+"</b><br>"+prob.statement(values)
-      ;
+    document.getElementById("statement").innerHTML="<b>"+prob.title+"</b><br>"+prob.statement(values);
     const err=prob.validate(values);
     const vEl=document.getElementById("validation");
     if(err){
@@ -3330,6 +2426,7 @@
 
     const N=P.steps.length;
     document.getElementById("stepCounter").innerText=started?("Step "+s+" of "+N):("Ready - "+N+" steps");
+    syncFsUI(s,N);
     document.getElementById("prevButton").disabled=(!started||s<=1);
     document.getElementById("nextButton").disabled=(started&&s>=N);
     document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
@@ -3355,15 +2452,22 @@
   function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
-  let voiceOn=false, lastSpoken=-1;
   const voiceSupported=("speechSynthesis" in window);
+  let voiceOn=voiceSupported, lastSpoken=-1;   // sound is ON by default
+
+  function syncVoiceUI(){
+    const b=document.getElementById("voiceBtn");
+    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
+    b.classList.toggle("on",voiceOn);
+    const fb=document.getElementById("fsVoice");
+    if(fb) fb.innerText=voiceOn?"🔊 Sound on":"🔇 Sound off";
+  }
+  syncVoiceUI();
 
   function toggleVoice(){
     if(!voiceSupported){ alert("Voice is not supported in this browser."); return; }
     voiceOn=!voiceOn;
-    const b=document.getElementById("voiceBtn");
-    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
-    b.classList.toggle("on",voiceOn);
+    syncVoiceUI();
     if(voiceOn){ lastSpoken=-1; speakCurrent(); }
     else speechSynthesis.cancel();
   }
@@ -3454,6 +2558,40 @@
     redraw();
   }
   function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
+  /* ---------------- full screen ---------------- */
+  function syncFsUI(s,N){
+    const c=document.getElementById("fs-caption"); if(!c) return;
+    c.innerHTML=started?("<b>Step "+s+" of "+N+":</b> "+P.steps[s-1].text):("Ready - "+N+" steps. Press Next to begin.");
+    document.getElementById("fsPrev").disabled=(!started||s<=1);
+    document.getElementById("fsNext").disabled=(started&&s>=N);
+  }
+  function toggleFullscreen(){
+    const w=document.getElementById("canvas-wrapper");
+    if(document.fullscreenElement||document.webkitFullscreenElement){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    } else {
+      const req=w.requestFullscreen||w.webkitRequestFullscreen;
+      if(req){ const r=req.call(w); if(r&&r.catch) r.catch(()=>{}); }
+    }
+  }
+  // In full screen the canvas takes the whole screen: its drawing area is resized to the
+  // screen and the current problem is laid out again to fill it.
+  function sizeCanvasFor(fs){
+    const w=fs?Math.max(480,window.innerWidth-24):820, h=fs?Math.max(300,window.innerHeight-190):540;
+    if(w===CANVAS_W&&h===CANVAS_H) return;
+    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h;
+    compassPose=null;
+    if(P&&document.getElementById("screen-solve").style.display!=="none") rebuild(false); else clearCanvasWhite();
+  }
+  function onFsChange(){
+    const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+    document.getElementById("fsBtn").textContent=on?"✕ Exit full screen":"⛶ Full screen";
+    sizeCanvasFor(on);
+    if(on) setTimeout(()=>sizeCanvasFor(true),120);
+  }
+  document.addEventListener("fullscreenchange",onFsChange);
+  document.addEventListener("webkitfullscreenchange",onFsChange);
+  window.addEventListener("resize",()=>{ if(document.fullscreenElement||document.webkitFullscreenElement) sizeCanvasFor(true); });
   function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
   function canvasPos(e){
     const r=canvas.getBoundingClientRect();
@@ -3501,52 +2639,8 @@
 
   renderList();
 
-
-  /* ---- full-screen sketch mode, for a phone ---------------------------
-     The drawing fills the screen and the step is changed by tapping: the
-     right of the screen goes on, the left goes back. The step wording sits
-     in a bar along the bottom so nothing covers the sheet.              */
-  function fsSync(){
-    if(!document.body.classList.contains("fs")) return;
-    const t=document.getElementById("fsText"), c=document.getElementById("fsCount");
-    if(!P){ if(t) t.innerText=""; return; }
-    const n=P.steps.length;
-    const i=Math.max(1,Math.min(currentStep||1,n));
-    if(c) c.innerText="Step "+(started?i:0)+" of "+n;
-    if(t) t.innerText=started&&P.steps[i-1]?P.steps[i-1].text:"Tap the right-hand side to start drawing.";
-  }
-  function fsNext(){ nextStep(); setTimeout(fsSync,60); }
-  function fsPrev(){ prevStep(); setTimeout(fsSync,60); }
-  function fsOn(){
-    document.body.classList.add("fs");
-    /* full screen is asked for on the PAGE, not on the sketch: in native
-       full screen the browser paints only the chosen element and its
-       children, which would hide the tap bar and the exit button      */
-    const el=document.documentElement;
-    if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
-    if(screen.orientation&&screen.orientation.lock) screen.orientation.lock("landscape").catch(()=>{});
-    fsSync();
-  }
-  function fsOff(){
-    document.body.classList.remove("fs");
-    if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-  }
-  function fsToggle(){ document.body.classList.contains("fs")?fsOff():fsOn(); }
-  document.addEventListener("fullscreenchange",()=>{
-    if(!document.fullscreenElement) document.body.classList.remove("fs"); });
-  document.addEventListener("keydown",e=>{
-    if(!document.body.classList.contains("fs")) return;
-    if(e.key==="ArrowRight"||e.key===" ") { e.preventDefault(); fsNext(); }
-    else if(e.key==="ArrowLeft") { e.preventDefault(); fsPrev(); }
-    else if(e.key==="Escape") fsOff();
-  });
 </script>
 
 <footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M Jadhav</a></footer>
-
-<div id="fsTapL" onclick="fsPrev()"></div>
-<div id="fsTapR" onclick="fsNext()"></div>
-<button id="fsExit" onclick="fsOff()">Exit full screen</button>
-<div id="fsBar"><b><span id="fsCount"></span> &nbsp;·&nbsp; tap right to go on, left to go back</b><span id="fsText"></span></div>
 </body>
 </html>

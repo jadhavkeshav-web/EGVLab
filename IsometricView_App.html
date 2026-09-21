@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Isometric Projections - Problems with Stepwise Solutions</title>
+  <title>Development of Lateral Surfaces - Problems with Stepwise Solutions</title>
   <style>
     :root{
       --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
@@ -117,7 +117,7 @@
 </head>
 <body>
 
-<h1>📐 Isometric Projections - Problems with Stepwise Solutions</h1>
+<h1>📐 Development of Lateral Surfaces - Problems with Stepwise Solutions</h1>
 <div class="h-rule"></div>
 
 <!-- ================= SCREEN 1 : PROBLEM LIST ================= -->
@@ -190,7 +190,7 @@
 
       <div id="space-wrap" style="display:none;">
         <div id="space-head">
-          <span id="space-title">The object in space - turn it round to reach the isometric position</span>
+          <span id="space-title">The given solid in space - turn it round to see which faces are opened out</span>
           <span id="space-hint">Drag to rotate · Scroll to zoom · Double-click to reset</span>
         </div>
         <canvas id="spaceCanvas" width="820" height="430"></canvas>
@@ -1358,729 +1358,804 @@
   }
 
   /* =========================================================
-     ISOMETRIC PROJECTIONS
-     Isometric axes : one vertical, two at 30 degrees to the horizontal.
-     Object space   : x = 0..L along the length, y = 0..H upwards,
-                      z = 0..B from the REAR to the FRONT.
-     The nearest corner of the picture is (x=0, y=0, z=B).
-       canvas x = OX2 + (x + z)*cos30
-       canvas y = OY2 - (x - z)*sin30 - y
+     DEVELOPMENT OF LATERAL SURFACES
+     Parallel-line method : prisms and cylinders
+     Radial-line method   : pyramids and cones
   ========================================================= */
-  const C30=Math.cos(Math.PI/6), S30=0.5;
-  const COL_CONS="#9aa7b4", PATTERN_CL=[16,3,3,3];
+  const LET="ABCDEFGHIJKL", let_="abcdefghijkl";
+  const COL_DEV="#111", COL_CUT="#b8541f";
 
-  function m_holeY(cx,cz,r,y0,y1,seg){
-    const n=seg||24, verts=[],faces=[],hard=[];
-    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),y0,cz+r*Math.sin(a))); }
-    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),y1,cz+r*Math.sin(a))); }
-    for(let i=0;i<n;i++){ const j=(i+1)%n;
-      faces.push({v:[j,i,n+i,n+j],tag:"hole",curved:true});
-      hard.push([i,j,"hole"],[n+i,n+j,"hole"]); }
-    return {verts,faces,hard};
-  }
-
-  /* ---- the four-centre construction for an isometric circle ---- */
-  function fourCentre(PJ,c,e1,e2,r){
-    const P4=[[1,1],[1,-1],[-1,-1],[-1,1]].map(s=>PJ({
-      x:c.x+r*(s[0]*e1.x+s[1]*e2.x),
-      y:c.y+r*(s[0]*e1.y+s[1]*e2.y),
-      z:c.z+r*(s[0]*e1.z+s[1]*e2.z)}));
-    const A=P4[0],Bc=P4[1],Cc=P4[2],Dc=P4[3];
-    const mid=(p,q)=>({x:(p.x+q.x)/2,y:(p.y+q.y)/2});
-    const d=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);
-    /* the obtuse corners are the ends of the SHORTER diagonal */
-    let O1=A,O2=Cc,X1=Bc,X2=Dc;
-    if(d(A,Cc)>d(Bc,Dc)){ O1=Bc; O2=Dc; X1=Cc; X2=A; }
-    const P=mid(O1,X1), Q=mid(X1,O2), R=mid(O2,X2), S=mid(X2,O1);
-    const X=(p1,p2,p3,p4)=>{                       /* line-line intersection */
-      const a1=p2.y-p1.y,b1=p1.x-p2.x,c1=a1*p1.x+b1*p1.y;
-      const a2=p4.y-p3.y,b2=p3.x-p4.x,c2=a2*p3.x+b2*p3.y;
-      const dt=a1*b2-a2*b1;
-      if(Math.abs(dt)<1e-9) return {x:(p1.x+p3.x)/2,y:(p1.y+p3.y)/2};
-      return {x:(b2*c1-b1*c2)/dt, y:(a1*c2-a2*c1)/dt};
-    };
-    const m=X(O1,Q,O2,P), n=X(O1,R,O2,S);
-    const ang=(ct,p)=>Math.atan2(p.y-ct.y,p.x-ct.x);
-    const arc=(ct,p,q)=>{
-      const a1=ang(ct,p), a2=ang(ct,q);
-      let sw=a2-a1; while(sw>Math.PI) sw-=TAU; while(sw<-Math.PI) sw+=TAU;
-      return {cx:ct.x,cy:ct.y,r:d(ct,p),a1:a1,a2:a1+sw,ccw:(sw<0)};
-    };
-    const arcs=[arc(O1,Q,R),arc(O2,S,P),arc(m,P,Q),arc(n,R,S)];
-    /* polyline of the finished curve - the four arcs taken in the order in
-       which they follow each other round the ellipse: P-Q, Q-R, R-S, S-P     */
-    const pts=[];
-    [2,0,3,1].forEach(k=>{ const a=arcs[k], N=26;
-      for(let i=0;i<=N;i++){ const t=a.a1+(a.a2-a.a1)*i/N;
-        pts.push({x:a.cx+a.r*Math.cos(t), y:a.cy+a.r*Math.sin(t)}); } });
-    return {rhombus:[O1,X1,O2,X2],mids:{P,Q,R,S},centres:{O1,O2,m,n},arcs,pts,
-            lines:[[O1,Q],[O1,R],[O2,P],[O2,S]]};
-  }
-  const extremeX=E=>{ let L=E.pts[0],R=E.pts[0];
-    E.pts.forEach(p=>{ if(p.x<L.x)L=p; if(p.x>R.x)R=p; }); return {L,R}; };
-  function arcPortion(E,p1,p2,wantLower){
-    const near=p=>{ let bi=0,bd=1e18;
-      E.pts.forEach((q,i)=>{ const d=(q.x-p.x)*(q.x-p.x)+(q.y-p.y)*(q.y-p.y);
-        if(d<bd){bd=d;bi=i;} }); return bi; };
-    const n=E.pts.length, i1=near(p1), i2=near(p2);
-    const fwd=[]; for(let i=i1;;i=(i+1)%n){ fwd.push(E.pts[i]); if(i===i2) break; }
-    const bwd=[]; for(let i=i1;;i=(i-1+n)%n){ bwd.push(E.pts[i]); if(i===i2) break; }
-    const midY=a=>a[Math.floor(a.length/2)].y;
-    const pick=(wantLower===false)?(midY(fwd)<midY(bwd)?fwd:bwd)
-                                  :(midY(fwd)>midY(bwd)?fwd:bwd);
-    return pick;
-  }
-  function boreVisible(E,dy){
-    let cy=0; E.pts.forEach(p=>{cy+=p.y;}); cy/=E.pts.length;
-    const back=E.pts.filter(p=>p.y<cy), front=E.pts.filter(p=>p.y>=cy);
-    const yfAt=x=>{ let b=null,bd=1e18;
-      front.forEach(q=>{ const d=Math.abs(q.x-x); if(d<bd){bd=d;b=q;} });
-      return b?b.y:cy; };
-    const out=[];
-    back.forEach(p=>{ if(dy<yfAt(p.x)-p.y) out.push({x:p.x,y:p.y+dy}); });
-    out.sort((a,b)=>a.x-b.x);
-    return out;
-  }
-  function tangentsFrom(E,ap){                    /* the two tangent points seen from ap */
-    let lo=E.pts[0],hi=E.pts[0],la=1e9,ha=-1e9;
-    E.pts.forEach(p=>{ const a=Math.atan2(p.y-ap.y,p.x-ap.x);
-      if(a<la){la=a;lo=p;} if(a>ha){ha=a;hi=p;} });
-    return [lo,hi];
-  }
-
-  function ptInPoly(poly,p){                       /* ray-crossing test */
-    let inside=false;
-    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-      const a=poly[i], b=poly[j];
-      if(((a.y>p.y)!==(b.y>p.y)) &&
-         (p.x < (b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) inside=!inside;
-    }
-    return inside;
-  }
-  const AP=arcPortion;
-
-  function buildIso(v,def){
-    const O=def(v);
-    const L=O.L, B=O.B, H=O.H;
-    const wmm=(L+B)*C30, hmm=(L+B)*S30+H;
-    const sc=Math.min((CANVAS_W-PX(190))/wmm,(CANVAS_H-PY(110))/hmm,3.6);
+  /* --- layout: FV above XY, TV below XY, development to the right --- */
+  function layoutPL(fvW,upH,dnH,devW,devUp){
+    const gap=Math.max(20,fvW*0.30);
+    const totW=fvW+gap+devW;
+    const totH=Math.max(upH,devUp||0)+dnH+16;
+    const sc=Math.min((CANVAS_W-PX(110))/totW,(CANVAS_H-PY(110))/totH,3.2);
     SCALE_PXMM=sc;
-    const OX2=(CANVAS_W-wmm*sc)/2+60, OY2=(CANVAS_H-hmm*sc)/2+(L*S30+H)*sc;
-    const PJ=p=>({x:OX2+(p.x+p.z)*C30*sc, y:OY2-(p.x-p.z)*S30*sc-p.y*sc});
-    const p3=(x,y,z)=>PJ({x:x,y:y,z:z});
-    const seg=(a,b,col,w,dash)=>drawLine(a.x,a.y,b.x,b.y,col||COL_THICK,w||LW_THICK,dash);
-    const SET=(arr,col,w,dash)=>{ if(arr.length) lineSet(arr.map(e=>[e[0].x,e[0].y,e[1].x,e[1].y]),col,w,dash); };
-    const EX={x:1,y:0,z:0}, EY={x:0,y:1,z:0}, EZ={x:0,y:0,z:1};
-    const PLANE={top:[EX,EZ], front:[EX,EY], side:[EZ,EY]};
-    const ISOC=(c,plane,r)=>fourCentre(PJ,c,PLANE[plane][0],PLANE[plane][1],r);
-    const CTX={L,B,H,PJ,p3,seg,SET,ISOC,extremeX,tangentsFrom,arcPortion:AP,
-               boreVisible:boreVisible,ptInPoly:ptInPoly,sc,EX,EY,EZ,v};
+    const X0=(CANVAS_W-totW*sc)/2;
+    const REF=(CANVAS_H-totH*sc)/2+Math.max(upH,devUp||0)*sc+8;
+    return {sc,REF,fvL:X0,devL:X0+(fvW+gap)*sc,
+            lineStart:X0-38,lineEnd:X0+totW*sc+30};
+  }
 
-    /* ---- visible edges taken straight from the 3-D model ---- */
-    function modelEdges(){
-      const m=O.model(v);
-      const S=m.verts.map(PJ);
-      const front={},back={},cF={},cB={};
-      m.faces.forEach(f=>{
-        const a=S[f.v[0]],b=S[f.v[1]],c=S[f.v[2]];
-        const cr=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-        const fr=(cr<0);
-        for(let i=0;i<f.v.length;i++){
-          const p=f.v[i], q=f.v[(i+1)%f.v.length];
-          const k=Math.min(p,q)+"_"+Math.max(p,q);
-          if(fr){ front[k]=1; if(f.curved) cF[k]=1; } else { back[k]=1; if(f.curved) cB[k]=1; }
-        }
-      });
-      const out=[], seen={};
-      (m.hard||[]).forEach(e=>{
-        const k=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
-        if(seen[k]||!front[k]) return; seen[k]=1;
-        out.push([S[e[0]],S[e[1]]]);
-      });
-      Object.keys(cF).forEach(k=>{ if(!cB[k]||seen[k]) return; seen[k]=1;
-        const p=k.split("_"); out.push([S[+p[0]],S[+p[1]]]); });
-      return out;
-    }
+  /* --- divide a horizontal line into n parts with the 30° auxiliary line --- */
+  /* returns {aux:[...lines], para:[...lines], pts:[x...]}                    */
+  function div30(x0,y,x1,n,down){
+    const L=x1-x0, dir=(down?1:-1);
+    const total=Math.min(L*0.42,170);            // keep the construction compact
+    const step=total/n, ang=dir*Math.PI/6;
+    const ax=q=>x0+q*step*Math.cos(ang), ay=q=>y+q*step*Math.sin(ang);
+    const pts=[]; for(let i=0;i<=n;i++) pts.push(x0+L*i/n);
+    return {
+      aux:[x0,y,ax(n),ay(n)],
+      closing:[ax(n),ay(n),x1,y],
+      paras:Array.from({length:n-1},(_,i)=>[ax(i+1),ay(i+1),pts[i+1],y]),
+      drop:Math.abs(ay(n)-y),
+      pts:pts
+    };
+  }
 
-    const AXO=p3(0,0,B);                            /* the nearest bottom corner */
+  /* ================= PARALLEL LINE : PRISM ================= */
+  function buildPrism(v,n,cut){
+    const s=v.s, H=v.h;
+    const R=polyR(n,s), ph=Math.PI/2-Math.PI/n;
+    const A=Array.from({length:n},(_,i)=>ph+TAU*i/n);
+    const cx=A.map(a=>R*Math.cos(a)), cz=A.map(a=>R*Math.sin(a));
+    const xMin=Math.min.apply(null,cx), xMax=Math.max.apply(null,cx);
+    const zMin=Math.min.apply(null,cz), zMax=Math.max.apply(null,cz);
+    const fvW=xMax-xMin, tvD=zMax-zMin;
+
+    /* cut heights at every corner */
+    const tan=cut?Math.tan(toRad(v.ang)):0;
+    const hAt=x=>cut? (cut.type==="horiz"? v.hc : v.hc+x*tan) : H;
+    const hc=cx.map(hAt);
+    const devW=n*s;
+    const f=layoutPL(fvW,H,tvD+14,devW,Math.max.apply(null,hc));
+    const sc=f.sc, REF=f.REF;
+    const FX=x=>f.fvL+(x-xMin)*sc;                 // model x -> canvas x (FV & TV)
+    const TVY=REF+34;                              // top of the TV band
+    const TY=z=>TVY+(zMax-z)*sc;
+    const DX=q=>f.devL+q*sc;                       // distance along stretch-out
+    const YH=h=>REF-h*sc;
+
+    /* development order : start at the shortest lateral edge */
+    let k0=0; for(let i=1;i<n;i++) if(hc[i]<hc[k0]-1e-9) k0=i;
+    const ord=Array.from({length:n+1},(_,j)=>(k0+j)%n);
+
+    const model=()=>{
+      let m=m_prism(n,s,H,ph);
+      if(cut){
+        if(cut.type==="horiz") m=clipModel(m,0,1,0,v.hc,"cut");
+        else m=clipModel(m,-tan,1,0,v.hc,"cut");
+      }
+      return m;
+    };
+    const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
+
     const steps=[];
-
-    steps.push({text:"Draw the ISOMETRIC AXES. From the nearest bottom corner draw one line vertically upward for the HEIGHT and two lines at 30° to the horizontal - one to the right for the LENGTH and one to the left for the DEPTH. All three axes are 120° apart.",
+    steps.push({text:"Draw the X–Y reference line. The prism rests on the HP with its axis vertical, so the top view is drawn below X–Y and the front view above it.",
       hl:[],
-      d:()=>{ const up=p3(0,H*1.30,B), rt=p3(L*1.18,0,B), lf=p3(0,0,B-B*1.18);
-        SET([[AXO,up],[AXO,rt],[AXO,lf]],COL_THIN,LW_THIN);   /* axes are construction, not outline */
-        drawText(AXO.x-14,AXO.y-46,"height",COL_CONS,FONT_DIM,"right","middle");
-        const rl=p3(L*1.02,0,B), ll=p3(0,0,B-B*1.02);   /* captions sit BELOW the axes, clear of the solid */
-        drawText(rl.x+6,rl.y+18,"length (30°)",COL_CONS,FONT_DIM,"left","middle");
-        drawText(ll.x-6,ll.y+18,"depth (30°)",COL_CONS,FONT_DIM,"right","middle");
-        drawPoint(AXO.x,AXO.y,"O",{x:-16,y:12});
-        drawAngleDimOutward(AXO.x,AXO.y,32,"30°",0,-toRad(30),true,true); }});
+      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:`Mark the three overall sizes along the axes - length ${R1(L)} mm to the right, depth ${R1(B)} mm to the left and height ${R1(H)} mm upwards - and complete the ISOMETRIC BOX that just encloses the object. Draw it in thin construction lines.`,
-      hl:O.hlAll||[],
-      d:()=>{ const C=[];
-        [[0,0,0],[L,0,0],[L,0,B],[0,0,B]].forEach((a,i,arr)=>{
-          const b=arr[(i+1)%4];
-          C.push([p3(a[0],0,a[2]),p3(b[0],0,b[2])]);
-          C.push([p3(a[0],H,a[2]),p3(b[0],H,b[2])]);
-          C.push([p3(a[0],0,a[2]),p3(a[0],H,a[2])]); });
-        SET(C,COL_CONS,LW_THIN);
-        drawAlignedLabel(AXO.x,AXO.y,p3(L,0,B).x,p3(L,0,B).y,R1(L),-12,0.66);
-        drawAlignedLabel(AXO.x,AXO.y,p3(0,0,0).x,p3(0,0,0).y,R1(B),-12,0.66);
-        drawAlignedLabel(p3(0,0,0).x,p3(0,0,0).y,p3(0,H,0).x,p3(0,H,0).y,R1(H),10,0.5); }});
+    steps.push({text:`Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":n===6?"hexagon":n+"-gon"} of side ${R1(s)} mm, with one face parallel to the VP. Name the corners ${let_.slice(0,n).split("").join(", ")}.`,
+      hl:["base"],
+      d:()=>{ const L=[];
+        for(let i=0;i<n;i++){ const j=(i+1)%n;
+          L.push([FX(cx[i]),TY(cz[i]),FX(cx[j]),TY(cz[j])]); }
+        lineSet(L,COL_THICK,LW_THICK);
+        for(let i=0;i<n;i++) drawPoint(FX(cx[i]),TY(cz[i]),let_[i],radOff(FX(0),TY(0),FX(cx[i]),TY(cz[i]),13)); }});
 
-    steps.push({text:"Remember the golden rule of isometric drawing: distances are marked TRUE LENGTH only along the three isometric axes, or along lines parallel to them. Any line NOT parallel to an axis - a slope, a diagonal - must be found by locating its two end points first.",
-      hl:O.hlAll||[], d:()=>{ }});
+    steps.push({text:`Project every corner of the top view upwards and draw the front view: a rectangle ${R1(fvW)} mm wide and ${R1(H)} mm high. The vertical lines are the lateral edges ${let_[0]}′, ${let_[1]}′, … Each of them is a TRUE LENGTH.`,
+      hl:latAll,
+      d:()=>{ const P=[];
+        for(let i=0;i<n;i++) P.push([FX(cx[i]),REF,FX(cx[i]),YH(H)]);
+        lineSet(P,COL_PROJ,LW_THIN,[6,4]);
+        drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+        drawSLine(FX(xMin),YH(H),FX(xMax),YH(H),COL_THICK,LW_THICK);
+        drawSLine(FX(xMin),REF,FX(xMin),YH(H),COL_THICK,LW_THICK);
+        drawSLine(FX(xMax),REF,FX(xMax),YH(H),COL_THICK,LW_THICK);
+        const grp={};
+        for(let i=0;i<n;i++){ const key=cx[i].toFixed(2);
+          (grp[key]=grp[key]||[]).push(i); }
+        Object.keys(grp).forEach(key=>{
+          const g=grp[key], x=FX(+key);
+          drawLine(x,REF,x,YH(H),COL_THIN,LW_THIN);
+          drawPoint(x,REF,g.map(i=>let_[i]+"′").join(""),{x:-5*g.length,y:-13}); });
+        drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H)); }});
 
-    (O.groups||[]).forEach(g=>{
-      steps.push({text:g.text, hl:g.hl||[], d:()=>g.d(CTX)});
-    });
-
-    if(!O.custom){
-      steps.push({text:"Line in the finished isometric view. Only the edges that can actually be SEEN are drawn - in an isometric view hidden edges are left out altogether.",
-        hl:O.hlAll||[],
-        d:()=>{ const E=modelEdges();
-          const hz=E.filter(e=>Math.abs(e[0].y-e[1].y)<0.6);
-          const rest=E.filter(e=>Math.abs(e[0].y-e[1].y)>=0.6);
-          SET(hz,COL_THICK,LW_THICK); SET(rest,COL_THICK,LW_THICK); }});
+    if(cut){
+      if(cut.type==="horiz"){
+        steps.push({text:`Draw the cutting plane in the front view: a horizontal line ${R1(v.hc)} mm above the base. It cuts every lateral edge, giving the points 1′, 2′, 3′ …`,
+          hl:["cut"],
+          d:()=>{ drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
+            drawText(FX(xMax)+18,YH(v.hc),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
+            for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
+      } else {
+        steps.push({text:`Draw the cutting plane in the front view: a line inclined at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
+          hl:["cut"],
+          d:()=>{ const yL=YH(hAt(xMin)), yR=YH(hAt(xMax));
+            const eL=xMin-8/sc, eR=xMax+8/sc;
+            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
+            drawLine(FX(xMin),yL,FX(xMin)+58,yL,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+            drawAngleDimOutward(FX(xMin),yL,44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
+            drawText(FX(eR)+6,YH(hAt(eR)),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
+            for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
+      }
     }
 
-    steps.push({text:"The isometric view is complete. Check it against the given orthographic views: the length runs up to the right, the depth up to the left and the height stays vertical.",
-      hl:O.hlAll||[], d:()=>{ }});
+    steps.push({text:`Draw the stretch-out line for the development. Its length is the perimeter of the base = ${n} × ${R1(s)} = ${R1(n*s)} mm, set out on the level of the base line, to the right of the front view.`,
+      hl:["base"],
+      d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_THICK,LW_THICK);
+        drawHorizontalDim(REF+34,DX(0),DX(devW),"perimeter = "+R1(n*s)); }});
 
-    const results=`<b>Isometric data:</b>
-      <table>
-        <tr><td>Length L</td><td>${R1(L)} mm</td><td>Depth B</td><td>${R1(B)} mm</td><td>Height H</td><td>${R1(H)} mm</td></tr>
-        <tr><td>Axes</td><td colspan="3">vertical, 30° right, 30° left (120° apart)</td><td>Scale</td><td>isometric drawing (full size)</td></tr>
-      </table>`;
+    steps.push({text:`Step off ${n} equal divisions of ${R1(s)} mm - the TRUE side length taken straight from the top view - and name the points ${ord.map(i=>LET[i]).join(", ")}. The seam is taken on the shortest edge ${LET[k0]}.`,
+      hl:["base"],
+      d:()=>{ stepOff(DX(0),REF,DX(devW),REF,n);
+        for(let j=0;j<=n;j++) drawPoint(DX(j*s),REF,LET[ord[j]],{x:-4,y:15}); }});
+
+    steps.push({text:"Erect a perpendicular at every division point. These are the lateral edges of the opened-out surface, and each one shows its true length.",
+      hl:latAll,
+      d:()=>{ const P=[];
+        const top=Math.max.apply(null,hc);
+        for(let j=0;j<=n;j++) P.push([DX(j*s),REF,DX(j*s),YH(top)-10]);
+        lineSet(P,COL_THIN,LW_THIN); }});
+
+    if(!cut){
+      steps.push({text:`Cut every perpendicular to the height of the prism, ${R1(H)} mm, transferring the height from the front view with the compass.`,
+        hl:latAll,
+        d:()=>{ for(let j=0;j<=n;j++){
+            measureSpan(DX(j*s),REF,DX(j*s),YH(H));
+            drawPoint(DX(j*s),YH(H),"",{x:0,y:0}); } }});
+      steps.push({text:`Join the top points. The development of the lateral surface is a rectangle ${R1(n*s)} mm × ${R1(H)} mm.`,
+        hl:latAll.concat(["top"]),
+        d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
+          for(let j=0;j<=n;j++) drawPoint(DX(j*s),YH(H),LET[ord[j]]+"1",{x:-6,y:-12});
+          drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
+    } else {
+      steps.push({text:"Transfer the height of every cut point from the front view to the matching perpendicular in the development, using the compass or the scale. Mark 1, 2, 3 …",
+        hl:["cut"],
+        d:()=>{ for(let j=0;j<=n;j++){
+            const i=ord[j];
+            measureSpan(DX(j*s),REF,DX(j*s),YH(hc[i]));
+            drawPoint(DX(j*s),YH(hc[i]),String(i+1),{x:5,y:-11}); } }});
+      steps.push({text:`Join the points 1-2-3-… by straight lines: each lateral face of a prism is a plane, so the cut edge develops as a straight line. Close the figure with the two end edges.`,
+        hl:["cut"],
+        d:()=>{ const L=[];
+          for(let j=0;j<n;j++) L.push([DX(j*s),YH(hc[ord[j]]),DX((j+1)*s),YH(hc[ord[j+1]])]);
+          lineSet(L,COL_DEV,LW_THICK);
+          drawSLine(DX(0),REF,DX(0),YH(hc[ord[0]]),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(hc[ord[n]]),COL_DEV,LW_THICK);
+          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK); }});
+      steps.push({text:`The development of the lateral surface of the truncated prism is complete. The shortest edge measures ${R1(Math.min.apply(null,hc))} mm and the longest ${R1(Math.max.apply(null,hc))} mm.`,
+        hl:["cut"].concat(latAll),
+        d:()=>{ const mn=Math.min.apply(null,hc), mx=Math.max.apply(null,hc);
+          const jmn=ord.indexOf(hc.indexOf(mn)), jmx=ord.indexOf(hc.indexOf(mx));
+          drawVerticalDim(DX(jmn*s)-15,YH(mn),REF,R1(mn));
+          drawVerticalDim(DX(jmx*s)+16,YH(mx),REF,R1(mx)); }});
+    }
+
+    const results=cut
+      ? `<b>Result:</b><table>
+          <tr><td>Perimeter</td><td>${R1(n*s)} mm</td><td>Shortest edge</td><td>${R1(Math.min.apply(null,hc))} mm</td></tr>
+          <tr><td>Longest edge</td><td>${R1(Math.max.apply(null,hc))} mm</td><td>Divisions</td><td>${n} × ${R1(s)} mm</td></tr></table>`
+      : `<b>Result:</b><table>
+          <tr><td>Development</td><td colspan="3">rectangle ${R1(n*s)} mm × ${R1(H)} mm</td></tr>
+          <tr><td>Perimeter</td><td>${R1(n*s)} mm</td><td>Height</td><td>${R1(H)} mm</td></tr></table>`;
 
     return {steps,results,
-      given:{type:"3d",title:"The object to be drawn",model:()=>O.model(v)},
-      space:{title:"The object in 3-D - drag to turn it round",model:()=>O.model(v),
-             note:"Turn the solid until the three axes are 120° apart on the screen - that is the isometric position."}};
+      given:{type:"3d",title:"Given solid",model:model}};
   }
 
-  /* ================= the objects ================= */
-  const IS={};
+  /* ================= PARALLEL LINE : CYLINDER ================= */
+  function buildCylinder(v,cut){
+    const D=v.d, R=D/2, H=v.h, N=12;
+    const A=Array.from({length:N},(_,i)=>Math.PI-TAU*i/N);   // 1 at the left, going round
+    const gx=A.map(a=>R*Math.cos(a)), gz=A.map(a=>R*Math.sin(a));
+    const tan=cut?Math.tan(toRad(v.ang)):0;
+    const hAt=x=>cut?(cut.type==="horiz"?v.hc:v.hc+x*tan):H;
+    const hg=gx.map(hAt);
+    const devW=Math.PI*D;
+    const f=layoutPL(D,H,D+14,devW,Math.max.apply(null,hg));
+    const sc=f.sc, REF=f.REF;
+    const FX=x=>f.fvL+(x+R)*sc;
+    const TVY=REF+34;
+    const TY=z=>TVY+(R-z)*sc;
+    const DX=q=>f.devL+q*sc;
+    const YH=h=>REF-h*sc;
 
-  IS.block=v=>({L:v.L,B:v.B,H:v.H,
-    model:()=>boxVF(0,0,0,v.L,v.H,v.B,"m"),
-    hlAll:["mfront","mtop","mleft"],
-    groups:[{text:"For a plain rectangular block the isometric box IS the object - no points have to be located inside it. Every edge of the box is an edge of the block.",
-      hl:["mfront","mtop","mleft"], d:C=>{} }]});
-
-  IS.step=v=>({L:v.L,B:v.B,H:v.H,
-    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
-                     boxVF(0,v.h1,0,v.l2,v.H-v.h1,v.B,"b")),
-    hlAll:["afront","btop"],
-    groups:[
-      {text:`Mark the height of the base, ${R1(v.h1)} mm, up the vertical edges, and the length of the step, ${R1(v.l2)} mm, along the two length edges. These distances are all parallel to the axes, so they are marked TRUE LENGTH.`,
-       hl:["atop","bright"],
-       d:C=>{ const A=[];
-         [0,v.B].forEach(z=>{ A.push([C.p3(0,v.h1,z),C.p3(v.L,v.h1,z)]); });
-         A.push([C.p3(v.l2,0,0),C.p3(v.l2,0,v.B)]);
-         C.SET(A,COL_CONS,LW_THIN);
-         [[0,v.h1,v.B],[v.l2,v.h1,v.B],[v.l2,v.h1,0],[v.L,v.h1,v.B]].forEach(q=>{
-           const p=C.p3(q[0],q[1],q[2]); drawPoint(p.x,p.y,"",{x:0,y:0}); }); }},
-      {text:"Draw the top face of the base and the vertical face of the step, each parallel to an isometric axis, and complete the upper block on top of the base.",
-       hl:["atop","bright"],
-       d:C=>{ C.SET([[C.p3(v.l2,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
-                     [C.p3(v.l2,v.h1,0),C.p3(v.l2,v.h1,v.B)],
-                     [C.p3(v.l2,v.h1,v.B),C.p3(v.l2,v.H,v.B)]],COL_THICK,LW_THICK); }}]});
-
-  IS.lshape=v=>({L:v.L,B:v.B,H:v.H,
-    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
-                     boxVF(0,v.h1,0,v.w,v.H-v.h1,v.B,"b")),
-    hlAll:["afront","btop"],
-    groups:[
-      {text:`Mark the thickness of the horizontal limb, ${R1(v.h1)} mm, up the vertical edges and the width of the vertical limb, ${R1(v.w)} mm, along the length edges. Join the points with lines parallel to the isometric axes to get the L-shaped face.`,
-       hl:["atop","bright"],
-       d:C=>{ C.SET([[C.p3(0,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
-                     [C.p3(v.w,0,v.B),C.p3(v.w,v.H,v.B)]],COL_CONS,LW_THIN); }},
-      {text:"The L-shaped face is parallel to the length-height plane, so it keeps its shape in the isometric view - only the right angles look different. Draw the finished L on the near face, then carry the same shape back along the depth axis.",
-       hl:["afront","bright"],
-       d:C=>{ C.SET([[C.p3(v.w,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
-                     [C.p3(v.w,v.h1,v.B),C.p3(v.w,v.H,v.B)],
-                     [C.p3(v.w,v.h1,0),C.p3(v.L,v.h1,0)],
-                     [C.p3(v.w,v.h1,0),C.p3(v.w,v.h1,v.B)]],COL_THICK,LW_THICK); }}]});
-
-  IS.tee=v=>({L:v.L,B:v.B,H:v.H,
-    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
-                     boxVF((v.L-v.w)/2,v.h1,0,v.w,v.H-v.h1,v.B,"b")),
-    hlAll:["afront","btop"],
-    groups:[
-      {text:`Mark the height of the base, ${R1(v.h1)} mm, and set out the central upstand ${R1(v.w)} mm wide, that is ${R1((v.L-v.w)/2)} mm in from each end. All these distances lie along isometric axes, so they are true lengths.`,
-       hl:["atop","bleft","bright"],
-       d:C=>{ C.SET([[C.p3(0,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
-                     [C.p3((v.L-v.w)/2,v.h1,0),C.p3((v.L-v.w)/2,v.h1,v.B)],
-                     [C.p3((v.L+v.w)/2,v.h1,0),C.p3((v.L+v.w)/2,v.h1,v.B)]],COL_CONS,LW_THIN); }},
-      {text:"Erect the two vertical faces of the upstand from the top of the base and close it with its top face, drawn parallel to the length and depth axes.",
-       hl:["bleft","bright","btop"],
-       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.h1,v.B),C.p3((v.L-v.w)/2,v.H,v.B)],
-                     [C.p3((v.L+v.w)/2,v.h1,v.B),C.p3((v.L+v.w)/2,v.H,v.B)]],COL_THICK,LW_THICK); }}]});
-
-  IS.groove=v=>({L:v.L,B:v.B,H:v.H,
-    model:()=>mergeM(boxVF(0,0,0,v.L,v.H-v.g,v.B,"a"),
-                     boxVF(0,v.H-v.g,0,(v.L-v.w)/2,v.g,v.B,"b"),
-                     boxVF((v.L+v.w)/2,v.H-v.g,0,(v.L-v.w)/2,v.g,v.B,"c")),
-    hlAll:["afront","btop","ctop"],
-    groups:[
-      {text:`Set out the groove on the TOP face of the box: it is ${R1(v.w)} mm wide, so mark ${R1((v.L-v.w)/2)} mm in from each end along the length axis, and draw the two lines back along the depth axis.`,
-       hl:["bright","cleft"],
-       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.H,0),C.p3((v.L-v.w)/2,v.H,v.B)],
-                     [C.p3((v.L+v.w)/2,v.H,0),C.p3((v.L+v.w)/2,v.H,v.B)]],COL_CONS,LW_THIN); }},
-      {text:`Drop the two sides of the groove ${R1(v.g)} mm vertically and join their lower ends to give the bottom of the groove, which is parallel to the top face.`,
-       hl:["bright","cleft","atop"],
-       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.H,v.B),C.p3((v.L-v.w)/2,v.H-v.g,v.B)],
-                     [C.p3((v.L+v.w)/2,v.H,v.B),C.p3((v.L+v.w)/2,v.H-v.g,v.B)],
-                     [C.p3((v.L-v.w)/2,v.H-v.g,v.B),C.p3((v.L+v.w)/2,v.H-v.g,v.B)],
-                     [C.p3((v.L-v.w)/2,v.H-v.g,0),C.p3((v.L+v.w)/2,v.H-v.g,0)]],
-                    COL_THICK,LW_THICK); }}]});
-
-  IS.vnotch=v=>({L:v.L,B:v.B,H:v.H,
-    model:()=>{ const prof=[{x:0,y:0},{x:v.L,y:0},{x:v.L,y:v.H},{x:(v.L+v.w)/2,y:v.H},
-                            {x:v.L/2,y:v.H-v.g},{x:(v.L-v.w)/2,y:v.H},{x:0,y:v.H}];
-      const m=m_prismFromProfile(prof,v.B,"s");
-      m.verts.forEach(p=>{ p.z+=v.B/2; }); return m; },
-    hlAll:["sfront","sside4","sside5"],
-    groups:[
-      {text:`Locate the three corners of the V on the near face: the two top corners ${R1((v.L-v.w)/2)} mm in from each end, and the apex on the centre of the top face, ${R1(v.g)} mm down. Mark the same three points on the far face.`,
-       hl:["sside4","sside5"],
-       d:C=>{ [[(v.L-v.w)/2,v.H],[v.L/2,v.H-v.g],[(v.L+v.w)/2,v.H]].forEach(q=>{
-           [0,v.B].forEach(z=>{ const p=C.p3(q[0],q[1],z); drawPoint(p.x,p.y,"",{x:0,y:0}); }); });
-         C.SET([[C.p3(v.L/2,v.H,v.B),C.p3(v.L/2,v.H-v.g,v.B)],
-                [C.p3(v.L/2,v.H,0),C.p3(v.L/2,v.H-v.g,0)]],COL_CONS,LW_THIN); }},
-      {text:"Join the points to form the V. NOTE that the two sloping faces of the notch are NOT parallel to any isometric axis, so their lengths in the drawing are not true lengths - they had to be found by locating their end points first.",
-       hl:["sside4","sside5"],
-       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.H,v.B),C.p3(v.L/2,v.H-v.g,v.B)],
-                     [C.p3(v.L/2,v.H-v.g,v.B),C.p3((v.L+v.w)/2,v.H,v.B)],
-                     [C.p3((v.L-v.w)/2,v.H,0),C.p3(v.L/2,v.H-v.g,0)],
-                     [C.p3(v.L/2,v.H-v.g,0),C.p3((v.L+v.w)/2,v.H,0)],
-                     [C.p3(v.L/2,v.H-v.g,0),C.p3(v.L/2,v.H-v.g,v.B)]],COL_THICK,LW_THICK); }}]});
-
-  IS.hexprism=v=>({L:2*polyR(6,v.s),B:2*polyR(6,v.s)*C30*0+2*polyR(6,v.s)*Math.sin(Math.PI/3)*0+2*polyR(6,v.s)*0.8660254,H:v.h,
-    model:()=>{ const m=m_prism(6,v.s,v.h,Math.PI/2-Math.PI/6);
-      const R=polyR(6,v.s), d=R*0.8660254;
-      m.verts.forEach(p=>{ p.x+=R; p.z+=d; }); return m; },
-    hlAll:["lat1","lat2","top"],
-    groups:[
-      {text:`Set out the hexagonal base by the OFFSET method. The hexagon of side ${R1(v.s)} mm fits inside a rectangle ${R1(2*polyR(6,v.s))} mm × ${R1(2*polyR(6,v.s)*0.866)} mm - that rectangle is the bottom of the isometric box. Mark the six corners on it by their offsets.`,
-       hl:["base"],
-       d:C=>{ const R=polyR(6,v.s), d=R*0.8660254, ph=Math.PI/2-Math.PI/6;
-         const pts=[]; for(let i=0;i<6;i++){ const a=ph+TAU*i/6;
-           pts.push([R+R*Math.cos(a), d+R*Math.sin(a)]); }
-         pts.forEach(q=>{ const p=C.p3(q[0],0,q[1]); drawPoint(p.x,p.y,"",{x:0,y:0}); });
-         const A=[]; pts.forEach(q=>{ A.push([C.p3(q[0],0,0),C.p3(q[0],0,2*d)]); });
-         C.SET(A,COL_CONS,LW_THIN); }},
-      {text:"Join the six points to give the hexagon in isometric. Only the two sides that run along the length axis keep their true length of the side - all the others are drawn shorter or longer, which is why the offset method must be used.",
-       hl:["base"],
-       d:C=>{ const R=polyR(6,v.s), d=R*0.8660254, ph=Math.PI/2-Math.PI/6, A=[];
-         for(let i=0;i<6;i++){ const a1=ph+TAU*i/6, a2=ph+TAU*((i+1)%6)/6;
-           A.push([C.p3(R+R*Math.cos(a1),0,d+R*Math.sin(a1)),
-                   C.p3(R+R*Math.cos(a2),0,d+R*Math.sin(a2))]); }
-         C.SET(A,COL_CONS,LW_THIN); }},
-      {text:`Erect verticals of ${R1(v.h)} mm from each corner of the hexagon - heights are always true lengths - and join their tops to give the top hexagonal face.`,
-       hl:["top"],
-       d:C=>{ const R=polyR(6,v.s), d=R*0.8660254, ph=Math.PI/2-Math.PI/6, A=[];
-         for(let i=0;i<6;i++){ const a1=ph+TAU*i/6, a2=ph+TAU*((i+1)%6)/6;
-           A.push([C.p3(R+R*Math.cos(a1),0,d+R*Math.sin(a1)),
-                   C.p3(R+R*Math.cos(a1),v.h,d+R*Math.sin(a1))]);
-           A.push([C.p3(R+R*Math.cos(a1),v.h,d+R*Math.sin(a1)),
-                   C.p3(R+R*Math.cos(a2),v.h,d+R*Math.sin(a2))]); }
-         C.SET(A,COL_CONS,LW_THIN); }}]});
-
-  IS.pyramid=v=>({L:v.s,B:v.s,H:v.h,
-    model:()=>{ const m=m_pyr(4,v.s,v.h,Math.PI/4);
-      const R=polyR(4,v.s);
-      m.verts.forEach(p=>{ p.x+=v.s/2; p.z+=v.s/2; }); return m; },
-    hlAll:["lat1","lat2"],
-    groups:[
-      {text:`Draw the square base ${R1(v.s)} mm × ${R1(v.s)} mm as the bottom of the isometric box, then draw its two diagonals. They cross at the centre of the base - the diagonals are NOT true lengths, but their intersection still gives the true centre.`,
-       hl:["base"],
-       d:C=>{ C.SET([[C.p3(0,0,0),C.p3(v.s,0,v.s)],[C.p3(v.s,0,0),C.p3(0,0,v.s)]],COL_CONS,LW_THIN);
-         const c=C.p3(v.s/2,0,v.s/2); drawPoint(c.x,c.y,"o",{x:8,y:10}); }},
-      {text:`From that centre erect the axis ${R1(v.h)} mm vertically - a height is always a true length - and mark the apex o′.`,
-       hl:["lat1"],
-       d:C=>{ C.SET([[C.p3(v.s/2,0,v.s/2),C.p3(v.s/2,v.h,v.s/2)]],COL_CONS,LW_THIN);
-         const a=C.p3(v.s/2,v.h,v.s/2); drawPoint(a.x,a.y,"o′",{x:8,y:-10}); }},
-      {text:"Join the apex to the four corners of the base. These slant edges are not parallel to any isometric axis, so they are NOT true lengths - they come out simply by joining the points already found.",
-       hl:["lat1","lat2","lat3","lat4"],
-       d:C=>{ const ap=C.p3(v.s/2,v.h,v.s/2);
-         C.SET([[ap,C.p3(0,0,0)],[ap,C.p3(v.s,0,0)],[ap,C.p3(v.s,0,v.s)],[ap,C.p3(0,0,v.s)]],
-               COL_THICK,LW_THICK); }}]});
-
-  IS.cylinder=v=>({L:v.d,B:v.d,H:v.h, custom:true,
-    model:()=>{ const m=m_cyl(v.d/2,v.h,36);
-      m.verts.forEach(p=>{ p.x+=v.d/2; p.z+=v.d/2; }); return m; },
-    hlAll:["lat","top"],
-    groups:[
-      {text:`Draw the isometric square (a rhombus) of side ${R1(v.d)} mm on the TOP of the box - this is the isometric view of the square that just encloses the Ø ${R1(v.d)} mm circle. Mark the mid-point of each of its four sides.`,
-       hl:["top"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2), Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         ["P","Q","R","S"].forEach(k=>{ const p=E.mids[k]; drawPoint(p.x,p.y,k,{x:6,y:-8}); }); }},
-      {text:"FOUR-CENTRE METHOD. From each of the two OBTUSE corners of the rhombus draw lines to the mid-points of the two opposite sides. The four lines cross at two more points on the long diagonal - these, with the two obtuse corners, are the four centres.",
-       hl:["top"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
-         C.SET(E.lines,COL_CONS,LW_THIN);
-         [E.centres.O1,E.centres.O2,E.centres.m,E.centres.n].forEach(p=>drawPoint(p.x,p.y,"",{x:0,y:0})); }},
-      {text:"With those four centres draw the four arcs. Each large arc runs between the two far mid-points and each small arc closes the ends, giving the isometric circle of the top face.",
-       hl:["top"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:`Repeat the whole construction on the BOTTOM face, ${R1(v.h)} mm lower. In practice only the visible front half of the lower ellipse is needed.`,
-       hl:["base"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:"Finally draw the two vertical outlines of the cylinder, each touching the extreme left and right points of the two ellipses. The isometric view of the cylinder is complete.",
-       hl:["lat"],
-       d:C=>{ const T=C.extremeX(C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2));
-         const Bo=C.extremeX(C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2));
-         C.SET([[T.L,Bo.L],[T.R,Bo.R]],COL_CONS,LW_THIN); }},
-      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
-       hl:["lat","top"],
-       d:C=>{ const T=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
-         const Bo=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
-         drawCurve(T.pts.concat([T.pts[0]]),COL_THICK,LW_THICK);
-         const tx=C.extremeX(T), bx=C.extremeX(Bo);
-         drawCurve(C.arcPortion(Bo,bx.L,bx.R,true),COL_THICK,LW_THICK);
-         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_THICK,LW_THICK); }}
-]});
-
-  IS.hollowcyl=v=>({L:v.d,B:v.d,H:v.h, custom:true,
-    model:()=>{ const m=m_cyl(v.d/2,v.h,36);
-      m.verts.forEach(p=>{ p.x+=v.d/2; p.z+=v.d/2; });
-      return mergeM(m,m_holeY(v.d/2,v.d/2,v.d2/2,0,v.h,30)); },
-    hlAll:["lat","top","hole"],
-    groups:[
-      {text:`Draw the outer isometric circle of Ø ${R1(v.d)} mm on the top face by the four-centre method: rhombus, mid-points, the four centres, then the four arcs.`,
-       hl:["top"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
-         const Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         C.SET(E.lines,COL_CONS,LW_THIN);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:`Now the bore. Draw a second isometric circle of Ø ${R1(v.d2)} mm about the SAME centre, again by the four-centre method. The two ellipses are concentric but they are NOT the same shape scaled - each needs its own construction.`,
-       hl:["hole"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d2/2);
-         const Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:`Drop the whole construction ${R1(v.h)} mm to the bottom face and draw the outer ellipse there too - only its visible front half is required.`,
-       hl:["base"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:"Draw the two vertical outlines touching the extreme points of the outer ellipses."+
-            (v.d2*0.70711>v.h
-              ? " Then drop the bore ellipse the full height of the cylinder and draw the crescent of the FAR wall that can still be seen down the bore."
-              : " Now test whether the inside of the bore can be seen: drop the bore ellipse the full height of the cylinder and it falls clear below the mouth, so NO part of the inside wall shows. Nothing further is drawn inside the mouth."),
-       hl:["lat","hole"],
-       d:C=>{ const T=C.extremeX(C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2));
-         const Bo=C.extremeX(C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2));
-         C.SET([[T.L,Bo.L],[T.R,Bo.R]],COL_CONS,LW_THIN);
-         const Ei=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d2/2);
-         const cr=C.boreVisible(Ei,v.h*C.sc);
-         if(cr.length>2) drawCurve(cr,COL_CONS,LW_THIN); }},
-      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
-       hl:["lat","top","hole"],
-       d:C=>{ const T=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
-         const I=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d2/2);
-         const Bo=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
-         drawCurve(T.pts.concat([T.pts[0]]),COL_THICK,LW_THICK);
-         drawCurve(I.pts.concat([I.pts[0]]),COL_THICK,LW_THICK);
-         const tx=C.extremeX(T), bx=C.extremeX(Bo);
-         drawCurve(C.arcPortion(Bo,bx.L,bx.R,true),COL_THICK,LW_THICK);
-         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_THICK,LW_THICK);
-         const cr=C.boreVisible(I,v.h*C.sc);
-         if(cr.length>2) drawCurve(cr,COL_THICK,LW_THICK); }}
-]});
-
-  IS.cone=v=>({L:v.d,B:v.d,H:v.h, custom:true,
-    model:()=>{ const m=m_cone(v.d/2,v.h,36);
-      m.verts.forEach(p=>{ p.x+=v.d/2; p.z+=v.d/2; }); return m; },
-    hlAll:["lat","base"],
-    groups:[
-      {text:`Draw the isometric circle of the base, Ø ${R1(v.d)} mm, on the BOTTOM of the box by the four-centre method - rhombus, mid-points, four centres, four arcs.`,
-       hl:["base"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2), Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         C.SET(E.lines,COL_CONS,LW_THIN);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:`From the centre of the base erect the axis ${R1(v.h)} mm vertically and mark the apex.`,
-       hl:["lat"],
-       d:C=>{ C.SET([[C.p3(v.d/2,0,v.d/2),C.p3(v.d/2,v.h,v.d/2)]],COL_CONS,LW_THIN);
-         const a=C.p3(v.d/2,v.h,v.d/2); drawPoint(a.x,a.y,"o′",{x:8,y:-10}); }},
-      {text:"Draw the two outlines of the cone as TANGENTS from the apex to the base ellipse. They must touch the ellipse - they do not run to its extreme left and right points, and that is a mistake often made.",
-       hl:["lat"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
-         const ap=C.p3(v.d/2,v.h,v.d/2), T=C.tangentsFrom(E,ap);
-         C.SET([[ap,T[0]],[ap,T[1]]],COL_CONS,LW_THIN);
-         T.forEach(p=>drawPoint(p.x,p.y,"",{x:0,y:0})); }},
-      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
-       hl:["lat","base"],
-       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
-         const ap=C.p3(v.d/2,v.h,v.d/2), T=C.tangentsFrom(E,ap);
-         drawCurve(C.arcPortion(E,T[0],T[1],true),COL_THICK,LW_THICK);
-         C.SET([[ap,T[0]],[ap,T[1]]],COL_THICK,LW_THICK); }}
-]});
-
-  IS.cylOnPlate=v=>({L:v.L,B:v.B,H:v.h1+v.h2, custom:true,
-    model:()=>{ const cyl=m_cyl(v.d/2,v.h2,36);
-      cyl.verts.forEach(p=>{ p.x+=v.L/2; p.y+=v.h1; p.z+=v.B/2; });
-      return mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),cyl); },
-    hlAll:["afront","atop","lat"],
-    groups:[
-      {text:`Draw the base plate first: a box ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.h1)} mm thick, using the three isometric axes.`,
-       hl:["afront","atop"],
-       d:C=>{ const A=[];
-         [[0,0],[v.L,0],[v.L,v.B],[0,v.B]].forEach((a,i,arr)=>{ const b=arr[(i+1)%4];
-           A.push([C.p3(a[0],v.h1,a[1]),C.p3(b[0],v.h1,b[1])]); });
-         A.push([C.p3(0,0,v.B),C.p3(0,v.h1,v.B)],[C.p3(v.L,0,v.B),C.p3(v.L,v.h1,v.B)],
-                [C.p3(v.L,0,0),C.p3(v.L,v.h1,0)]);
-         C.SET(A,COL_THICK,LW_THICK); }},
-      {text:`On the top face of the plate mark the centre and set out the isometric square of side ${R1(v.d)} mm for the cylinder. Draw the isometric circle by the four-centre method.`,
-       hl:["lat"],
-       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.h1,z:v.B/2},"top",v.d/2), Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         C.SET(E.lines,COL_CONS,LW_THIN);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:`Repeat the ellipse ${R1(v.h2)} mm higher for the top of the cylinder, then join the two with vertical outlines touching their extreme points.`,
-       hl:["lat"],
-       d:C=>{ const T=C.ISOC({x:v.L/2,y:v.h1+v.h2,z:v.B/2},"top",v.d/2);
-         T.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN));
-         const tx=C.extremeX(T), bx=C.extremeX(C.ISOC({x:v.L/2,y:v.h1,z:v.B/2},"top",v.d/2));
-         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_CONS,LW_THIN); }},
-      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
-       hl:["lat","atop"],
-       d:C=>{ const T=C.ISOC({x:v.L/2,y:v.h1+v.h2,z:v.B/2},"top",v.d/2);
-         const Bo=C.ISOC({x:v.L/2,y:v.h1,z:v.B/2},"top",v.d/2);
-         drawCurve(T.pts.concat([T.pts[0]]),COL_THICK,LW_THICK);
-         const tx=C.extremeX(T), bx=C.extremeX(Bo);
-         drawCurve(C.arcPortion(Bo,bx.L,bx.R,true),COL_THICK,LW_THICK);
-         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_THICK,LW_THICK); }}
-]});
-
-  IS.holeTop=v=>({L:v.L,B:v.B,H:v.H, custom:true,
-    model:()=>mergeM(boxVF(0,0,0,v.L,v.H,v.B,"m"),
-                     m_holeY(v.L/2,v.B/2,v.D/2,0,v.H,30)),
-    hlAll:["mfront","mtop","hole"],
-    groups:[
-      {text:"Draw the isometric box - for this object the box IS the block. Line in its nine visible edges.",
-       hl:["mfront","mtop","mleft"],
-       d:C=>{ const A=[];
-         [[0,0],[v.L,0],[v.L,v.B],[0,v.B]].forEach((a,i,arr)=>{ const b=arr[(i+1)%4];
-           A.push([C.p3(a[0],v.H,a[1]),C.p3(b[0],v.H,b[1])]); });
-         A.push([C.p3(0,0,v.B),C.p3(v.L,0,v.B)],[C.p3(v.L,0,0),C.p3(v.L,0,v.B)],
-                [C.p3(0,0,v.B),C.p3(0,v.H,v.B)],[C.p3(v.L,0,v.B),C.p3(v.L,v.H,v.B)],
-                [C.p3(v.L,0,0),C.p3(v.L,v.H,0)]);
-         C.SET(A,COL_THICK,LW_THICK); }},
-      {text:`Mark the centre of the Ø ${R1(v.D)} mm hole on the top face and draw the isometric square of side ${R1(v.D)} mm about it, with the mid-points of its sides.`,
-       hl:["hole"],
-       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2), Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         ["P","Q","R","S"].forEach(k=>{ const p=E.mids[k]; drawPoint(p.x,p.y,"",{x:0,y:0}); }); }},
-      {text:"Draw the four construction lines from the obtuse corners, find the four centres and draw the four arcs - the mouth of the hole on the top face.",
-       hl:["hole"],
-       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2);
-         C.SET(E.lines,COL_CONS,LW_THIN);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:"Show the inside of the hole. Looking down into it you see the FAR wall, never the near one, so drop the mouth ellipse by the full depth of the hole and keep only the part of it that still lies ABOVE the front edge of the mouth."+
-            (v.D*0.70711>v.H
-              ? " Here a crescent of the far wall does show. No vertical lines are ever drawn for a hole."
-              : " Here the hole is deeper than the mouth is wide, so the dropped ellipse falls clear of the mouth and nothing at all can be seen inside. No vertical lines are ever drawn for a hole."),
-       hl:["hole"],
-       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2);
-         const cr=C.boreVisible(E,v.H*C.sc);
-         if(cr.length>2) drawCurve(cr,COL_CONS,LW_THIN); }},
-      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
-       hl:["mtop","hole"],
-       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2);
-         drawCurve(E.pts.concat([E.pts[0]]),COL_THICK,LW_THICK);
-         const cr=C.boreVisible(E,v.H*C.sc);
-         if(cr.length>2) drawCurve(cr,COL_THICK,LW_THICK); }}
-]});
-
-  IS.arch=v=>{
-    const R=v.L/2, HT=v.h1+R;
-    /* the two isometric circles - front (near) face and back (far) face */
-    const NE=C=>C.ISOC({x:R,y:v.h1,z:v.B},"front",R);
-    const FE=C=>C.ISOC({x:R,y:v.h1,z:0},"front",R);
-    /* the half of an isometric circle that lies ABOVE the springing line */
-    const upper=(C,E,z)=>C.arcPortion(E,C.p3(0,v.h1,z),C.p3(v.L,v.h1,z),false);
-    /* how much of the BACK arc shows over the top, and where it is met by the
-       line parallel to the depth axis that touches both arcs                */
-    const backSeen=C=>{
-      const F=FE(C), N=NE(C), up=upper(C,F,0), poly=N.pts;
-      const out=[];
-      for(let i=0;i<up.length;i++){
-        if(C.ptInPoly(poly,up[i])) break;
-        out.push(up[i]);
-      }
-      const d={x:C.p3(0,0,v.B).x-C.p3(0,0,0).x, y:C.p3(0,0,v.B).y-C.p3(0,0,0).y};
-      const T=out.length?out[out.length-1]:null;
-      return {arc:out, T:T, T2:T?{x:T.x+d.x,y:T.y+d.y}:null};
+    const model=()=>{
+      let m=m_cyl(R,H,48);
+      if(cut){ if(cut.type==="horiz") m=clipModel(m,0,1,0,v.hc,"cut");
+               else m=clipModel(m,-tan,1,0,v.hc,"cut"); }
+      return m;
     };
-    return {L:v.L,B:v.B,H:HT, custom:true,
-    model:()=>{ const prof=[{x:0,y:0},{x:v.L,y:0},{x:v.L,y:v.h1}];
-      for(let i=0;i<=24;i++){ const a=i*Math.PI/24; prof.push({x:R+R*Math.cos(a),y:v.h1+R*Math.sin(a)}); }
-      prof.push({x:0,y:v.h1});
-      const m=m_prismFromProfile(prof,v.B,"s");
-      m.verts.forEach(p=>{ p.z+=v.B/2; }); return m; },
-    hlAll:["sfront"],
-    groups:[
-      {text:`Block in the rectangular part first - ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.h1)} mm up to the SPRINGING of the arch. Keep it in thin construction lines until the very last step.`,
-       hl:["sfront"],
-       d:C=>{ const A=[];
-         [[0,0],[v.L,0],[v.L,v.B],[0,v.B]].forEach((a,i,arr)=>{ const b=arr[(i+1)%4];
-           A.push([C.p3(a[0],0,a[1]),C.p3(b[0],0,b[1])]);
-           A.push([C.p3(a[0],v.h1,a[1]),C.p3(b[0],v.h1,b[1])]);
-           A.push([C.p3(a[0],0,a[1]),C.p3(a[0],v.h1,a[1])]); });
-         C.SET(A,COL_CONS,LW_THIN); }},
-      {text:`The semicircular top stands in a VERTICAL plane, so its isometric square goes on the FRONT face - not on the top. About the mid-point of the springing line set out the rhombus of side ${R1(v.L)} mm with its sides parallel to the LENGTH and HEIGHT axes, and mark the mid-points of the four sides.`,
-       hl:["sfront"],
-       d:C=>{ const E=NE(C), Rh=E.rhombus;
-         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
-         ["P","Q","R","S"].forEach(k=>{ const p=E.mids[k]; drawPoint(p.x,p.y,"",{x:0,y:0}); }); }},
-      {text:"Join the obtuse corners to the opposite mid-points to fix the four centres, and swing the four arcs. Two of the mid-points ARE the springing points, so the arch is exactly the half of this isometric circle that lies above the springing line.",
-       hl:["sfront"],
-       d:C=>{ const E=NE(C);
-         C.SET(E.lines,COL_CONS,LW_THIN);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
-      {text:`Carry the same construction back ${R1(v.B)} mm along the DEPTH axis and draw the identical isometric circle on the back face. Then draw the line parallel to the depth axis that just TOUCHES both arcs - it is the highest generator of the curved surface and it fixes how much of the back arc can be seen over the top.`,
-       hl:["sfront"],
-       d:C=>{ const E=FE(C);
-         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN));
-         const b=backSeen(C);
-         if(b.T) C.SET([[b.T,b.T2]],COL_CONS,LW_THIN); }},
-      {text:"Line in the finished view. The whole front face shows; of the back face only the left-hand edge and the piece of arc lying outside the front one are seen. Nothing is drawn where the flat side runs smoothly into the curved top - that joint is tangential, so it shows no line.",
-       hl:["sfront"],
-       d:C=>{ const N=NE(C), b=backSeen(C);
-         C.SET([[C.p3(0,0,v.B),C.p3(v.L,0,v.B)],
-                [C.p3(v.L,0,v.B),C.p3(v.L,v.h1,v.B)],
-                [C.p3(0,v.h1,v.B),C.p3(0,0,v.B)],
-                [C.p3(0,0,v.B),C.p3(0,0,0)],
-                [C.p3(0,0,0),C.p3(0,v.h1,0)]],COL_THICK,LW_THICK);
-         drawCurve(upper(C,N,v.B),COL_THICK,LW_THICK);
-         if(b.arc.length>2) drawCurve(b.arc,COL_THICK,LW_THICK);
-         if(b.T) C.SET([[b.T,b.T2]],COL_THICK,LW_THICK); }}
-]};};
+
+    const steps=[];
+    steps.push({text:"Draw the X–Y reference line. The cylinder stands on the HP with its axis vertical.",
+      hl:[],
+      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+
+    steps.push({text:`Draw the top view: a circle of diameter ${R1(D)} mm.`,
+      hl:["base"],
+      d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK);
+        drawHorizontalDim(TY(0),FX(-R),FX(R),"Ø "+R1(D)); }});
+
+    steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1, 2, 3 … 12 starting from the extreme left.",
+      hl:["base"],
+      d:()=>{ markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
+        for(let i=0;i<N;i++)
+          drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14)); }});
+
+    steps.push({text:`Project the 12 points upwards and draw the front view: a rectangle ${R1(D)} mm × ${R1(H)} mm containing the 12 generators 1′, 2′ … 12′.`,
+      hl:["lat"],
+      d:()=>{ const P=[];
+        for(let i=0;i<N;i++) P.push([FX(gx[i]),REF,FX(gx[i]),YH(H)]);
+        lineSet(P,COL_THIN,LW_THIN);
+        drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+        drawSLine(FX(-R),YH(H),FX(R),YH(H),COL_THICK,LW_THICK);
+        drawSLine(FX(-R),REF,FX(-R),YH(H),COL_THICK,LW_THICK);
+        drawSLine(FX(R),REF,FX(R),YH(H),COL_THICK,LW_THICK);
+        drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H)); }});
+
+    if(cut){
+      if(cut.type==="horiz"){
+        steps.push({text:`Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting every generator.`,
+          hl:["cut"],
+          d:()=>{ drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
+            drawText(FX(R)+18,YH(v.hc),"cutting plane",COL_CUT,FONT_DIM,"left","middle"); }});
+      } else {
+        steps.push({text:`Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ where it crosses the generators.`,
+          hl:["cut"],
+          d:()=>{ const eL=-R-8/sc, eR=R+8/sc;
+            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
+            drawLine(FX(-R),YH(hAt(-R)),FX(-R)+58,YH(hAt(-R)),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+            drawAngleDimOutward(FX(-R),YH(hAt(-R)),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
+            for(let i=0;i<N;i++) drawPoint(FX(gx[i]),YH(hg[i]),"",{x:0,y:0}); }});
+      }
+    }
+
+    steps.push({text:`Draw the stretch-out line to the right of the front view. Its length is the circumference of the base, π × ${R1(D)} = ${R1(devW)} mm.`,
+      hl:["base"],
+      d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_THICK,LW_THICK);
+        drawHorizontalDim(REF+div30(DX(0),REF,DX(devW),N,true).drop+30,DX(0),DX(devW),"πD = "+R1(devW)); }});
+
+    steps.push({text:"Divide the stretch-out into 12 equal parts by the auxiliary-line method: draw a line at 30° from the left end, step off 12 equal convenient divisions on it with the divider, join the last division to the right end of πD, and draw parallels to that closing line.",
+      hl:["base"],
+      d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
+        drawSLine(g.aux[0],g.aux[1],g.aux[2],g.aux[3],COL_THIN,LW_THIN);
+        stepOff(g.aux[0],g.aux[1],g.aux[2],g.aux[3],N);
+        drawText(g.aux[2]+6,g.aux[3]+4,"30° auxiliary line",COL_DIM,FONT_DIM,"left","middle");
+        drawSLine(g.closing[0],g.closing[1],g.closing[2],g.closing[3],COL_THIN,LW_THIN);
+        lineSet(g.paras,COL_PROJ,LW_THIN);
+        for(let i=0;i<=N;i++) drawPoint(DX(devW*i/N),REF,String(i+1>12?1:i+1),{x:-4,y:-14}); }});
+
+    steps.push({text:"Erect a perpendicular at every division. These are the 12 generators of the opened-out surface.",
+      hl:["lat"],
+      d:()=>{ const P=[], top=Math.max.apply(null,hg);
+        for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(top)-10]);
+        lineSet(P,COL_THIN,LW_THIN); }});
+
+    if(!cut){
+      steps.push({text:`Cut each generator to the height ${R1(H)} mm and join the tops. The development is a rectangle πD × H = ${R1(devW)} mm × ${R1(H)} mm.`,
+        hl:["lat","top"],
+        d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
+          drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
+    } else {
+      steps.push({text:"Transfer the height of every cut point 1′, 2′ … from the front view on to the matching generator of the development.",
+        hl:["cut"],
+        d:()=>{ for(let i=0;i<=N;i++){
+            const q=i%N;
+            measureSpan(DX(devW*i/N),REF,DX(devW*i/N),YH(hg[q]));
+            drawPoint(DX(devW*i/N),YH(hg[q]),"",{x:0,y:0}); } }});
+      steps.push({text:"Draw a smooth curve through the points. Because the surface is curved, the cut edge develops as a curve - never as straight lines.",
+        hl:["cut"],
+        d:()=>{ const pts=[];
+          for(let i=0;i<=N*4;i++){ const q=i/4, k=Math.floor(q)%N, kk=(k+1)%N, t=q-Math.floor(q);
+            const h=hg[k]+(hg[kk]-hg[k])*t;
+            const hs=(t===0)?hg[k]:h;
+            pts.push({x:DX(devW*q/N),y:YH(hs)}); }
+          const sm=[];
+          for(let i=0;i<=N*8;i++){ const u=i/(N*8)*TAU;
+            const x=devW*i/(N*8);
+            const ang=Math.PI-u;
+            const hh=cut.type==="horiz"?v.hc:v.hc+R*Math.cos(ang)*tan;
+            sm.push({x:DX(x),y:YH(hh)}); }
+          drawCurve(sm,COL_DEV,LW_THICK);
+          drawSLine(DX(0),REF,DX(0),YH(hg[0]),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(hg[0]),COL_DEV,LW_THICK);
+          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK); }});
+      steps.push({text:`The development of the truncated cylinder is complete. The shortest generator is ${R1(Math.min.apply(null,hg))} mm and the longest ${R1(Math.max.apply(null,hg))} mm.`,
+        hl:["cut","lat"],
+        d:()=>{ drawVerticalDim(DX(0)-15,YH(Math.min.apply(null,hg)),REF,R1(Math.min.apply(null,hg)));
+          drawVerticalDim(DX(devW/2)+16,YH(Math.max.apply(null,hg)),REF,R1(Math.max.apply(null,hg))); }});
+    }
+
+    const results=cut
+      ? `<b>Result:</b><table>
+          <tr><td>Circumference πD</td><td>${R1(devW)} mm</td><td>Divisions</td><td>12</td></tr>
+          <tr><td>Shortest generator</td><td>${R1(Math.min.apply(null,hg))} mm</td><td>Longest</td><td>${R1(Math.max.apply(null,hg))} mm</td></tr></table>`
+      : `<b>Result:</b><table>
+          <tr><td>Development</td><td colspan="3">rectangle ${R1(devW)} mm × ${R1(H)} mm</td></tr></table>`;
+
+    return {steps,results,
+      given:{type:"3d",title:"Given solid",model:model}};
+  }
+
+  /* ================= RADIAL LINE : PYRAMID ================= */
+  function buildPyramid(v,n,cut){
+    const s=v.s, H=v.h;
+    const R=polyR(n,s), ph=Math.PI/2-Math.PI/n;
+    const A=Array.from({length:n},(_,i)=>ph+TAU*i/n);
+    const cx=A.map(a=>R*Math.cos(a)), cz=A.map(a=>R*Math.sin(a));
+    const xMin=Math.min.apply(null,cx), xMax=Math.max.apply(null,cx);
+    const zMin=Math.min.apply(null,cz), zMax=Math.max.apply(null,cz);
+    const TL=Math.hypot(R,H);                       // true length of a slant edge
+    const half=Math.asin(Math.min(1,s/(2*TL)));
+    const SEC=2*half*n;                             // total angle of the development
+    const tan=cut?Math.tan(toRad(v.ang)):0;
+    /* cut point on edge i : parametric along the edge from base corner to apex  */
+    const cutT=i=>{
+      if(!cut) return 1;
+      if(cut.type==="horiz") return v.hc/H;
+      /* edge : P(t) = ((1-t)cx , tH) ; plane y = hc + x tan  */
+      const x0=cx[i];
+      return (v.hc+x0*tan)/(H+x0*tan);
+    };
+    const tt=Array.from({length:n},(_,i)=>cutT(i));
+    const tlCut=tt.map(t=>TL*(1-t));                // true length from APEX to the cut point
+    const devR=TL;
+    const devW=(SEC>=Math.PI)?2*devR:2*devR*Math.sin(SEC/2);
+    const devUp=devR;
+    const kRot=(function(){let k=0;for(let i=1;i<n;i++) if(cz[i]>=-1e-9&&cx[i]>cx[k]) k=i; return k;})();
+    const needRot=(R-xMax)>0.5;
+    const f=layoutPL(Math.max(xMax,R)-xMin,H,zMax-zMin+14,devW,devUp);
+    const sc=f.sc, REF=f.REF;
+    const FX=x=>f.fvL+(x-xMin)*sc;
+    const TVY=REF+34, TY=z=>TVY+(zMax-z)*sc;
+    const YH=h=>REF-h*sc;
+    const APX=f.devL+devW*sc/2, APY=REF-devR*sc;    // apex of the development
+    const DA=j=>-Math.PI/2+(-SEC/2+2*half*j);       // canvas angle of development edge j
+    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
+
+    let k0=0; for(let i=1;i<n;i++) if(tlCut[i]<tlCut[k0]-1e-9) k0=i;
+    const ord=Array.from({length:n+1},(_,j)=>(k0+j)%n);
+    const apexFV={x:FX(0),y:YH(H)};
+    const tlEndFV={x:FX(R),y:REF};                  // o′a₁ = TRUE LENGTH of a slant edge
+
+    const model=()=>{
+      let m=m_pyr(n,s,H,ph);
+      if(cut){ if(cut.type==="horiz") m=clipModel(m,0,1,0,v.hc,"cut");
+               else m=clipModel(m,-tan,1,0,v.hc,"cut"); }
+      return m;
+    };
+    const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
+
+    const steps=[];
+    const xyEnd=f.devL-16;
+    steps.push({text:"Draw the X–Y reference line. The pyramid rests on the HP on its base with the axis vertical, so the top view goes below X–Y and the front view above it.",
+      hl:[],
+      d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+
+    steps.push({text:`Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":"hexagon"} of side ${R1(s)} mm with one side parallel to the VP. Mark the centre o and join it to every corner - these are the slant edges seen in plan.`,
+      hl:["base"],
+      d:()=>{ const L=[];
+        for(let i=0;i<n;i++){ const j=(i+1)%n; L.push([FX(cx[i]),TY(cz[i]),FX(cx[j]),TY(cz[j])]); }
+        lineSet(L,COL_THICK,LW_THICK);
+        const Rl=[]; for(let i=0;i<n;i++) Rl.push([FX(0),TY(0),FX(cx[i]),TY(cz[i])]);
+        lineSet(Rl,COL_THIN,LW_THIN);
+        drawPoint(FX(0),TY(0),"o",{x:6,y:12});
+        for(let i=0;i<n;i++) drawPoint(FX(cx[i]),TY(cz[i]),let_[i],radOff(FX(0),TY(0),FX(cx[i]),TY(cz[i]),13)); }});
+
+    steps.push({text:`Project the corners up to X–Y and mark the apex o′ on the axis, ${R1(H)} mm above the base. Join o′ to every base corner: this is the front view.`,
+      hl:latAll,
+      d:()=>{ const P=[];
+        for(let i=0;i<n;i++) P.push([FX(cx[i]),TY(cz[i]),FX(cx[i]),REF]);
+        lineSet(P,COL_PROJ,LW_THIN,[6,4]);
+        drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+        drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        const E=[]; for(let i=0;i<n;i++) E.push([apexFV.x,apexFV.y,FX(cx[i]),REF]);
+        lineSet(E,COL_THICK,LW_THICK);
+        drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12});
+        drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H)); }});
+
+    if(needRot){
+      steps.push({text:`Find the TRUE LENGTH of a slant edge. A slant edge is inclined to both planes, so neither view shows it true. In the TOP VIEW, with centre o and radius o${let_[kRot]}, swing the corner round to a\u2081 on the horizontal line through o - the edge is now parallel to the VP.`,
+        hl:["lat"+(kRot+1)],
+        d:()=>{ const a1=-A[kRot];
+          drawArcWithMidArrow(FX(0),TY(0),R*sc,a1,0,false,COL_THIN);
+          drawPoint(FX(R),TY(0),"a\u2081",{x:8,y:10}); }});
+      steps.push({text:`Project a\u2081 up to X\u2013Y and join o\u2032a\u2081. This line is the TRUE LENGTH of every slant edge: TL = \u221a(R\u00b2 + H\u00b2) = ${R1(TL)} mm.`,
+        hl:latAll,
+        d:()=>{ drawLine(FX(R),TY(0),FX(R),REF,COL_PROJ,LW_THIN,SOLID,"mid");
+          drawPoint(FX(R),REF,"a\u2081\u2032",{x:6,y:-12});
+          drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
+          drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
+    } else {
+      steps.push({text:`Find the TRUE LENGTH of a slant edge. Here the extreme edge o\u2032${let_[kRot]}\u2032 of the front view is already parallel to the VP, so it shows the true length directly: TL = \u221a(R\u00b2 + H\u00b2) = ${R1(TL)} mm.`,
+        hl:latAll,
+        d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
+          drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
+    }
+
+    if(cut){
+      const ct=cut.type==="horiz"
+        ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base. It cuts the slant edges at 1′, 2′, 3′ …`
+        : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … on the slant edges.`;
+      steps.push({text:ct, hl:["cut"],
+        d:()=>{ if(cut.type==="horiz")
+            drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
+          else{
+            const eL=xMin-8/sc, eR=xMax+8/sc;
+            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK);
+            drawLine(FX(xMin),YH(v.hc+xMin*tan),FX(xMin)+58,YH(v.hc+xMin*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+            drawAngleDimOutward(FX(xMin),YH(v.hc+xMin*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true); }
+          for(let i=0;i<n;i++){
+            const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
+            drawPoint(P.x,P.y,String(i+1),{x:5,y:-11}); } }});
+
+      steps.push({text:"To get the TRUE distance of every cut point from the apex, draw a horizontal from each point 1′, 2′ … to meet the true-length edge. The intercept measured from o′ is the true length required.",
+        hl:["cut"],
+        d:()=>{ const L=[];
+          for(let i=0;i<n;i++){
+            const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
+            const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
+            L.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(L,COL_PROJ,LW_THIN,[5,4]);
+          for(let i=0;i<n;i++){
+            const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
+            drawPoint(Q.x,Q.y,"",{x:0,y:0}); } }});
+    }
+
+    steps.push({text:`Start the development. With centre O and radius equal to the true length ${R1(TL)} mm, draw an arc - every slant edge of the pyramid is this same length.`,
+      hl:latAll,
+      d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
+        drawArcPlain(APX,APY,devR*sc,-DA(0),-DA(n),true,COL_THIN); }});
+
+    steps.push({text:`Step off ${n} chords of ${R1(s)} mm - the true side of the base - along that arc, and join every division to O. Name the points ${ord.map(i=>LET[i]).join(", ")}; the seam is at the shortest edge ${LET[k0]}.`,
+      hl:["base"],
+      d:()=>{ const L=[];
+        for(let j=0;j<=n;j++){ const P=DP(j,devR); L.push([APX,APY,P.x,P.y]); }
+        lineSet(L,COL_THIN,LW_THIN);
+        for(let j=0;j<=n;j++){ const P=DP(j,devR);
+          drawPoint(P.x,P.y,LET[ord[j]],radOff(APX,APY,P.x,P.y,14)); } }});
+
+    if(!cut){
+      steps.push({text:`Join the divisions ${LET[ord[0]]}–${LET[ord[1]]}–… by straight lines. The development of the lateral surface is a fan of ${n} equal isosceles triangles, total angle ${R1(SEC*180/Math.PI)}°.`,
+        hl:latAll,
+        d:()=>{ const L=[];
+          for(let j=0;j<n;j++){ const P=DP(j,devR), Q=DP(j+1,devR); L.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(L,COL_DEV,LW_THICK);
+          const P0=DP(0,devR), Pn=DP(n,devR);
+          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
+    } else {
+      steps.push({text:"With centre O and the true lengths found in the front view as radii, cut the corresponding development edges at 1, 2, 3 …",
+        hl:["cut"],
+        d:()=>{ for(let j=0;j<=n;j++){
+            const i=ord[j], r=tlCut[i];
+            drawCut(APX,APY,r*sc,-DA(j),COL_THIN); } }});
+      steps.push({text:"Join 1-2-3-… by straight lines - each face of a pyramid is a plane triangle - and close the development with the two end edges.",
+        hl:["cut"],
+        d:()=>{ const L=[];
+          for(let j=0;j<n;j++){ const P=DP(j,tlCut[ord[j]]), Q=DP(j+1,tlCut[ord[j+1]]);
+            L.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(L,COL_DEV,LW_THICK);
+          const B=[];
+          for(let j=0;j<n;j++){ const P=DP(j,devR), Q=DP(j+1,devR); B.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(B,COL_DEV,LW_THICK);
+          const P0=DP(0,devR), Pn=DP(n,devR);
+          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK);
+          for(let j=0;j<=n;j++){ const P=DP(j,tlCut[ord[j]]);
+            drawPoint(P.x,P.y,String(ord[j]+1),radOff(APX,APY,P.x,P.y,-13)); } }});
+      steps.push({text:`The development of the lateral surface of the truncated pyramid is complete. O–1 (shortest) = ${R1(Math.min.apply(null,tlCut))} mm and the longest = ${R1(Math.max.apply(null,tlCut))} mm.`,
+        hl:["cut"].concat(latAll),
+        d:()=>{ }});
+    }
+
+    const results=cut
+      ? `<b>Result:</b><table>
+          <tr><td>True slant length</td><td>${R1(TL)} mm</td><td>Development angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
+          <tr><td>Shortest O–point</td><td>${R1(Math.min.apply(null,tlCut))} mm</td><td>Longest</td><td>${R1(Math.max.apply(null,tlCut))} mm</td></tr></table>`
+      : `<b>Result:</b><table>
+          <tr><td>True slant length</td><td>${R1(TL)} mm</td><td>Chord</td><td>${R1(s)} mm</td></tr>
+          <tr><td>Development angle</td><td>${R1(SEC*180/Math.PI)}°</td><td>Faces</td><td>${n}</td></tr></table>`;
+
+    return {steps,results,
+      given:{type:"3d",title:"Given solid",model:model}};
+  }
+
+  /* ================= RADIAL LINE : CONE ================= */
+  function buildCone(v,cut){
+    const D=v.d, R=D/2, H=v.h, N=12;
+    const L=Math.hypot(R,H);
+    const SEC=TAU*R/L;
+    const A=Array.from({length:N},(_,i)=>Math.PI-TAU*i/N);
+    const gx=A.map(a=>R*Math.cos(a)), gz=A.map(a=>R*Math.sin(a));
+    const tan=cut?Math.tan(toRad(v.ang)):0;
+    const cutT=i=>{
+      if(!cut) return 1;
+      if(cut.type==="horiz") return v.hc/H;
+      const x0=gx[i];
+      return (v.hc+x0*tan)/(H+x0*tan);
+    };
+    const tt=Array.from({length:N},(_,i)=>cutT(i));
+    const lCut=tt.map(t=>L*(1-t));
+    const devW=(SEC>=Math.PI)?2*L:2*L*Math.sin(SEC/2);
+    const f=layoutPL(D,H,D+14,devW,L);
+    const sc=f.sc, REF=f.REF;
+    const FX=x=>f.fvL+(x+R)*sc;
+    const TVY=REF+34, TY=z=>TVY+(R-z)*sc;
+    const YH=h=>REF-h*sc;
+    const APX=f.devL+devW*sc/2, APY=REF-L*sc;
+    const DA=j=>-Math.PI/2+(-SEC/2+SEC*j/N);
+    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
+    const apexFV={x:FX(0),y:YH(H)}, tlEndFV={x:FX(R),y:REF};
+
+    const model=()=>{
+      let m=m_cone(R,H,48);
+      if(cut){ if(cut.type==="horiz") m=clipModel(m,0,1,0,v.hc,"cut");
+               else m=clipModel(m,-tan,1,0,v.hc,"cut"); }
+      return m;
+    };
+
+    const steps=[];
+    const xyEnd=f.devL-16;
+    steps.push({text:"Draw the X–Y reference line. The cone rests on the HP on its base with the axis vertical.",
+      hl:[],
+      d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+
+    steps.push({text:`Draw the top view: a circle of diameter ${R1(D)} mm. Divide it into 12 equal parts and number them 1 to 12 from the extreme left.`,
+      hl:["base"],
+      d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK);
+        markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
+        for(let i=0;i<N;i++)
+          drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14));
+        drawHorizontalDim(TY(0),FX(-R),FX(R),"Ø "+R1(D)); }});
+
+    steps.push({text:`Project the base up to X–Y and mark the apex o′ ${R1(H)} mm above it. Join o′ to the ends of the base: the front view is a triangle. Draw the 12 generators o′1′ … o′12′.`,
+      hl:["lat"],
+      d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+        drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawSLine(apexFV.x,apexFV.y,FX(-R),REF,COL_THICK,LW_THICK);
+        drawSLine(apexFV.x,apexFV.y,FX(R),REF,COL_THICK,LW_THICK);
+        const G=[]; for(let i=0;i<N;i++) G.push([apexFV.x,apexFV.y,FX(gx[i]),REF]);
+        lineSet(G,COL_THIN,LW_THIN);
+        drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12});
+        drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H)); }});
+
+    steps.push({text:`The extreme generator o′1′ is parallel to the VP, so it gives the TRUE slant length directly: L = √(R² + H²) = ${R1(L)} mm. Every generator of a cone is this same length.`,
+      hl:["lat"],
+      d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
+        drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"L = "+R1(L),9,0.55); }});
+
+    if(cut){
+      steps.push({text:cut.type==="horiz"
+          ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting all the generators.`
+          : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ on the generators.`,
+        hl:["cut"],
+        d:()=>{ if(cut.type==="horiz")
+            drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
+          else{ const eL=-R-8/sc, eR=R+8/sc;
+            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK);
+            drawLine(FX(-R),YH(v.hc-R*tan),FX(-R)+58,YH(v.hc-R*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+            drawAngleDimOutward(FX(-R),YH(v.hc-R*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true); }
+          for(let i=0;i<N;i++){
+            const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])};
+            drawPoint(P.x,P.y,"",{x:0,y:0}); } }});
+
+      steps.push({text:"Draw a horizontal from every cut point to the true-length generator o′1′. The intercept from o′ is the true distance of that point from the apex.",
+        hl:["cut"],
+        d:()=>{ const Ls=[];
+          for(let i=0;i<N;i++){
+            const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])};
+            const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
+            Ls.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(Ls,COL_PROJ,LW_THIN,[5,4]); }});
+    }
+
+    steps.push({text:`Before drawing the development, calculate the angle of the sector: θ = 360° × R / L = 360° × ${R1(R)} / ${R1(L)} = ${R1(SEC*180/Math.PI)}°.`,
+      hl:["lat"],
+      d:()=>{}});
+
+    steps.push({text:`Start the development. With centre O and radius L = ${R1(L)} mm draw an arc through angle θ = ${R1(SEC*180/Math.PI)}°.`,
+      hl:["lat"],
+      d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
+        drawArcPlain(APX,APY,L*sc,-DA(0),-DA(N),true,COL_DEV,LW_THICK); }});
+
+    steps.push({text:"Divide the sector into the same 12 equal parts and join every division to O. These are the 12 generators of the opened-out surface.",
+      hl:["lat"],
+      d:()=>{ const Ls=[];
+        for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
+        lineSet(Ls,COL_THIN,LW_THIN);
+        for(let j=0;j<=N;j++){ const P=DP(j,L);
+          drawPoint(P.x,P.y,String(j+1>12?1:j+1),radOff(APX,APY,P.x,P.y,14)); } }});
+
+    if(!cut){
+      steps.push({text:`Close the sector with the two end generators. The development of the cone is a sector of radius ${R1(L)} mm and angle ${R1(SEC*180/Math.PI)}°.`,
+        hl:["lat"],
+        d:()=>{ const P0=DP(0,L), Pn=DP(N,L);
+          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
+    } else {
+      steps.push({text:"With centre O and the true lengths taken from the front view as radii, cut the matching generators of the development at 1, 2, 3 …",
+        hl:["cut"],
+        d:()=>{ for(let j=0;j<=N;j++){ const i=j%N; drawCut(APX,APY,lCut[i]*sc,-DA(j),COL_THIN); } }});
+      steps.push({text:"Draw a smooth curve through these points - the cut edge of a cone always develops as a curve. Close the figure with the two end generators.",
+        hl:["cut"],
+        d:()=>{ const pts=[];
+          for(let j=0;j<=N*6;j++){
+            const q=j/6, i=Math.floor(q)%N, k=(i+1)%N, t=q-Math.floor(q);
+            const r=lCut[i]+(lCut[k]-lCut[i])*t;
+            const ang=-Math.PI/2+(-SEC/2+SEC*q/N);
+            pts.push({x:APX+r*sc*Math.cos(ang), y:APY-r*sc*Math.sin(ang)}); }
+          drawCurve(pts,COL_DEV,LW_THICK);
+          const P0=DP(0,L), Pn=DP(N,L);
+          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
+      steps.push({text:`The development of the truncated cone is complete. The shortest generator is ${R1(Math.min.apply(null,lCut))} mm and the longest ${R1(Math.max.apply(null,lCut))} mm from the apex.`,
+        hl:["cut","lat"], d:()=>{ }});
+    }
+
+    const results=cut
+      ? `<b>Result:</b><table>
+          <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
+          <tr><td>Shortest O–point</td><td>${R1(Math.min.apply(null,lCut))} mm</td><td>Longest</td><td>${R1(Math.max.apply(null,lCut))} mm</td></tr></table>`
+      : `<b>Result:</b><table>
+          <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
+          <tr><td>Arc length</td><td colspan="3">πD = ${R1(Math.PI*D)} mm</td></tr></table>`;
+
+    return {steps,results,
+      given:{type:"3d",title:"Given solid",model:model}};
+  }
 
   /* ================= problem list ================= */
-  const IL={id:"L",label:"Length L",unit:"mm"},
-        IB={id:"B",label:"Depth B",unit:"mm"},
-        IH={id:"H",label:"Height H",unit:"mm"};
-  const vB=v=>(v.L<=0||v.B<=0||v.H<=0)?"Length, depth and height must all be positive.":null;
+  const FS={id:"s",label:"Base side",unit:"mm"},
+        FD={id:"d",label:"Base diameter",unit:"mm"},
+        FH={id:"h",label:"Height of solid",unit:"mm"},
+        FA={id:"ang",label:"Cutting plane angle",unit:"°"},
+        FC={id:"hc",label:"Cut point on axis, above base",unit:"mm"};
+
+  function vPoly(v){ if(v.s<=0) return "Base side must be positive.";
+    if(v.h<=0) return "Height must be positive."; return null; }
+  function vCirc(v){ if(v.d<=0) return "Base diameter must be positive.";
+    if(v.h<=0) return "Height must be positive."; return null; }
+  function vCutP(n){ return v=>{ const e=vPoly(v); if(e) return e;
+    if(v.ang<=0||v.ang>=90) return "The cutting plane angle must be between 0° and 90°.";
+    const R=polyR(n,v.s), t=Math.tan(toRad(v.ang));
+    if(v.hc-R*t<=0.5) return "The plane cuts below the base - raise the point on the axis or reduce the angle.";
+    if(v.hc+R*t>=v.h-0.5) return "The plane passes above the top face - lower the point on the axis or reduce the angle.";
+    return null; }; }
+  function vCutC(v){ const e=vCirc(v); if(e) return e;
+    if(v.ang<=0||v.ang>=90) return "The cutting plane angle must be between 0° and 90°.";
+    const R=v.d/2, t=Math.tan(toRad(v.ang));
+    if(v.hc-R*t<=0.5) return "The plane cuts below the base - raise the point on the axis or reduce the angle.";
+    if(v.hc+R*t>=v.h-0.5) return "The plane passes above the top - lower the point on the axis or reduce the angle.";
+    return null; }
+  function vCutCone(v){ const e=vCirc(v); if(e) return e;
+    if(v.ang<=0||v.ang>=90) return "The cutting plane angle must be between 0° and 90°.";
+    const R=v.d/2, H=v.h, t=Math.tan(toRad(v.ang));
+    if(v.hc-R*t<=0.5) return "The plane cuts below the base - raise the point on the axis or reduce the angle.";
+    if(Math.atan(H/R)<=toRad(v.ang)) return "The plane must be less steep than the generator (θ < "+R1(Math.atan(H/R)*180/Math.PI)+"°) so that it cuts every generator.";
+    if(v.hc>=H-0.5) return "The point on the axis must be below the apex.";
+    return null; }
+  function vHoriz(v,poly){ const e=poly?vPoly(v):vCirc(v); if(e) return e;
+    if(v.hc<=0.5||v.hc>=v.h-0.5) return "The horizontal cut must lie between the base and the top."; return null; }
+
+  const polyName={3:"triangular",4:"square",5:"pentagonal",6:"hexagonal"};
 
   const PROBLEMS=[
-    { title:"Problem 1 - Isometric view of a rectangular block",
-      fields:[IL,IB,IH], defaults:{L:70,B:45,H:40},
-      statement:v=>`The front view and top view of a rectangular block show it to be ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.H)} mm high. Draw its isometric view.`,
-      validate:vB, build:v=>buildIso(v,IS.block) },
+    { title:"Problem 1 - Development of a square prism",
+      fields:[FS,FH], defaults:{s:30,h:65},
+      statement:v=>`A square prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base with a rectangular face parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPrism(v,4,null) },
 
-    { title:"Problem 2 - Isometric view of a stepped block",
-      fields:[IL,IB,IH,{id:"l2",label:"Length of the step",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
-      defaults:{L:75,B:45,H:50,l2:35,h1:22},
-      statement:v=>`A stepped block is ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.H)} mm high. The base is ${R1(v.h1)} mm thick and the upper block, ${R1(v.l2)} mm long, stands on it at the left-hand end for the full depth. Draw the isometric view.`,
-      validate:v=>{ const e=vB(v); if(e) return e;
-        if(v.l2>=v.L) return "The step must be shorter than the block.";
-        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
-      build:v=>buildIso(v,IS.step) },
+    { title:"Problem 2 - Development of a pentagonal prism",
+      fields:[FS,FH], defaults:{s:26,h:60},
+      statement:v=>`A pentagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP with one rectangular face parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPrism(v,5,null) },
 
-    { title:"Problem 3 - Isometric view of an L-shaped block",
-      fields:[IL,IB,IH,{id:"w",label:"Width of the vertical limb",unit:"mm"},{id:"h1",label:"Thickness of the base limb",unit:"mm"}],
-      defaults:{L:75,B:45,H:52,w:22,h1:18},
-      statement:v=>`An L-shaped block has a horizontal limb ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick, with a vertical limb ${R1(v.w)} mm wide at the left-hand end rising to a total height of ${R1(v.H)} mm. Draw its isometric view.`,
-      validate:v=>{ const e=vB(v); if(e) return e;
-        if(v.w>=v.L) return "The vertical limb must be narrower than the block.";
-        if(v.h1>=v.H) return "The base limb must be thinner than the overall height."; return null; },
-      build:v=>buildIso(v,IS.lshape) },
+    { title:"Problem 3 - Development of a hexagonal prism",
+      fields:[FS,FH], defaults:{s:24,h:60},
+      statement:v=>`A hexagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base with a rectangular face parallel to the VP. Draw the development of the lateral surface of the prism.`,
+      validate:vPoly, build:v=>buildPrism(v,6,null) },
 
-    { title:"Problem 4 - Isometric view of a T-shaped block",
-      fields:[IL,IB,IH,{id:"w",label:"Width of the upstand",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
-      defaults:{L:75,B:45,H:52,w:28,h1:20},
-      statement:v=>`A T-shaped block has a base ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick, with a central upstand ${R1(v.w)} mm wide running the full depth and rising to ${R1(v.H)} mm. Draw its isometric view.`,
-      validate:v=>{ const e=vB(v); if(e) return e;
-        if(v.w>=v.L) return "The upstand must be narrower than the block.";
-        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
-      build:v=>buildIso(v,IS.tee) },
+    { title:"Problem 4 - Development of a cylinder",
+      fields:[FD,FH], defaults:{d:50,h:65},
+      statement:v=>`A cylinder of base diameter ${R1(v.d)} mm and height ${R1(v.h)} mm stands on the HP on its base. Draw the development of its lateral surface.`,
+      validate:vCirc, build:v=>buildCylinder(v,null) },
 
-    { title:"Problem 5 - Isometric view of a block with a rectangular groove",
-      fields:[IL,IB,IH,{id:"w",label:"Width of the groove",unit:"mm"},{id:"g",label:"Depth of the groove",unit:"mm"}],
-      defaults:{L:75,B:45,H:45,w:26,g:18},
-      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a central groove ${R1(v.w)} mm wide and ${R1(v.g)} mm deep cut in its top face, running right through from front to back. Draw the isometric view.`,
-      validate:v=>{ const e=vB(v); if(e) return e;
-        if(v.w>=v.L) return "The groove must be narrower than the block.";
-        if(v.g>=v.H) return "The groove must be shallower than the height."; return null; },
-      build:v=>buildIso(v,IS.groove) },
+    { title:"Problem 5 - Truncated square prism (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:30,h:70,ang:40,hc:45},
+      statement:v=>`A square prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP with a face parallel to the VP. It is cut by a plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated prism.`,
+      validate:vCutP(4), build:v=>buildPrism(v,4,{type:"incl"}) },
 
-    { title:"Problem 6 - Isometric view of a block with a V-notch",
-      fields:[IL,IB,IH,{id:"w",label:"Width of the notch at the top",unit:"mm"},{id:"g",label:"Depth of the notch",unit:"mm"}],
-      defaults:{L:75,B:45,H:45,w:34,g:20},
-      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a V-shaped notch cut centrally in its top face, ${R1(v.w)} mm wide at the top and ${R1(v.g)} mm deep, running through the full depth. Draw its isometric view and note which lines are NOT true lengths.`,
-      validate:v=>{ const e=vB(v); if(e) return e;
-        if(v.w>=v.L) return "The notch must be narrower than the block.";
-        if(v.g>=v.H) return "The notch must be shallower than the height."; return null; },
-      build:v=>buildIso(v,IS.vnotch) },
+    { title:"Problem 6 - Truncated pentagonal prism (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:26,h:70,ang:35,hc:45},
+      statement:v=>`A pentagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP with a rectangular face parallel to the VP. A section plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP cuts the prism through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the remaining lateral surface.`,
+      validate:vCutP(5), build:v=>buildPrism(v,5,{type:"incl"}) },
 
-    { title:"Problem 7 - Isometric view of a hexagonal prism",
-      fields:[{id:"s",label:"Side of the hexagon",unit:"mm"},{id:"h",label:"Height of the prism",unit:"mm"}],
-      defaults:{s:25,h:60},
-      statement:v=>`A hexagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base. Draw its isometric view using the offset (box) method.`,
-      validate:v=>{ if(v.s<=0||v.h<=0) return "Side and height must be positive."; return null; },
-      build:v=>buildIso(v,IS.hexprism) },
+    { title:"Problem 7 - Truncated hexagonal prism (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:24,h:70,ang:35,hc:45},
+      statement:v=>`A hexagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm rests on the HP on its base with a face parallel to the VP. It is cut by a plane inclined at ${R1(v.ang)}° to the HP, perpendicular to the VP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
+      validate:vCutP(6), build:v=>buildPrism(v,6,{type:"incl"}) },
 
-    { title:"Problem 8 - Isometric view of a square pyramid",
-      fields:[{id:"s",label:"Side of the base",unit:"mm"},{id:"h",label:"Height of the axis",unit:"mm"}],
-      defaults:{s:50,h:60},
-      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. Draw its isometric view.`,
-      validate:v=>{ if(v.s<=0||v.h<=0) return "Side and height must be positive."; return null; },
-      build:v=>buildIso(v,IS.pyramid) },
+    { title:"Problem 8 - Truncated cylinder (inclined cut)",
+      fields:[FD,FH,FA,FC], defaults:{d:50,h:70,ang:35,hc:45},
+      statement:v=>`A cylinder of diameter ${R1(v.d)} mm and height ${R1(v.h)} mm stands on the HP. It is cut by a plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated cylinder.`,
+      validate:vCutC, build:v=>buildCylinder(v,{type:"incl"}) },
 
-    { title:"Problem 9 - Isometric view of a cylinder (four-centre method)",
-      fields:[{id:"d",label:"Diameter",unit:"mm"},{id:"h",label:"Height",unit:"mm"}],
-      defaults:{d:56,h:65},
-      statement:v=>`A cylinder of base diameter ${R1(v.d)} mm and height ${R1(v.h)} mm rests on the HP on its base. Draw its isometric view, constructing the isometric circles by the four-centre method.`,
-      validate:v=>{ if(v.d<=0||v.h<=0) return "Diameter and height must be positive."; return null; },
-      build:v=>buildIso(v,IS.cylinder) },
+    { title:"Problem 9 - Development of a square pyramid",
+      fields:[FS,FH], defaults:{s:34,h:60},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base with a base edge parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPyramid(v,4,null) },
 
-    { title:"Problem 10 - Isometric view of a hollow cylinder",
-      fields:[{id:"d",label:"Outside diameter",unit:"mm"},{id:"d2",label:"Bore diameter",unit:"mm"},{id:"h",label:"Height",unit:"mm"}],
-      defaults:{d:60,d2:32,h:60},
-      statement:v=>`A hollow cylinder of outside diameter ${R1(v.d)} mm, bore ${R1(v.d2)} mm and height ${R1(v.h)} mm stands on the HP. Draw its isometric view.`,
-      validate:v=>{ if(v.d<=0||v.h<=0) return "Diameter and height must be positive.";
-        if(v.d2>=v.d) return "The bore must be smaller than the outside diameter."; return null; },
-      build:v=>buildIso(v,IS.hollowcyl) },
+    { title:"Problem 10 - Development of a pentagonal pyramid",
+      fields:[FS,FH], defaults:{s:28,h:60},
+      statement:v=>`A pentagonal pyramid of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base with one base edge parallel to the VP. Draw the development of the lateral surface.`,
+      validate:vPoly, build:v=>buildPyramid(v,5,null) },
 
-    { title:"Problem 11 - Isometric view of a cone",
-      fields:[{id:"d",label:"Base diameter",unit:"mm"},{id:"h",label:"Height",unit:"mm"}],
-      defaults:{d:56,h:65},
-      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. Draw its isometric view, taking care that the outlines are TANGENTS to the base ellipse.`,
-      validate:v=>{ if(v.d<=0||v.h<=0) return "Diameter and height must be positive."; return null; },
-      build:v=>buildIso(v,IS.cone) },
+    { title:"Problem 11 - Development of a hexagonal pyramid",
+      fields:[FS,FH], defaults:{s:25,h:60},
+      statement:v=>`A hexagonal pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on its base on the HP with a base edge parallel to the VP. Draw the development of its lateral surface.`,
+      validate:vPoly, build:v=>buildPyramid(v,6,null) },
 
-    { title:"Problem 12 - Isometric view of a plate with a circular hole",
-      fields:[IL,IB,IH,{id:"D",label:"Hole diameter",unit:"mm"}],
-      defaults:{L:90,B:70,H:18,D:44},
-      statement:v=>`A rectangular plate ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.H)} mm thick has a Ø ${R1(v.D)} mm hole drilled centrally through it. Draw its isometric view.`,
-      validate:v=>{ const e=vB(v); if(e) return e;
-        if(v.D>=Math.min(v.L,v.B)) return "The hole must be smaller than the plate."; return null; },
-      build:v=>buildIso(v,IS.holeTop) },
+    { title:"Problem 12 - Development of a cone",
+      fields:[FD,FH], defaults:{d:50,h:60},
+      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. Draw the development of its lateral surface and state the angle of the sector.`,
+      validate:vCirc, build:v=>buildCone(v,null) },
 
-    { title:"Problem 13 - Isometric view of a cylinder on a base plate",
-      fields:[IL,IB,{id:"h1",label:"Thickness of the plate",unit:"mm"},
-              {id:"d",label:"Cylinder diameter",unit:"mm"},{id:"h2",label:"Height of the cylinder",unit:"mm"}],
-      defaults:{L:76,B:56,h1:16,d:42,h2:40},
-      statement:v=>`A base plate ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick carries a cylinder of Ø ${R1(v.d)} mm and ${R1(v.h2)} mm high standing centrally on it. Draw the isometric view of the composite solid.`,
-      validate:v=>{ if(v.L<=0||v.B<=0||v.h1<=0||v.h2<=0) return "All sizes must be positive.";
-        if(v.d>=Math.min(v.L,v.B)) return "The cylinder must sit inside the plate."; return null; },
-      build:v=>buildIso(v,IS.cylOnPlate) },
+    { title:"Problem 13 - Truncated square pyramid (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:34,h:65,ang:30,hc:32},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP with a base edge parallel to the VP. It is cut by a plane perpendicular to the VP, inclined at ${R1(v.ang)}° to the HP and passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated pyramid.`,
+      validate:vCutP(4), build:v=>buildPyramid(v,4,{type:"incl"}) },
 
-    { title:"Problem 14 - Isometric view of a plate with a semicircular top",
-      fields:[IL,IB,{id:"h1",label:"Height to the centre",unit:"mm"}],
-      defaults:{L:60,B:30,h1:36},
-      statement:v=>`A plate ${R1(v.L)} mm wide and ${R1(v.B)} mm thick is ${R1(v.h1)} mm high to the centre of its semicircular top, the radius of the semicircle being half the width. Draw its isometric view - note that the semicircle lies in a VERTICAL plane.`,
-      validate:v=>{ if(v.L<=0||v.B<=0||v.h1<=0) return "All sizes must be positive."; return null; },
-      build:v=>buildIso(v,IS.arch) }
+    { title:"Problem 14 - Truncated pentagonal pyramid (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:28,h:65,ang:30,hc:32},
+      statement:v=>`A pentagonal pyramid of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base. A section plane inclined at ${R1(v.ang)}° to the HP and perpendicular to the VP passes through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the remaining solid.`,
+      validate:vCutP(5), build:v=>buildPyramid(v,5,{type:"incl"}) },
+
+    { title:"Problem 15 - Truncated hexagonal pyramid (inclined cut)",
+      fields:[FS,FH,FA,FC], defaults:{s:25,h:65,ang:30,hc:30},
+      statement:v=>`A hexagonal pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base with an edge of the base parallel to the VP. It is cut by a plane inclined at ${R1(v.ang)}° to the HP passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
+      validate:vCutP(6), build:v=>buildPyramid(v,6,{type:"incl"}) },
+
+    { title:"Problem 16 - Truncated cone (inclined cut)",
+      fields:[FD,FH,FA,FC], defaults:{d:50,h:65,ang:30,hc:30},
+      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a plane perpendicular to the VP and inclined at ${R1(v.ang)}° to the HP, passing through a point on the axis ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the truncated cone.`,
+      validate:vCutCone, build:v=>buildCone(v,{type:"incl"}) },
+
+    { title:"Problem 17 - Frustum of a square pyramid (horizontal cut)",
+      fields:[FS,FH,FC], defaults:{s:36,h:60,hc:35},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the frustum.`,
+      validate:v=>vHoriz(v,true), build:v=>buildPyramid(v,4,{type:"horiz"}) },
+
+    { title:"Problem 18 - Frustum of a hexagonal pyramid (horizontal cut)",
+      fields:[FS,FH,FC], defaults:{s:25,h:60,hc:35},
+      statement:v=>`A hexagonal pyramid of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base. A horizontal section plane ${R1(v.hc)} mm above the base removes the top. Draw the development of the lateral surface of the frustum.`,
+      validate:v=>vHoriz(v,true), build:v=>buildPyramid(v,6,{type:"horiz"}) },
+
+    { title:"Problem 19 - Frustum of a cone (horizontal cut)",
+      fields:[FD,FH,FC], defaults:{d:56,h:60,hc:35},
+      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the frustum.`,
+      validate:v=>vHoriz(v,false), build:v=>buildCone(v,{type:"horiz"}) },
+
+    { title:"Problem 20 - Cylinder cut by a horizontal plane",
+      fields:[FD,FH,FC], defaults:{d:50,h:70,hc:45},
+      statement:v=>`A cylinder of diameter ${R1(v.d)} mm and height ${R1(v.h)} mm rests on the HP on its base. It is cut by a horizontal plane ${R1(v.hc)} mm above the base. Draw the development of the lateral surface of the lower portion.`,
+      validate:v=>vHoriz(v,false), build:v=>buildCylinder(v,{type:"horiz"}) }
   ];
 
   /* ---------------- engine / UI ---------------- */

@@ -85,10 +85,16 @@
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    #canvas-wrapper:fullscreen{overflow:auto;display:flex;flex-direction:column;align-items:center;border-radius:0;padding:12px;}
-    #canvas-wrapper:fullscreen #zoom-toolbar{width:100%;}
-    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:min(calc(100vw - 28px),calc((100vh - 70px)*820/540));}
+    .fs-only{display:none;}
+    .mm-note{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:right;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    #fs-caption{font-size:.95rem;color:var(--ink);margin-top:6px;max-height:84px;overflow:auto;}
+    #canvas-wrapper:fullscreen{background:#fff;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px;border-radius:0;border:0;}
+    #canvas-wrapper:fullscreen #zoom-toolbar{flex-wrap:wrap;margin-bottom:6px;}
+    #canvas-wrapper:fullscreen .fs-nav{display:flex;gap:8px;}
+    #canvas-wrapper:fullscreen #fs-caption{display:block;}
+    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:calc(100vw - 24px);height:calc(100vh - 190px);border-radius:0;}
+    #canvas-wrapper:fullscreen #space-wrap{display:none !important;}
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
   </style>
 </head>
@@ -132,7 +138,7 @@
       <div class="btn-group">
         <button onclick="restartSteps()">Restart</button>
         <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" onclick="toggleVoice()">🔊 Voice off</button>
+        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
       </div>
       <div class="btn-group speed-row">
         <label for="speedSel">Drawing speed</label>
@@ -155,9 +161,17 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
+        <span class="fs-only fs-nav">
+          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
+          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
+          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
+        </span>
+
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
+      <div id="fs-caption" class="fs-only"></div>
+      <div class="mm-note">Note: All dimensions are in mm</div>
 
       <div id="space-wrap" style="display:none;">
         <div id="space-head">
@@ -171,7 +185,7 @@
 </div>
 
 <script>
-  const CANVAS_W=820, CANVAS_H=540;
+  let CANVAS_W=820, CANVAS_H=540;
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
   const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
@@ -1493,7 +1507,7 @@
      {text:`From the point where the circle touches the ground draw the base line with the scale, tangent to the circle and equal to the circumference: πD = ${R1(BL)} mm.`,
       d:()=>{ drawSLine(sx,baseY,endX,baseY,COL_AXIS,LW_THIN);
         drawPoint(endX,baseY,"A",{x:9,y:15});
-        drawHorizontalDim(baseY-(2*r+14)*s,sx,endX,"πD = "+R1(BL)+" mm"); }},
+        drawHorizontalDim(baseY-(2*r+14)*s,sx,endX,"πD = "+R1(BL)); }},
      {text:`P-A must now be divided into 12 equal parts. Set the protractor at P and draw an auxiliary line P-Q at 30° below the base, long enough to take 12 convenient divisions (like say 60 mm and 5 mm each, or 120 mm and 10 mm each division - here 12 × ${R1(part)} = ${R1(aux)} mm).`,
       d:()=>{ markAngles(sx,baseY,84,[INC],true);
         drawSLine(sx,baseY,Q12.x,Q12.y,COL_THIN,LW_THIN);
@@ -1597,7 +1611,7 @@
           drawPoint(c.x,c.y,String(i),radOff(O.x,O.y,c.x,c.y,12)); } }},
      {text:`With the scale draw the base tangent at P, equal to the circumference of the circle: πD = ${R1(CIR)} mm.`,
       d:()=>{ drawSLine(P.x,P.y,E.x,E.y,COL_AXIS,LW_THIN);
-        drawHorizontalDim(P.y+34,P.x,E.x,"πD = "+R1(CIR)+" mm"); }},
+        drawHorizontalDim(P.y+34,P.x,E.x,"πD = "+R1(CIR)); }},
      {text:`Divide the tangent into 12 equal parts in the same way as before: draw an auxiliary line at 30° from P and lay off 12 divisions of ${R1(part)} mm with the scale (like say 60 mm and 5 mm each, or 120 mm and 10 mm each division).`,
       d:()=>{ markAngles(P.x,P.y,84,[INC],true);
         drawSLine(P.x,P.y,Qa.x,Qa.y,COL_THIN,LW_THIN);
@@ -1935,38 +1949,73 @@
     const F0=fitBox(box,15), s=F0.s, M=F0.M;
     const cA=t=>-t;
     const STR=n*a;
+    const IDEG=R1(inter*180/Math.PI), EDEG=R1(ext*180/Math.PI), aTxt=R1(a);
+    const nm=k=>"V"+(k+1);
+    const A2P=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);          // canvas direction p -> q
+    const side=(i,j)=>{ const p=M(V[i]), q=M(V[j]); drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK); };
+    const dot=i=>{ const p=M(V[i]); drawPoint(p.x,p.y); };
+    const span=()=>{ const p=M(V[0]), q=M(V[1]); measureSpan(p.x,p.y,q.x,q.y); };   // compass = first side
+    const cutFrom=(i,j)=>{ const c=M(V[i]), t=M(V[j]); drawCut(c.x,c.y,a*s,A2P(c,t),COL_THIN); };
+    const protr=(i,j)=>{ const c=M(V[i]), t=M(V[j]); markAngles(c.x,c.y,30,[A2P(c,t)]); };
+    const angleAtV2=()=>{ const c=M(V[1]), p=M(V[0]), q=M(V[2]);
+      const a1=A2P(c,p), a2=A2P(c,q);
+      let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
+      drawAngleDimOutward(c.x,c.y,22,IDEG+"°",a1,a1+d,d<0,Math.sin(a1+d/2)<0); };
     const steps=[
-     {text:`Mark the length of the first side = ${R1(a)} mm, then draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${R1(inter*180/Math.PI)}°. The length of string equals the perimeter = ${n} × ${R1(a)} = ${R1(STR)} mm.`,
+     {text:`Mark the length of the first side = ${aTxt} and draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${IDEG}°. (Corners are called V1, V2 ... V${n} in clockwise order in these steps; they are not lettered on the figure.)`,
       d:()=>{ const p=M(V[0]), q=M(V[1]), yb=p.y+26;
         drawLine(p.x,p.y+3,p.x,yb+5,COL_DIM,LW_THIN);
         drawLine(q.x,q.y+3,q.x,yb+5,COL_DIM,LW_THIN);
-        drawHorizontalDim(yb,q.x,p.x,R1(a)+" mm");
+        drawHorizontalDim(yb,q.x,p.x,aTxt);
         drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK);
-        drawPoint(p.x,p.y); drawPoint(q.x,q.y); }},
-     {text:`At V2 set out the interior angle of ${R1(inter*180/Math.PI)}° with the protractor, measuring from V2-V1, and draw the next side V2-V3 = ${R1(a)} mm.`+(n===6?" (For a hexagon there is a quicker way: draw a circle of radius equal to the side and step the same radius round it six times with the compass.)":""),
-      d:()=>{ const c=M(V[1]), p=M(V[0]), q=M(V[2]);
-        const a1=Math.atan2(p.y-c.y,p.x-c.x), a2=Math.atan2(q.y-c.y,q.x-c.x);
-        let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
-        drawAngleDimOutward(c.x,c.y,22,R1(inter*180/Math.PI)+"°",a1,a1+d,d<0,Math.sin(a1+d/2)<0);
-        drawSLine(c.x,c.y,q.x,q.y,COL_THICK,LW_THICK);
-        drawPoint(q.x,q.y); }},
-     {text:`Repeat at every vertex until the polygon closes.`,
-      d:()=>{ for(let k=2;k<n;k++){
-          const c=M(V[k]), q=M(V[(k+1)%n]);
-          drawSLine(c.x,c.y,q.x,q.y,COL_THICK,LW_THICK); }
-        for(let k=2;k<n;k++){ const p=M(V[k]);
-          drawPoint(p.x,p.y); } }}
+        drawPoint(p.x,p.y); drawPoint(q.x,q.y); }}
     ];
+    if(n===3){
+      steps.push(
+       {text:`Set the compass to the length of the first side V1-V2 = ${aTxt} (measure it directly on the first line). With centre V1 draw an arc above the line.`,
+        d:()=>{ span(); cutFrom(0,2); }},
+       {text:`With the same compass setting and centre V2 draw a second arc to cut the first one. The point of intersection is V3. Join V2-V3 and V3-V1 - all three sides are now equal and each angle is ${IDEG}°.`,
+        d:()=>{ span(); cutFrom(1,2); angleAtV2(); side(1,2); side(2,0); dot(2); }});
+    } else {
+      steps.push(
+       {text:`At V2 set the protractor to the interior angle ${IDEG}°, measured from V2-V1. Set the compass to the first side V1-V2 = ${aTxt} and, with centre V2, cut the protractor line at V3. Join V2-V3.`,
+        d:()=>{ angleAtV2(); span(); cutFrom(1,2); side(1,2); dot(2); }},
+       {text:`Repeat on the other end: at V1 set the protractor to ${IDEG}° from V1-V2, take the compass to ${aTxt} (first side) and, with centre V1, cut the line at V${n}. Join V1-V${n}.`,
+        d:()=>{ protr(0,n-1); span(); cutFrom(0,n-1); side(0,n-1); dot(n-1); }});
+      if(n===4){
+        steps.push({text:`Join V3-V4. It automatically comes equal to the first side, which completes the square.`,
+          d:()=>{ side(2,3); }});
+      } else if(n===5){
+        steps.push({text:`Keep the compass at ${aTxt} (first side). With centres V3 and V5 draw two arcs cutting each other at V4. Join V3-V4 and V4-V5 to complete the pentagon.`,
+          d:()=>{ span(); cutFrom(2,3); cutFrom(4,3); side(2,3); side(3,4); dot(3); }});
+      } else {
+        steps.push(
+         {text:`At V3 set the protractor to ${IDEG}° from V3-V2, take the compass to ${aTxt} (first side) and, with centre V3, cut the line at V4. Join V3-V4.`,
+          d:()=>{ protr(2,3); span(); cutFrom(2,3); side(2,3); dot(3); }},
+         {text:`In the same way at V6 obtain V5, then join V4-V5 to complete the hexagon.`,
+          d:()=>{ protr(5,4); span(); cutFrom(5,4); side(5,4); side(3,4); dot(4); }});
+      }
+    }
+    // all the tangent lines (the produced sides) are drawn first, with the string length dimensioned
+    steps.push(
+     {text:`Produce the sides of the polygon one after another in the clockwise direction to get the tangent lines: beyond V2 for ${aTxt}, beyond V3 for 2 × ${aTxt}, and so on, up to ${n} × ${aTxt} = ${R1(STR)} beyond V1 for the last one. This last length is the LENGTH OF THE STRING (= perimeter of the polygon), shown by the dimension line.`,
+      d:()=>{ arcs.forEach(A=>{ const c=M(A.c), t=M(A.to);
+          drawSLine(c.x,c.y,t.x,t.y,COL_PROJ,LW_THIN); });
+        const LA2=arcs[arcs.length-1], c=M(LA2.c), t=M(LA2.to);
+        const a0=A2P(c,t), ox=-Math.sin(a0), oy=Math.cos(a0);   // outer side of the last tangent
+        const D=16, x1=c.x+ox*D, y1=c.y+oy*D, x2=t.x+ox*D, y2=t.y+oy*D;
+        drawLine(c.x,c.y,x1+ox*4,y1+oy*4,COL_DIM,LW_THIN);
+        drawLine(t.x,t.y,x2+ox*4,y2+oy*4,COL_DIM,LW_THIN);
+        drawLine(x1,y1,x2,y2,COL_DIM,LW_THIN,SOLID,"both");
+        drawAlignedLabel(x1,y1,x2,y2,"String length = "+R1(STR),(Math.abs(a0)>Math.PI/2)?5:-5,0.5); }}
+    );
     arcs.forEach((A,k)=>{
       const cV="V"+(((k+1)%n)+1);
       const prevP=(k===0)?"V1":("P"+k);
       steps.push(
-       {text:`Produce the next side beyond ${cV} to a length of ${k+1===1?"one side":(k+1)+" sides"} = ${R1(A.r)} mm. The unwound string will come to rest along this line, so it fixes where the arc must stop.`,
-        d:()=>{ const c=M(A.c), t=M(A.to);
-          drawSLine(c.x,c.y,t.x,t.y,COL_PROJ,LW_THIN);
-          if(k===arcs.length-1) drawAlignedLabel(c.x,c.y,t.x,t.y,"String = "+R1(STR)+" mm",-6,0.8); }},
-       {text:`With centre ${cV} and radius ${cV}-${prevP} = ${R1(A.r)} mm, swing an arc from ${prevP} through the exterior angle of ${R1(ext*180/Math.PI)}° until it meets that line. Mark P${k+1}.`,
-        d:()=>{ const c=M(A.c), t=M(A.to);
+       {text:`Set the compass with its point at ${cV} and pencil at ${prevP} (radius ${cV}-${prevP} = ${R1(A.r)}). With centre ${cV} swing an arc from ${prevP} through the exterior angle of ${EDEG}° until it meets the tangent line. Mark P${k+1}.`,
+        d:()=>{ const c=M(A.c), t=M(A.to), f=M(A.from);
+          measureSpan(c.x,c.y,f.x,f.y);
           drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),false,COL_THICK,LW_THICK);
           drawPoint(t.x,t.y,"P"+(k+1),radOff(c.x,c.y,t.x,t.y,14));
           if(k===arcs.length-1){ const ap=M(anchor), dx=Math.cos(-tm), dy=Math.sin(-tm);
@@ -2460,8 +2509,8 @@
 
     sctx.font="12px Arial";sctx.fillStyle="#44576b";sctx.textAlign="left";sctx.textBaseline="middle";
     sctx.fillText((S.kind==="cyl"?"Helix on a cylinder":"Helix on a cone")
-      +"   -   D = "+R1(S.D)+" mm,  "+(S.kind==="cyl"?("pitch "+R1(S.P)):("height "+R1(S.H)))
-      +" mm,  "+N+" turn"+(N>1?"s":"")+"   (rotate to see the far side of the thread)",14,18);
+      +"   -   D = "+R1(S.D)+",  "+(S.kind==="cyl"?("pitch "+R1(S.P)):("height "+R1(S.H)))
+      +",  "+N+" turn"+(N>1?"s":"")+"   (rotate to see the far side of the thread)",14,18);
   }
   function syncSpace(show){
     const w=document.getElementById("space-wrap");
@@ -2494,6 +2543,7 @@
 
     const N=P.steps.length;
     document.getElementById("stepCounter").innerText=started?("Step "+s+" of "+N):("Ready - "+N+" steps");
+    syncFsUI(s,N);
     document.getElementById("prevButton").disabled=(!started||s<=1);
     document.getElementById("nextButton").disabled=(started&&s>=N);
     document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
@@ -2519,15 +2569,22 @@
   function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
-  let voiceOn=false, lastSpoken=-1;
   const voiceSupported=("speechSynthesis" in window);
+  let voiceOn=voiceSupported, lastSpoken=-1;   // sound is ON by default
+
+  function syncVoiceUI(){
+    const b=document.getElementById("voiceBtn");
+    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
+    b.classList.toggle("on",voiceOn);
+    const fb=document.getElementById("fsVoice");
+    if(fb) fb.innerText=voiceOn?"🔊 Sound on":"🔇 Sound off";
+  }
+  syncVoiceUI();
 
   function toggleVoice(){
     if(!voiceSupported){ alert("Voice is not supported in this browser."); return; }
     voiceOn=!voiceOn;
-    const b=document.getElementById("voiceBtn");
-    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
-    b.classList.toggle("on",voiceOn);
+    syncVoiceUI();
     if(voiceOn){ lastSpoken=-1; speakCurrent(); }
     else speechSynthesis.cancel();
   }
@@ -2618,16 +2675,40 @@
     redraw();
   }
   function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
+  /* ---------------- full screen ---------------- */
+  function syncFsUI(s,N){
+    const c=document.getElementById("fs-caption"); if(!c) return;
+    c.innerHTML=started?("<b>Step "+s+" of "+N+":</b> "+P.steps[s-1].text):("Ready - "+N+" steps. Press Next to begin.");
+    document.getElementById("fsPrev").disabled=(!started||s<=1);
+    document.getElementById("fsNext").disabled=(started&&s>=N);
+  }
   function toggleFullscreen(){
     const w=document.getElementById("canvas-wrapper");
-    if(document.fullscreenElement){ document.exitFullscreen(); }
-    else if(w.requestFullscreen){ w.requestFullscreen().catch(()=>{}); }
-    else if(w.webkitRequestFullscreen){ w.webkitRequestFullscreen(); }
+    if(document.fullscreenElement||document.webkitFullscreenElement){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    } else {
+      const req=w.requestFullscreen||w.webkitRequestFullscreen;
+      if(req){ const r=req.call(w); if(r&&r.catch) r.catch(()=>{}); }
+    }
   }
-  document.addEventListener("fullscreenchange",()=>{
-    const b=document.getElementById("fsBtn");
-    if(b) b.textContent=document.fullscreenElement?"✕ Exit full screen":"⛶ Full screen";
-  });
+  // In full screen the canvas takes the whole screen: its drawing area is resized to the
+  // screen and the current problem is laid out again to fill it.
+  function sizeCanvasFor(fs){
+    const w=fs?Math.max(480,window.innerWidth-24):820, h=fs?Math.max(300,window.innerHeight-190):540;
+    if(w===CANVAS_W&&h===CANVAS_H) return;
+    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h;
+    compassPose=null;
+    if(P&&document.getElementById("screen-solve").style.display!=="none") rebuild(false); else clearCanvasWhite();
+  }
+  function onFsChange(){
+    const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+    document.getElementById("fsBtn").textContent=on?"✕ Exit full screen":"⛶ Full screen";
+    sizeCanvasFor(on);
+    if(on) setTimeout(()=>sizeCanvasFor(true),120);
+  }
+  document.addEventListener("fullscreenchange",onFsChange);
+  document.addEventListener("webkitfullscreenchange",onFsChange);
+  window.addEventListener("resize",()=>{ if(document.fullscreenElement||document.webkitFullscreenElement) sizeCanvasFor(true); });
   function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
   function canvasPos(e){
     const r=canvas.getBoundingClientRect();

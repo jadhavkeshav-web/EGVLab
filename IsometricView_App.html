@@ -1,0 +1,3349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Isometric Projections - Problems with Stepwise Solutions</title>
+  <style>
+    :root{
+      --ink:#4a3312; --ink-2:#7a571f; --accent:#2a6f8a;
+      --line:#dfe5ec; --paper:#f7f2e9; --card:#ffffff; --muted:#6b7686;
+      --tint:#f2ebdd;
+    }
+    *{box-sizing:border-box;}
+    body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px 14px;background:linear-gradient(180deg,var(--tint) 0%,var(--paper) 340px,var(--paper) 100%);background-attachment:fixed;color:#16202b;}
+    h1{font-size:1.3rem;margin:0 auto 6px;text-align:center;color:var(--ink);letter-spacing:.3px;font-weight:700;}
+    .h-rule{width:72px;height:3px;background:var(--ink-2);margin:0 auto 12px;border-radius:2px;}
+
+    /* ---- Screen 1 : problem list ---- */
+    #screen-list{max-width:820px;margin:0 auto;}
+    .prob-card{border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;background:var(--card);box-shadow:0 1px 3px rgba(22,52,79,.06);}
+    .card-fig{margin:10px 0 4px;display:inline-block;border:1px solid var(--line);
+      border-radius:8px;padding:6px 6px 2px;background:#fff;}
+    .card-fig canvas{display:block;width:250px;height:220px;}
+    .card-fig-cap{text-align:center;font-size:.76rem;color:var(--muted);padding:2px 0 4px;}
+    .prob-card h3{margin:0 0 8px;font-size:1rem;color:var(--ink);}
+    .prob-card p{margin:0 0 12px;font-size:.93rem;line-height:1.45rem;color:#2c3644;}
+    .prob-card button{padding:9px 20px;border:1px solid var(--ink);border-radius:8px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;}
+    .prob-card button:hover{background:var(--ink-2);border-color:var(--ink-2);}
+
+    /* ---- Screen 2 : solver ---- */
+    #screen-solve{display:none;}
+    #topbar{display:flex;gap:14px;align-items:flex-start;max-width:1330px;margin:0 auto 16px;}
+    #backBtn{flex:0 0 auto;padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
+    #backBtn:hover{background:#eef2f7;}
+    .dim-note{margin-top:8px;padding:5px 10px;display:inline-block;
+      background:#eef4fb;border:1px solid #cfe0f0;border-left:3px solid var(--ink-2);
+      border-radius:6px;font-size:.82rem;font-weight:600;color:var(--ink);letter-spacing:.2px;}
+    #statement{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ink-2);border-radius:10px;font-size:.95rem;line-height:1.5rem;box-shadow:0 1px 3px rgba(22,52,79,.06);}
+
+    #solve-container{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;}
+    #left-panel{width:360px;background:var(--card);padding:16px;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px rgba(22,52,79,.06);}
+    #left-panel h4{margin:0 0 10px;font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+    #left-panel h4+*{margin-top:0;}
+    #given-grid{display:grid;grid-template-columns:1.6fr 1fr 40px;gap:8px;margin-bottom:14px;}
+    #given-grid label{text-align:right;align-self:center;font-size:.9rem;color:#2c3644;}
+    #given-grid select{padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;width:100%;box-sizing:border-box;}
+    #given-grid input{padding:7px;border:1px solid #c8d2dd;border-radius:6px;text-align:center;font-size:.95rem;width:100%;background:#fff;}
+    #given-grid input:focus{outline:2px solid var(--ink-2);outline-offset:-1px;}
+    #given-grid .unit{align-self:center;font-size:.85rem;color:var(--muted);}
+    #validation{color:#b00020;font-size:.85rem;margin:-6px 0 10px;min-height:0;}
+
+    .btn-group{display:flex;gap:8px;margin-bottom:10px;}
+    .btn-group button{flex:1;padding:9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-weight:600;background:var(--card);color:var(--ink);}
+    .btn-group button:hover{background:#eef2f7;}
+    .btn-group button:disabled{background:#f0f2f5;cursor:not-allowed;color:#aab3bf;border-color:var(--line);}
+    #nextButton{background:var(--ink);color:#fff;border-color:var(--ink);}
+    #nextButton:hover{background:var(--ink-2);border-color:var(--ink-2);}
+    #nextButton:disabled{background:#f0f2f5;color:#aab3bf;}
+    #voiceBtn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+    #stepCounter{text-align:center;font-size:.86rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.4px;}
+
+    /* one-step viewport with auto-scroll */
+    #step-viewport{height:128px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;cursor:pointer;}
+    #stepList{list-style:none;margin:0;padding:0;transition:transform .35s ease;}
+    #stepList li{height:128px;display:flex;gap:12px;align-items:flex-start;padding:14px 14px;font-size:.89rem;line-height:1.4rem;color:#2c3644;}
+    #stepList li .step-num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;margin-top:1px;}
+
+    #results{margin-top:12px;font-size:.92rem;}
+    table{width:100%;border-collapse:collapse;margin-top:8px;}
+    td{border:1px solid var(--line);padding:6px;text-align:center;font-size:.88rem;}
+    tr:first-child{background:#eef2f7;font-weight:700;color:var(--ink);}
+
+    .start-btn{background:var(--ink);color:#fff;border-color:var(--ink);}
+    .start-btn:hover{background:var(--ink-2);}
+    .speed-row{align-items:center;}
+    .speed-row label{font-size:.85rem;color:var(--ink);flex:0 0 auto;}
+    .speed-row select{flex:1;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
+    #given-fig{margin-top:14px;}
+    #given-wrap{background:#fbfcfd;border:1px solid var(--line);border-radius:10px;padding:6px;}
+    #givenCanvas{display:block;background:#fff;width:100%;height:auto;cursor:grab;touch-action:none;border:1px solid #eef1f5;border-radius:6px;}
+    #givenCanvas.dragging{cursor:grabbing;}
+    #given-hint{font-size:.72rem;color:#7c8896;text-align:center;margin-top:5px;}
+    #given-fig h4{margin:0 0 8px;}
+    #canvas-wrapper{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(22,52,79,.06);}
+    canvas{display:block;background:#fff;cursor:grab;border:1px solid #eef1f5;border-radius:6px;width:100%;max-width:820px;height:auto;}
+    canvas.dragging{cursor:grabbing;}
+    #space-wrap{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
+    #space-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+    #space-title{font-weight:700;color:var(--ink);font-size:.95rem;}
+    #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
+    #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:grab;}
+    #spaceCanvas.dragging{cursor:grabbing;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
+    #zoom-toolbar button:hover{background:#eef2f7;}
+    #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
+    #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
+  
+    /* ---- mobile: the sketch on its own, full screen ---------------------- */
+    #fsBtn{margin-left:auto;}
+    /* the sketch sits inside a flex container; hide its siblings, not the
+       container itself, or the canvas goes with it                       */
+    body.fs #solve-container > *:not(#canvas-wrapper){display:none !important;}
+    body.fs #screen-solve > *:not(#solve-container){display:none !important;}
+    body.fs #solve-container{display:block !important;}
+    body.fs #canvas-wrapper{position:fixed;inset:0;z-index:9000;margin:0;padding:0;
+      border:0;border-radius:0;box-shadow:none;background:#fff;
+      display:flex;align-items:center;justify-content:center;}
+    body.fs #zoom-toolbar{position:fixed;top:6px;left:6px;right:6px;z-index:9002;
+      background:rgba(255,255,255,.92);border-radius:8px;padding:4px 6px;}
+    body.fs #zoom-hint,body.fs #fsBtn{display:none;}
+    body.fs #zoom-toolbar{width:auto;right:auto;}
+    /* a flex item will not shrink below its own size unless min-width is
+       cleared, which is why the sketch overflowed a narrow screen      */
+    body.fs #projectionCanvas{max-width:100vw;max-height:calc(100vh - 56px);
+      width:auto;height:auto;min-width:0;min-height:0;flex:0 1 auto;
+      border:0;border-radius:0;}
+    body.fs header,body.fs footer,body.fs h1,body.fs .h-rule{display:none !important;}
+    #fsTapL,#fsTapR{position:fixed;top:0;bottom:0;width:34vw;z-index:9001;display:none;}
+    #fsTapL{left:0;} #fsTapR{right:0;}
+    body.fs #fsTapL,body.fs #fsTapR{display:block;}
+    #fsBar{position:fixed;left:0;right:0;bottom:0;z-index:9003;display:none;
+      background:#ffffff;border-top:1px solid #cfd7e0;box-shadow:0 -2px 8px rgba(0,0,0,.08);
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom));font-size:.9rem;color:#16202b;}
+    body.fs #fsBar{display:block;}
+    #fsBar b{display:block;font-size:.78rem;color:var(--muted);margin-bottom:2px;}
+    #fsExit{position:fixed;top:8px;right:8px;z-index:9004;display:none;
+      background:var(--ink);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:.9rem;}
+    body.fs #fsExit{display:block;}
+    @media (max-width:820px){
+      #screen-solve{display:block;}
+      #canvas-wrapper{margin-top:12px;}
+      .btn-group{flex-wrap:wrap;}
+      button{min-height:40px;}
+    }
+</style>
+
+</head>
+<body>
+
+<h1>📐 Isometric Projections - Problems with Stepwise Solutions</h1>
+<div class="h-rule"></div>
+
+<!-- ================= SCREEN 1 : PROBLEM LIST ================= -->
+<div id="screen-list"></div>
+
+<!-- ================= SCREEN 2 : SOLVER ================= -->
+<div id="screen-solve">
+  <div id="topbar">
+    <button id="backBtn" onclick="showList()">◀ All problems</button>
+    <div id="statement"></div>
+  </div>
+
+  <div id="solve-container">
+    <div id="left-panel">
+      <h4>Given data (editable)</h4>
+      <div id="given-grid"></div>
+      <div id="validation"></div>
+
+      <div id="given-fig" style="display:none;">
+        <h4 id="given-fig-title">Given figure</h4>
+        <div id="given-wrap">
+          <canvas id="givenCanvas" width="330" height="290"></canvas>
+          <div id="given-hint"></div>
+        </div>
+      </div>
+
+      <h4>Step-by-step solution</h4>
+      <div class="btn-group" id="start-row">
+        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+      </div>
+      <div class="btn-group">
+        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+        <button id="nextButton" onclick="nextStep()">Next ▶</button>
+      </div>
+      <div class="btn-group">
+        <button onclick="restartSteps()">Restart</button>
+        <button onclick="showAll()">Show all</button>
+        <button id="voiceBtn" onclick="toggleVoice()">🔊 Voice off</button>
+      </div>
+      <div class="btn-group speed-row">
+        <label for="speedSel">Drawing speed</label>
+        <select id="speedSel" onchange="setSpeed(this.value)">
+          <option value="1.7">Slow</option>
+          <option value="1" selected>Normal</option>
+          <option value="0.62">Fast</option>
+          <option value="0.35">Very fast</option>
+        </select>
+      </div>
+      <div id="stepCounter"></div>
+      <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
+      <div id="results"></div>
+    </div>
+
+    <div id="canvas-wrapper">
+      <div id="zoom-toolbar">
+        <button onclick="zoomBy(1/1.2)" title="Zoom out">−</button>
+        <span id="zoom-level">100%</span>
+        <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
+        <button class="fit-btn" onclick="resetView()">Fit view</button>
+        <button id="fsBtn" onclick="fsToggle()" title="Full screen sketch">⛶ Full screen</button>
+        <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <canvas id="projectionCanvas" width="820" height="540"></canvas>
+
+      <div id="space-wrap" style="display:none;">
+        <div id="space-head">
+          <span id="space-title">The object in space - turn it round to reach the isometric position</span>
+          <span id="space-hint">Drag to rotate · Scroll to zoom · Double-click to reset</span>
+        </div>
+        <canvas id="spaceCanvas" width="820" height="430"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const CANVAS_W=820, CANVAS_H=540;
+  const LW_THIN=1.2, LW_THICK=2.8;
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
+  const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
+  const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
+  const PATTERN_CENTRE=[20,4,5,4];
+  let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
+  const ARROW_HALF_W=3, ARROW_LEN=9;
+
+  const canvas=document.getElementById("projectionCanvas");
+  const ctx=canvas.getContext("2d");
+  const toRad=d=>d*Math.PI/180;
+  const R1=v=>(+v).toFixed(1).replace(/\.0$/,"");   // 65.1 or 90
+
+  /* ---------------- drawing helpers ---------------- */
+  function clearCanvasWhite(){
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); ctx.restore();
+  }
+  function drawArrowhead(x,y,a,color="#000",hw=ARROW_HALF_W,len=ARROW_LEN){
+    ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(x,y);
+    ctx.lineTo(x-len*Math.cos(a)+hw*Math.cos(a+Math.PI/2), y-len*Math.sin(a)+hw*Math.sin(a+Math.PI/2));
+    ctx.lineTo(x-len*Math.cos(a)+hw*Math.cos(a-Math.PI/2), y-len*Math.sin(a)+hw*Math.sin(a-Math.PI/2));
+    ctx.closePath(); ctx.fill();
+  }
+  function drawLine(x1,y1,x2,y2,color,w,dash=SOLID,arrow="none"){
+    if(REC){REC.push({f:"drawLine",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.setLineDash([]);
+    const a=Math.atan2(y2-y1,x2-x1);
+    if(arrow==="mid") drawArrowhead((x1+x2)/2,(y1+y2)/2,a,color);
+    else if(arrow==="end") drawArrowhead(x2,y2,a,color);
+    else if(arrow==="both"){ drawArrowhead(x2,y2,a,color); drawArrowhead(x1,y1,a+Math.PI,color); }
+  }
+  function drawPoint(x,y,label,off={x:6,y:6}){
+    if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
+    ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
+    if(label){ ctx.font="10px Arial"; ctx.fillStyle="#222";
+      ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
+  }
+  function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
+    if(REC){REC.push({f:"drawText",a:Array.from(arguments)});return;}
+    ctx.font=font; ctx.fillStyle=color; ctx.textAlign=al; ctx.textBaseline=bl; ctx.fillText(t,x,y);
+  }
+  function drawArc(cx,cy,r,a1,a2,ccw,color){
+    if(REC){REC.push({f:"drawArc",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2,ccw); ctx.stroke();
+  }
+  function drawArcWithMidArrow(cx,cy,r,a1,a2,ccw,color){
+    if(REC){REC.push({f:"drawArcWithMidArrow",a:Array.from(arguments)});return;}
+    drawArc(cx,cy,r,a1,a2,ccw,color);
+    const m=(a1+a2)/2, t=m+(ccw?-Math.PI/2:Math.PI/2);
+    drawArrowhead(cx+r*Math.cos(m),cy+r*Math.sin(m),t,color);
+  }
+  function drawAngleDimOutward(cx,cy,r,text,a1,a2,ccw,above){
+    if(REC){REC.push({f:"drawAngleDimOutward",a:Array.from(arguments)});return;}
+    drawArc(cx,cy,r,a1,a2,ccw,COL_DIM);
+    const st=a1+(ccw?-Math.PI/2:Math.PI/2), et=a2+(ccw?-Math.PI/2:Math.PI/2);
+    drawArrowhead(cx+r*Math.cos(a1),cy+r*Math.sin(a1),st+Math.PI,COL_DIM);
+    drawArrowhead(cx+r*Math.cos(a2),cy+r*Math.sin(a2),et,COL_DIM);
+    const m=(a1+a2)/2;
+    drawText(cx+(r+20)*Math.cos(m), cy+(r+20)*Math.sin(m)+(above?-8:8), text,"#111",FONT_DIM,"center","middle");
+  }
+  function drawVerticalDim(x,yT,yB,label){
+    if(REC){REC.push({f:"drawVerticalDim",a:Array.from(arguments)});return;}
+    drawLine(x,yT,x,yB,COL_DIM,LW_THIN);
+    drawArrowhead(x,yT,-Math.PI/2,COL_DIM); drawArrowhead(x,yB,Math.PI/2,COL_DIM);
+    ctx.save(); ctx.translate(x-7,(yT+yB)/2); ctx.rotate(-Math.PI/2);
+    drawText(0,0,label,"#111",FONT_DIM,"center","middle"); ctx.restore();
+  }
+  function drawHorizontalDim(y,x1,x2,label){
+    if(REC){REC.push({f:"drawHorizontalDim",a:Array.from(arguments)});return;}
+    drawLine(x1,y,x2,y,COL_DIM,LW_THIN);
+    drawArrowhead(x1,y,Math.PI,COL_DIM); drawArrowhead(x2,y,0,COL_DIM);
+    drawText((x1+x2)/2,y-8,label,"#111",FONT_DIM,"center","bottom");
+  }
+  function drawAlignedLabel(x1,y1,x2,y2,text,off=12,t=0.5){
+    if(REC){REC.push({f:"drawAlignedLabel",a:Array.from(arguments)});return;}
+    const mx=x1+(x2-x1)*t,my=y1+(y2-y1)*t,a=Math.atan2(y2-y1,x2-x1);
+    ctx.save(); ctx.translate(mx,my);
+    let r=a; if(r>Math.PI/2||r<-Math.PI/2)r+=Math.PI; ctx.rotate(r);
+    if(off>=0) drawText(0,-off,text,"#111",FONT_DIM,"center","bottom");
+    else       drawText(0,-off,text,"#111",FONT_DIM,"center","top");
+    ctx.restore();
+  }
+  function frame(topH,botH,maxW){
+    const sc=Math.min((CANVAS_H-140)/(topH+botH),(CANVAS_W-330)/(maxW+40),3.2);
+    const AX=(CANVAS_W-maxW*sc)/2-70;
+    const REF=(CANVAS_H-(topH+botH)*sc)/2+topH*sc;
+    SCALE_PXMM=sc;
+    return {sc,AX,REF,lineStart:AX-95,lineEnd:AX+maxW*sc+70};
+  }
+
+  /* =========================================================
+     DRAWING INSTRUMENTS + STEP ANIMATION
+     Each new step is drawn live: pencil (with hand) for lines,
+     compass for arcs, protractor for setting angles.
+  ========================================================= */
+  let REC=null;      // when set, helper calls are recorded instead of drawn
+  let animId=0;      // token to cancel a running animation
+  let compassPose=null;   // {ax,ay,bx,by} - where the compass legs last were, so it can move (not vanish) to its next job
+
+  /* ---- calculation box -------------------------------------------------
+     Calculations are NOT drawn over the views. They are collected and printed
+     together in the lower-right corner of the sheet, black and white only.  */
+  let SHEET_CALCS=[];
+  function calcBox(title,lines){
+    if(REC){ REC.push({f:"calcBox",a:[title,lines]}); return; }
+    SHEET_CALCS.push({title:title,lines:lines});
+  }
+
+  function drawSheetCorner(){
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    const pad=8, lh=14, mR=14, mB=12;
+    const tf="bold 11px Arial", bf="11px Arial", nf="bold 11.5px Arial";
+    const note="NOTE: All dimensions are in mm.";
+    const blocks=SHEET_CALCS.map(c=>{
+      ctx.font=tf; let w=ctx.measureText(c.title).width;
+      ctx.font=bf; c.lines.forEach(t=>{ w=Math.max(w,ctx.measureText(t).width); });
+      return {c:c, w:w+pad*2, h:pad*2+lh*(c.lines.length+1)};
+    });
+    ctx.font=nf;
+    const nw=ctx.measureText(note).width+pad*2, nh=pad*1.6+lh;
+    let y=CANVAS_H-mB-nh;
+    ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=1.1;
+    ctx.beginPath(); ctx.rect(CANVAS_W-mR-nw,y,nw,nh); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
+    ctx.font=nf; ctx.fillText(note,CANVAS_W-mR-nw+pad,y+nh/2);
+    for(let i=blocks.length-1;i>=0;i--){
+      const b=blocks[i]; y-=b.h+8;
+      ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=0.9;
+      ctx.beginPath(); ctx.rect(CANVAS_W-mR-b.w,y,b.w,b.h); ctx.fill(); ctx.stroke();
+      ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
+      ctx.font=tf; ctx.fillText(b.c.title,CANVAS_W-mR-b.w+pad,y+pad+lh/2);
+      ctx.font=bf;
+      b.c.lines.forEach((t,j)=>ctx.fillText(t,CANVAS_W-mR-b.w+pad,y+pad+lh*(j+1)+lh/2));
+    }
+    ctx.restore();
+  }
+
+  const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
+              drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
+              drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
+              drawCut,drawArcPlain,lineSet,calcBox};
+  function execItem(it){ EXEC[it.f].apply(null,it.a); }
+
+  // draw: full steps 0..baseCount-1, then items[0..k-1], then an optional partial element
+  function frameDraw(baseCount,items,k,partial){
+    clearCanvasWhite();
+    SHEET_CALCS=[];
+    ctx.save();
+    ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
+    for(let i=0;i<baseCount;i++) P.steps[i].d();
+    for(let i=0;i<k;i++) execItem(items[i]);
+    if(partial) partial();
+    ctx.restore();
+    drawSheetCorner();          // calculations + units note, clear of the views
+  }
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  function animateFrames(dur,cb){
+    return new Promise(res=>{
+      const t0=performance.now();
+      function tick(now){
+        const t=Math.min(1,(now-t0)/dur);
+        if(cb(t)===false){res();return;}
+        if(t<1) requestAnimationFrame(tick); else res();
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  /* ---- extra recordable primitives ---- */
+  function drawRLine(x1,y1,x2,y2,color,w,dash){          // always roll-and-draw
+    if(REC){REC.push({f:"drawRLine",a:Array.from(arguments)});return;}
+    drawLine(x1,y1,x2,y2,color,w,dash);
+  }
+  function drawSLine(x1,y1,x2,y2,color,w,dash){          // always plain scale
+    if(REC){REC.push({f:"drawSLine",a:Array.from(arguments)});return;}
+    drawLine(x1,y1,x2,y2,color,w,dash);
+  }
+  function drawCircle(cx,cy,r,color,w){                  // always compass
+    if(REC){REC.push({f:"drawCircle",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color||COL_THIN; ctx.lineWidth=w||LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.stroke();
+  }
+  function markAngles(cx,cy,r,angs,labels){              // protractor division
+    if(REC){REC.push({f:"markAngles",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=COL_DIM; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+    (angs||[]).forEach(a=>{
+      ctx.beginPath();
+      ctx.moveTo(cx+(r-5)*Math.cos(a),cy+(r-5)*Math.sin(a));
+      ctx.lineTo(cx+(r+5)*Math.cos(a),cy+(r+5)*Math.sin(a));
+      ctx.stroke();
+    });
+    // division ticks only - the angle value is stated in the step text, not written on the drawing
+  }
+  function stepOff(x1,y1,x2,y2,n){                       // divider walking a line
+    if(REC){REC.push({f:"stepOff",a:Array.from(arguments)});return;}
+    for(let i=0;i<=n;i++){
+      const x=x1+(x2-x1)*i/n, y=y1+(y2-y1)*i/n;
+      ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
+    }
+  }
+  function rollSet(arr,color,w,dash){
+    if(REC){REC.push({f:"rollSet",a:Array.from(arguments)});return;}
+    arr.forEach(L=>drawLine(L[0],L[1],L[2],L[3],color,w,dash));
+  }
+  function lineSet(arr,color,w,dash){
+    if(REC){REC.push({f:"lineSet",a:Array.from(arguments)});return;}
+    arr.forEach(L=>drawLine(L[0],L[1],L[2],L[3],color,w,dash));
+  }
+  function drawCut(cx,cy,r,ang,color){
+    if(REC){REC.push({f:"drawCut",a:Array.from(arguments)});return;}
+    const half=Math.min(0.40,9/Math.max(r,1));
+    ctx.strokeStyle=color||COL_THIN; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,ang-half,ang+half,false); ctx.stroke();
+  }
+  function drawArcPlain(cx,cy,r,a1,a2,ccw,color,width){
+    if(REC){REC.push({f:"drawArcPlain",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color||COL_THIN; ctx.lineWidth=width||LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2,ccw); ctx.stroke();
+  }
+  function measureSpan(x1,y1,x2,y2){
+    if(REC){REC.push({f:"measureSpan",a:Array.from(arguments)});return;}
+    // A compass "measuring" span is a transient instrument cue, not a permanent
+    // mark on the drawing - it is rendered live by animMeasure() while the
+    // compass is being set, and must NOT persist once that step is behind us
+    // (otherwise every later step keeps re-drawing a stray dashed line).
+  }
+  function scaleMarks(x1,y1,x2,y2,n){
+    if(REC){REC.push({f:"scaleMarks",a:Array.from(arguments)});return;}
+    for(let q=0;q<=n;q++){
+      const x=x1+(x2-x1)*q/n, y=y1+(y2-y1)*q/n;
+      ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
+    }
+  }
+  function radOff(cx,cy,px,py,d){                        // label offset, radially outward
+    const a=Math.atan2(py-cy,px-cx);
+    const dx=Math.cos(a)*d, dy=Math.sin(a)*d;
+    return {x:(dx>=0?dx+3:dx-17), y:dy};
+  }
+
+  let SPEED=1;                       // 1 = normal, >1 slower, <1 faster
+  function setSpeed(v){ SPEED=parseFloat(v)||1; }
+
+  /* ---- one graduated scale, used plain or mounted on rollers ---- */
+  const SCALE_SKIN={fill:"rgba(247,219,140,0.45)",edge:"rgba(146,108,32,0.9)",
+                    tick:"rgba(120,88,20,0.85)",text:"rgba(110,80,15,0.95)"};
+  const SC_TOP=4, SC_HH=31, SC_EXT=30;
+
+  function scaleGeom(x1,y1,x2,y2,off){
+    const a=Math.atan2(y2-y1,x2-x1), L=Math.hypot(x2-x1,y2-y1);
+    const ux=Math.cos(a), uy=Math.sin(a);
+    let nx=-Math.sin(a), ny=Math.cos(a);
+    if(ny<-1e-4||(Math.abs(ny)<=1e-4&&nx<0)){ nx=-nx; ny=-ny; }
+    const o=off||0;
+    return {a,L,X:(d,h)=>({x:x1+ux*d+nx*(h+o), y:y1+uy*d+ny*(h+o)})};
+  }
+
+  // the scale body: graduated in real millimetres of the current drawing
+  function scaleBody(g,alpha){
+    const X=g.X, L=g.L, C=SCALE_SKIN;
+    ctx.save();
+    ctx.globalAlpha=(alpha===undefined?1:alpha);
+    ctx.setLineDash([]);
+    const c1=X(-SC_EXT,SC_TOP), c2=X(L+SC_EXT,SC_TOP),
+          c3=X(L+SC_EXT,SC_TOP+SC_HH), c4=X(-SC_EXT,SC_TOP+SC_HH);
+    ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y);
+    ctx.lineTo(c3.x,c3.y); ctx.lineTo(c4.x,c4.y); ctx.closePath();
+    ctx.fillStyle=C.fill; ctx.fill();
+    ctx.strokeStyle=C.edge; ctx.lineWidth=1.1; ctx.stroke();
+    const pm=SCALE_PXMM||0;
+    ctx.strokeStyle=C.tick; ctx.lineWidth=0.9;
+    if(pm>0.35){
+      const minor=(pm>=2.4)?2:(pm>=1.1?5:10);
+      const major=(pm*10>=17)?10:20;
+      for(let mm=0; mm*pm<=L+0.5; mm+=minor){
+        const big=(mm%major===0);
+        const p=X(mm*pm,SC_TOP), q=X(mm*pm,SC_TOP+(big?14:7));
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+      }
+      let rot=g.a; if(rot>Math.PI/2||rot<-Math.PI/2) rot+=Math.PI;
+      ctx.fillStyle=C.text; ctx.font="9px Arial";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      for(let mm=0; mm*pm<=L+0.5; mm+=major){
+        const p=X(mm*pm,SC_TOP+22);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(rot); ctx.fillText(String(mm),0,0); ctx.restore();
+      }
+    } else {
+      let i=0;
+      for(let d=0; d<=L; d+=8){ const big=(i%5===0); i++;
+        const p=X(d,SC_TOP), q=X(d,SC_TOP+(big?12:6));
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+
+  function drawScale(x1,y1,x2,y2,off,alpha){
+    scaleBody(scaleGeom(x1,y1,x2,y2,off),alpha);
+  }
+
+  // the scale carried on a rolling cylinder - a roll-and-draw scale
+  function drawRoller(x1,y1,x2,y2,off,spin,alpha){
+    const g=scaleGeom(x1,y1,x2,y2,off);
+    scaleBody(g,alpha);
+    const X=g.X, L=g.L, A=(alpha===undefined?1:alpha);
+    const hb=SC_TOP+SC_HH+10, rr=9.5, e=17, sp=spin||0;
+    ctx.save(); ctx.setLineDash([]); ctx.globalAlpha=A;
+    const c1=X(-e,hb-rr), c2=X(L+e,hb-rr), c3=X(L+e,hb+rr), c4=X(-e,hb+rr);
+    ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y);
+    ctx.lineTo(c3.x,c3.y); ctx.lineTo(c4.x,c4.y); ctx.closePath();
+    ctx.fillStyle="rgba(88,100,112,0.94)"; ctx.fill();
+    ctx.strokeStyle="rgba(46,56,66,0.9)"; ctx.lineWidth=1; ctx.stroke();
+    for(let q=0;q<10;q++){
+      const ph=sp+q*Math.PI/5, c=Math.cos(ph);
+      if(c<=0.06) continue;
+      const hh=hb+rr*0.86*Math.sin(ph);
+      const p1=X(-e,hh), p2=X(L+e,hh);
+      ctx.globalAlpha=A*0.42*c; ctx.strokeStyle="#e4eef6"; ctx.lineWidth=1.1;
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    }
+    ctx.globalAlpha=A;
+    const hl1=X(-e,hb-rr*0.5), hl2=X(L+e,hb-rr*0.5);
+    ctx.strokeStyle="rgba(226,238,246,0.5)"; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(hl1.x,hl1.y); ctx.lineTo(hl2.x,hl2.y); ctx.stroke();
+    [-e,L+e].forEach(dw=>{
+      const c=X(dw,hb);
+      ctx.fillStyle="rgba(56,68,80,0.96)";
+      ctx.beginPath(); ctx.arc(c.x,c.y,rr+2.6,0,2*Math.PI); ctx.fill();
+      ctx.strokeStyle="rgba(228,238,246,0.8)"; ctx.lineWidth=1.4;
+      for(let q=0;q<3;q++){
+        const ph=sp+q*Math.PI/3, r=rr*0.95;
+        const p1=X(dw-r*Math.cos(ph),hb-r*Math.sin(ph));
+        const p2=X(dw+r*Math.cos(ph),hb+r*Math.sin(ph));
+        ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+      }
+      ctx.fillStyle="#dce7ef"; ctx.beginPath(); ctx.arc(c.x,c.y,3.1,0,2*Math.PI); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+
+  /* ---- pencil held in a hand ---- */
+  function drawPencilHand(x,y,alpha){
+    ctx.save();
+    ctx.globalAlpha=(alpha===undefined?1:alpha);
+    ctx.translate(x,y); ctx.rotate(-Math.PI/3.2);
+    // graphite + wood tip
+    ctx.fillStyle="#3a3a3a";
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(9,-3); ctx.lineTo(9,3); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#e9c79a";
+    ctx.beginPath(); ctx.moveTo(9,-3.5); ctx.lineTo(24,-6.5); ctx.lineTo(24,6.5); ctx.lineTo(9,3.5); ctx.closePath(); ctx.fill();
+    // body
+    ctx.fillStyle="#f4b52e"; ctx.fillRect(24,-6.5,80,13);
+    ctx.strokeStyle="#d99f1d"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(24,-2.2); ctx.lineTo(104,-2.2);
+    ctx.moveTo(24,2.2); ctx.lineTo(104,2.2); ctx.stroke();
+    // ferrule + eraser
+    ctx.fillStyle="#b8c4cc"; ctx.fillRect(104,-6.5,9,13);
+    ctx.fillStyle="#e88a8a"; ctx.fillRect(113,-6.5,11,13);
+    // hand: palm under the pencil + three fingers over it
+    ctx.fillStyle="#eeb48f"; ctx.strokeStyle="#d09468"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(56,13,27,17,-0.30,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(37,-1.5,9.5,6,-0.55,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(49,-3.5,9.5,6,-0.45,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(61,-5,9.5,6,-0.35,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---- compass: needle at (cx,cy), pencil leg at (px,py) ---- */
+  function drawCompass(cx,cy,px,py){
+    const mx=(cx+px)/2, my=(cy+py)/2;
+    const dx=px-cx, dy=py-cy; const d=Math.hypot(dx,dy)||1;
+    let nx=-dy/d, ny=dx/d;
+    if(ny>0){nx=-nx;ny=-ny;}                    // hinge upward on screen
+    const h=Math.max(45,d*0.40);
+    const jx=mx+nx*h, jy=my+ny*h;
+    ctx.save(); ctx.lineCap="round";
+    ctx.strokeStyle="#7d8a94"; ctx.lineWidth=3.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(jx,jy); ctx.stroke();   // needle leg
+    ctx.strokeStyle="#8fa0ab";
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(jx,jy); ctx.stroke();   // pencil leg
+    // yellow pencil stub near the drawing point
+    const lx=jx-px, ly=jy-py; const ll=Math.hypot(lx,ly)||1;
+    ctx.strokeStyle="#f4b52e"; ctx.lineWidth=5.5;
+    ctx.beginPath(); ctx.moveTo(px+lx/ll*4,py+ly/ll*4); ctx.lineTo(px+lx/ll*24,py+ly/ll*24); ctx.stroke();
+    // knob + handle
+    ctx.strokeStyle="#5f6b73"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(jx+nx*15,jy+ny*15); ctx.stroke();
+    ctx.fillStyle="#5f6b73";
+    ctx.beginPath(); ctx.arc(jx,jy,6,0,2*Math.PI); ctx.fill();
+    // needle point
+    ctx.fillStyle="#3a3a3a";
+    ctx.beginPath(); ctx.arc(cx,cy,2.5,0,2*Math.PI); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---- divider: two needle legs, used to step off equal divisions ---- */
+  function drawDivider(ax,ay,bx,by){
+    const mx=(ax+bx)/2,my=(ay+by)/2;
+    const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy)||1;
+    let nx=-dy/d,ny=dx/d; if(ny>0){nx=-nx;ny=-ny;}
+    const h=Math.max(54,d*1.7);
+    const jx=mx+nx*h, jy=my+ny*h;
+    ctx.save(); ctx.lineCap="round";
+    ctx.strokeStyle="#7d8a94"; ctx.lineWidth=3.4;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(jx,jy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(jx,jy); ctx.stroke();
+    ctx.strokeStyle="#5f6b73"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(jx+nx*14,jy+ny*14); ctx.stroke();
+    ctx.fillStyle="#5f6b73"; ctx.beginPath(); ctx.arc(jx,jy,6,0,2*Math.PI); ctx.fill();
+    ctx.fillStyle="#3a3a3a";
+    ctx.beginPath(); ctx.arc(ax,ay,2.6,0,2*Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx,by,2.6,0,2*Math.PI); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---- protractor at a vertex; dome up or down; red marker at markAng ---- */
+  function drawProtractor(cx,cy,up,op,markAng){
+    const Rp=88;
+    ctx.save();
+    ctx.globalAlpha=op;
+    ctx.translate(cx,cy);
+    ctx.scale(1, up?1:-1);
+    ctx.fillStyle="rgba(147,184,216,0.32)";
+    ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,0,Rp,Math.PI,2*Math.PI); ctx.closePath(); ctx.fill(); ctx.stroke();
+    for(let dg=0;dg<=180;dg+=10){
+      const a=Math.PI+dg*Math.PI/180;
+      const ri=dg%90===0?Rp-16:dg%30===0?Rp-12:Rp-7;
+      ctx.beginPath();
+      ctx.moveTo(ri*Math.cos(a),ri*Math.sin(a));
+      ctx.lineTo((Rp-1)*Math.cos(a),(Rp-1)*Math.sin(a));
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-9,0); ctx.lineTo(9,0);
+    ctx.moveTo(0,0); ctx.lineTo(0,-11); ctx.stroke();
+    ctx.restore();
+    if(markAng!=null){
+      ctx.save(); ctx.globalAlpha=op;
+      ctx.strokeStyle="#c0392b"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+(Rp-4)*Math.cos(markAng), cy+(Rp-4)*Math.sin(markAng));
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* ---- animators ---- */
+  function rollerFor(it,mode){
+    if(mode==="R") return true;
+    if(mode==="S") return false;
+    return (Math.abs(it.a[2]-it.a[0])<1.5)||(Math.abs(it.a[3]-it.a[1])<1.5);
+  }
+
+  async function animLine(s,items,k,it,myId,mode){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3],color=it.a[4],w=it.a[5];
+    const dash=it.a[6]||SOLID;
+    const len=Math.hypot(x2-x1,y2-y1);
+    const roll=rollerFor(it,mode);
+    const dur=Math.min(3800,Math.max(1500,len*3.8))*SPEED;
+    const T1=0.22, T2=0.34, T3=0.86;        // instrument in | pencil in | draw | pencil out
+    const a=Math.atan2(y2-y1,x2-x1);
+    const ux=Math.cos(a), uy=Math.sin(a);
+    let nx=-Math.sin(a), ny=Math.cos(a);
+    if(ny<-1e-4||(Math.abs(ny)<=1e-4&&nx<0)){ nx=-nx; ny=-ny; }
+    const ex=-nx, ey=-ny;
+    const inP ={x:x1-ux*40+ex*80, y:y1-uy*40+ey*80};
+    const outP={x:x2+ux*30+ex*92, y:y2+uy*30+ey*92};
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(dur,t=>{
+      if(animId!==myId) return false;
+      let q=0,pen=null,pa=1,off=0,ia=1;
+      if(t<T1){ const f=t/T1; off=(1-ez(f))*64; ia=Math.min(1,f*2.4); }
+      else if(t<T2){ const f=(t-T1)/(T2-T1), e=ez(f);
+        pen={x:inP.x+(x1-inP.x)*e, y:inP.y+(y1-inP.y)*e}; pa=Math.min(1,f*2.2); }
+      else if(t<T3){ q=(t-T2)/(T3-T2); pen={x:x1+(x2-x1)*q, y:y1+(y2-y1)*q}; }
+      else { const f=(t-T3)/(1-T3), e=ez(f); q=1;
+        pen={x:x2+(outP.x-x2)*e, y:y2+(outP.y-y2)*e}; pa=1-e*0.92; ia=1-e*0.5; }
+      frameDraw(s-1,items,k,()=>{
+        if(roll) drawRoller(x1,y1,x2,y2,off,-off*0.085,ia);
+        else drawScale(x1,y1,x2,y2,off,ia);
+        if(q>0){
+          ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(x1,y1);
+          ctx.lineTo(x1+(x2-x1)*q,y1+(y2-y1)*q); ctx.stroke(); ctx.setLineDash([]);
+        }
+        if(pen) drawPencilHand(pen.x,pen.y,pa);
+      });
+    });
+  }
+
+  /* keep the instrument in place while points on that same line are marked */
+  function onSegment(l,p){
+    const x1=l.a[0],y1=l.a[1],x2=l.a[2],y2=l.a[3],px=p.a[0],py=p.a[1];
+    const dx=x2-x1,dy=y2-y1,L2=dx*dx+dy*dy;
+    if(L2<1) return false;
+    const t=((px-x1)*dx+(py-y1)*dy)/L2;
+    if(t<-0.03||t>1.03) return false;
+    return Math.hypot(px-(x1+dx*t),py-(y1+dy*t))<3.5;
+  }
+  async function animHold(s,items,upto,l,roll,myId){
+    await animateFrames(650*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,upto,()=>{
+        if(roll) drawRoller(l.a[0],l.a[1],l.a[2],l.a[3],0,0);
+        else drawScale(l.a[0],l.a[1],l.a[2],l.a[3]);
+      });
+    });
+  }
+
+  /* protractor stepping round a circle / vertex, dropping a tick at each angle */
+  async function animMarkAngles(s,items,k,it,myId){
+    const cx=it.a[0],cy=it.a[1],r=it.a[2],labels=it.a[4];
+    const norm=a=>{ let x=a; while(x<=-Math.PI)x+=2*Math.PI; while(x>Math.PI)x-=2*Math.PI; return x; };
+    const list=(it.a[3]||[]).map(norm);
+    const many=list.length>6;
+    const swT=(many?250:430)*SPEED, hoT=(many?90:170)*SPEED;
+    const up=list.filter(a=>a<=0.0001).sort((p,q)=>q-p);
+    const dn=list.filter(a=>a>0.0001).sort((p,q)=>p-q);
+    const done=[];
+    const base=()=>{ if(done.length) markAngles(cx,cy,r,done,labels); };
+    for(const g of [{L:up,u:true},{L:dn,u:false}]){
+      if(!g.L.length) continue;
+      await animateFrames(300*SPEED,t=>{
+        if(animId!==myId) return false;
+        frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,t*0.95,0); });
+      });
+      if(animId!==myId) return;
+      let prev=0;
+      for(const target of g.L){
+        const from=prev;
+        await animateFrames(swT,t=>{
+          if(animId!==myId) return false;
+          frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,0.95,from+(target-from)*t); });
+        });
+        if(animId!==myId) return;
+        done.push(target); prev=target;
+        await animateFrames(hoT,t=>{
+          if(animId!==myId) return false;
+          frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,0.95,target); });
+        });
+        if(animId!==myId) return;
+      }
+      await animateFrames(250*SPEED,t=>{
+        if(animId!==myId) return false;
+        frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,(1-t)*0.95,prev); });
+      });
+      if(animId!==myId) return;
+    }
+  }
+
+  /* divider walking along a line, dropping equal divisions */
+  async function animStepOff(s,items,k,it,myId){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3],n=it.a[4];
+    const PT=i=>({x:x1+(x2-x1)*i/n, y:y1+(y2-y1)*i/n});
+    const dot=p=>{ ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(p.x,p.y,2.6,0,2*Math.PI); ctx.fill(); };
+    const done=[PT(0)];
+    for(let i=0;i<n;i++){
+      const A=PT(i), Bp=PT(i-1), Bn=PT(i+1);
+      const a0=Math.atan2(Bp.y-A.y,Bp.x-A.x);
+      const rad=Math.hypot(Bn.x-A.x,Bn.y-A.y);
+      await animateFrames(310*SPEED,t=>{
+        if(animId!==myId) return false;
+        const a=a0-Math.PI*t;
+        frameDraw(s-1,items,k,()=>{
+          done.forEach(dot);
+          drawDivider(A.x,A.y,A.x+rad*Math.cos(a),A.y+rad*Math.sin(a));
+        });
+      });
+      if(animId!==myId) return;
+      done.push(Bn);
+    }
+    await animateFrames(170*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ done.forEach(dot); });
+    });
+  }
+
+
+  // slide both compass legs from the last known pose to a new pose - the compass never disappears, it moves
+  async function compassTransit(s,items,k,myId,tax,tay,tbx,tby){
+    if(!compassPose) return true;
+    const {ax,ay,bx,by}=compassPose;
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(420*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{
+        drawCompass(ax+(tax-ax)*e, ay+(tay-ay)*e, bx+(tbx-bx)*e, by+(tby-by)*e);
+      });
+    });
+    return animId===myId;
+  }
+
+  async function animMeasure(s,items,k,it,myId){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3];
+    const ez=t=>t*t*(3-2*t);
+    if(!(await compassTransit(s,items,k,myId,x1,y1,x1,y1))) return;
+    await animateFrames(720*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(Math.min(1,t*1.3));
+      frameDraw(s-1,items,k,()=>{
+        ctx.strokeStyle=COL_DIM; ctx.lineWidth=LW_THIN; ctx.setLineDash([4,3]);
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1+(x2-x1)*e,y1+(y2-y1)*e); ctx.stroke(); ctx.setLineDash([]);
+        drawCompass(x1,y1,x1+(x2-x1)*e,y1+(y2-y1)*e);
+      });
+    });
+    if(animId!==myId) return;
+    compassPose={ax:x1,ay:y1,bx:x2,by:y2};
+    await sleep(140*SPEED);
+  }
+  async function animArc(s,items,k,it,myId){
+    const cx=it.a[0],cy=it.a[1],r=it.a[2],a1=it.a[3],a2=it.a[4],ccw=it.a[5],color=it.a[6];
+    let sweep=a2-a1;
+    if(ccw&&sweep>0) sweep-=2*Math.PI;
+    if(!ccw&&sweep<0) sweep+=2*Math.PI;
+    const sx=cx+r*Math.cos(a1), sy=cy+r*Math.sin(a1);
+    if(!(await compassTransit(s,items,k,myId,cx,cy,sx,sy))) return;
+    const dur=Math.min(2600,Math.max(520,Math.abs(sweep)*1150))*SPEED;
+    await animateFrames(dur,t=>{
+      if(animId!==myId) return false;
+      const cur=a1+sweep*t;
+      frameDraw(s-1,items,k,()=>{
+        ctx.strokeStyle=color; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(cx,cy,r,a1,cur,ccw); ctx.stroke();
+        drawCompass(cx,cy,cx+r*Math.cos(cur),cy+r*Math.sin(cur));
+      });
+    });
+    if(animId!==myId) return;
+    const ex=cx+r*Math.cos(a1+sweep), ey=cy+r*Math.sin(a1+sweep);
+    compassPose={ax:cx,ay:cy,bx:ex,by:ey};
+  }
+
+  async function animProtractor(s,items,k,it,myId){
+    const cx=it.a[0],cy=it.a[1],a1=it.a[4],a2=it.a[5];
+    const up=(a2<=a1);
+    await animateFrames(950*(0.6+0.4*SPEED),t=>{
+      if(animId!==myId) return false;
+      const op=Math.min(1,t*4)*0.95;
+      const mark=a1+(a2-a1)*Math.min(1,t*1.2);
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,op,mark));
+    });
+    if(animId!==myId) return;
+    await animateFrames(240*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,(1-t)*0.95,a2));
+    });
+  }
+
+  function instrOf(it){
+    if(it.f==="drawLine"||it.f==="drawRLine"||it.f==="drawSLine"){
+      if(Math.hypot(it.a[2]-it.a[0],it.a[3]-it.a[1])<30) return null;
+      const mode=(it.f==="drawRLine")?"R":(it.f==="drawSLine")?"S":null;
+      return rollerFor(it,mode)?"roller":"scale";
+    }
+    if(it.f==="markAngles"||it.f==="drawAngleDimOutward") return "protractor";
+    if(it.f==="stepOff") return "divider";
+    if(it.f==="rollSet") return "roller";
+    if(it.f==="lineSet") return "scale";
+    if(it.f==="scaleMarks") return "scale";
+    if(it.f==="measureSpan") return "compass";
+    if(it.f==="drawCut"||it.f==="drawArcPlain") return "compass";
+    if(it.f==="drawCircle"||it.f==="drawArcWithMidArrow") return "compass";
+    if(it.f==="drawArc"&&it.a[2]>=70) return "compass";
+    if(it.f==="drawCurve") return "freehand";
+    return null;
+  }
+
+  // one scale, carried (and pivoted) from line to line without lifting off the sheet
+  async function animLineSet(s,items,k,it,myId){
+    const arr=it.a[0], color=it.a[1], w=it.a[2], dash=it.a[3]||SOLID;
+    if(!arr.length) return;
+    const done=[];
+    const shown=()=>{ done.forEach(L=>{ ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+      ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(L[2],L[3]); ctx.stroke(); ctx.setLineDash([]); }); };
+    const ez=t=>t*t*(3-2*t);
+    const F=arr[0];
+    await animateFrames(520*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ shown(); drawScale(F[0],F[1],F[2],F[3],(1-ez(t))*56,Math.min(1,t*2.4)); });
+    });
+    for(let q=0;q<arr.length;q++){
+      if(animId!==myId) return;
+      const L=arr[q];
+      if(q>0){
+        const p=arr[q-1];
+        const gap=Math.max(Math.hypot(L[0]-p[0],L[1]-p[1]),Math.hypot(L[2]-p[2],L[3]-p[3]));
+        await animateFrames(Math.min(880,Math.max(300,gap*2.2))*SPEED,t=>{
+          if(animId!==myId) return false;
+          const e=ez(t);
+          frameDraw(s-1,items,k,()=>{ shown();
+            drawScale(p[0]+(L[0]-p[0])*e, p[1]+(L[1]-p[1])*e,
+                      p[2]+(L[2]-p[2])*e, p[3]+(L[3]-p[3])*e, 0, 1); });
+        });
+        if(animId!==myId) return;
+      }
+      const len=Math.hypot(L[2]-L[0],L[3]-L[1]);
+      await animateFrames(Math.min(1500,Math.max(460,len*2.0))*SPEED,t=>{
+        if(animId!==myId) return false;
+        const xt=L[0]+(L[2]-L[0])*t, yt=L[1]+(L[3]-L[1])*t;
+        frameDraw(s-1,items,k,()=>{
+          shown(); drawScale(L[0],L[1],L[2],L[3],0,1);
+          ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(xt,yt); ctx.stroke(); ctx.setLineDash([]);
+          drawPencilHand(xt,yt);
+        });
+      });
+      if(animId!==myId) return;
+      done.push(L);
+    }
+    const E=arr[arr.length-1];
+    await animateFrames(400*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ shown(); drawScale(E[0],E[1],E[2],E[3],e*56,1-e*0.92); });
+    });
+  }
+
+  // one roll-and-draw scale, rolled forward from line to line
+  async function animRollSet(s,items,k,it,myId){
+    const arr=it.a[0], color=it.a[1], w=it.a[2], dash=it.a[3]||SOLID;
+    if(!arr.length) return;
+    const done=[];
+    const shown=()=>{ done.forEach(L=>{ ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+      ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(L[2],L[3]); ctx.stroke(); ctx.setLineDash([]); }); };
+    const ez=t=>t*t*(3-2*t);
+    const F=arr[0];
+    await animateFrames(540*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=1-ez(t);
+      frameDraw(s-1,items,k,()=>{ shown(); drawRoller(F[0],F[1],F[2],F[3],e*56,-e*5.5,Math.min(1,t*2.4)); });
+    });
+    let spin=0;
+    for(let q=0;q<arr.length;q++){
+      if(animId!==myId) return;
+      const L=arr[q];
+      if(q>0){
+        const p=arr[q-1];
+        const gap=Math.hypot(L[0]-p[0],L[1]-p[1]);
+        const sp0=spin; spin-=gap/9.5;
+        await animateFrames(Math.min(900,Math.max(280,gap*2.4))*SPEED,t=>{
+          if(animId!==myId) return false;
+          const e=ez(t);
+          frameDraw(s-1,items,k,()=>{ shown();
+            drawRoller(p[0]+(L[0]-p[0])*e, p[1]+(L[1]-p[1])*e,
+                       p[2]+(L[2]-p[2])*e, p[3]+(L[3]-p[3])*e, 0, sp0+(spin-sp0)*e); });
+        });
+        if(animId!==myId) return;
+      }
+      const len=Math.hypot(L[2]-L[0],L[3]-L[1]);
+      await animateFrames(Math.min(1500,Math.max(480,len*2.1))*SPEED,t=>{
+        if(animId!==myId) return false;
+        const xt=L[0]+(L[2]-L[0])*t, yt=L[1]+(L[3]-L[1])*t;
+        frameDraw(s-1,items,k,()=>{
+          shown(); drawRoller(L[0],L[1],L[2],L[3],0,spin);
+          ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(xt,yt); ctx.stroke(); ctx.setLineDash([]);
+          drawPencilHand(xt,yt);
+        });
+      });
+      if(animId!==myId) return;
+      done.push(L);
+    }
+    const E=arr[arr.length-1];
+    await animateFrames(420*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ shown(); drawRoller(E[0],E[1],E[2],E[3],e*56,spin+e*5.5,1-e*0.92); });
+    });
+  }
+
+  // divisions stepped off against the scale
+  async function animScaleMarks(s,items,k,it,myId){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3],n=it.a[4];
+    const PT=q=>({x:x1+(x2-x1)*q/n, y:y1+(y2-y1)*q/n});
+    const dot=p=>{ ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(p.x,p.y,2.6,0,2*Math.PI); ctx.fill(); };
+    const done=[PT(0)];
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(560*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ done.forEach(dot); drawScale(x1,y1,x2,y2,(1-ez(t))*58,Math.min(1,t*2.4)); });
+    });
+    for(let q=1;q<=n;q++){
+      if(animId!==myId) return;
+      const A=PT(q-1), B=PT(q);
+      await animateFrames(250*SPEED,t=>{
+        if(animId!==myId) return false;
+        const e=ez(t);
+        frameDraw(s-1,items,k,()=>{ done.forEach(dot); drawScale(x1,y1,x2,y2,0,1);
+          drawPencilHand(A.x+(B.x-A.x)*e, A.y+(B.y-A.y)*e); });
+      });
+      if(animId!==myId) return;
+      done.push(B);
+    }
+    await animateFrames(380*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ done.forEach(dot); drawScale(x1,y1,x2,y2,e*58,1-e*0.92); });
+    });
+  }
+
+  function restingCompassDraw(){
+    if(compassPose) drawCompass(compassPose.ax,compassPose.ay,compassPose.bx,compassPose.by);
+  }
+  async function runAnimation(s,items,myId){
+    let prev=null, compassResting=false;
+    for(let k=0;k<items.length;k++){
+      if(animId!==myId) return;
+      const it=items[k];
+      const ins=instrOf(it);
+      if(ins){
+        await sleep((prev&&prev!==ins?460:prev===ins?170:120)*SPEED);
+        if(animId!==myId) return;
+      }
+      const lineish=(it.f==="drawLine"||it.f==="drawRLine"||it.f==="drawSLine");
+      const isL=lineish&&Math.hypot(it.a[2]-it.a[0],it.a[3]-it.a[1])>=30;
+      if(isL){
+        const mode=(it.f==="drawRLine")?"R":(it.f==="drawSLine")?"S":null;
+        await animLine(s,items,k,it,myId,mode);
+        if(animId!==myId) return;
+        let ex=0;
+        while(items[k+1+ex]&&items[k+1+ex].f==="drawPoint"&&onSegment(it,items[k+1+ex])) ex++;
+        if(ex>0){
+          await animHold(s,items,k+1+ex,it,rollerFor(it,mode),myId);
+          if(animId!==myId) return;
+          k+=ex;
+        }
+      }
+      else if(it.f==="markAngles") await animMarkAngles(s,items,k,it,myId);
+      else if(it.f==="stepOff")    await animStepOff(s,items,k,it,myId);
+      else if(it.f==="rollSet")    await animRollSet(s,items,k,it,myId);
+      else if(it.f==="lineSet")    await animLineSet(s,items,k,it,myId);
+      else if(it.f==="scaleMarks") await animScaleMarks(s,items,k,it,myId);
+      else if(it.f==="measureSpan") await animMeasure(s,items,k,it,myId);
+      else if(it.f==="drawCircle") await animArc(s,items,k,
+                {a:[it.a[0],it.a[1],it.a[2],0,2*Math.PI,false,it.a[3]||COL_THIN]},myId);
+      else if(it.f==="drawCut") await animArc(s,items,k,
+                {a:[it.a[0],it.a[1],it.a[2],it.a[3]-Math.min(0.40,9/Math.max(it.a[2],1)),
+                    it.a[3]+Math.min(0.40,9/Math.max(it.a[2],1)),false,it.a[4]||COL_THIN]},myId);
+      else if(it.f==="drawArcPlain") await animArc(s,items,k,
+                {a:[it.a[0],it.a[1],it.a[2],it.a[3],it.a[4],it.a[5],it.a[6]||COL_THIN]},myId);
+      else if(it.f==="drawArcWithMidArrow") await animArc(s,items,k,it,myId);
+      else if(it.f==="drawArc"&&it.a[2]>=70) await animArc(s,items,k,it,myId);
+      else if(it.f==="drawAngleDimOutward") await animProtractor(s,items,k,it,myId);
+      else if(it.f==="drawCurve") await animCurve(s,items,k,it,myId);
+      else { frameDraw(s-1,items,k+1,compassResting?restingCompassDraw:null); await sleep(90*SPEED); continue; }
+      if(animId!==myId) return;
+      if(ins){ prev=ins; compassResting=(ins==="compass"); }
+      frameDraw(s-1,items,k+1,compassResting?restingCompassDraw:null);
+    }
+    if(animId!==myId) return;
+    const lastStep=(P&&s>=P.steps.length);
+    frameDraw(s,[],0,(compassResting&&!lastStep)?restingCompassDraw:null);
+  }
+
+
+  /* ================= topic shared helpers ================= */
+  function drawCurve(pts,color,width,dash){
+    if(REC){REC.push({f:"drawCurve",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color||COL_THICK; ctx.lineWidth=width||LW_THICK; ctx.setLineDash(dash||[]);
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  EXEC.drawCurve=drawCurve;
+
+  async function animCurve(s,items,k,it,myId){
+    const pts=it.a[0], color=it.a[1]||COL_THICK, width=it.a[2]||LW_THICK;
+    let LT=0; for(let i=1;i<pts.length;i++) LT+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+    const dur=Math.min(3000,Math.max(900,LT*2.1))*SPEED;
+    await animateFrames(dur,t=>{
+      if(animId!==myId) return false;
+      const target=LT*t;
+      frameDraw(s-1,items,k,()=>{
+        ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+        let acc=0,px=pts[0].x,py=pts[0].y,done=false;
+        for(let i=1;i<pts.length&&!done;i++){
+          const seg=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+          if(acc+seg<=target){ ctx.lineTo(pts[i].x,pts[i].y); acc+=seg; px=pts[i].x; py=pts[i].y; }
+          else{ const fr=seg?(target-acc)/seg:0;
+            px=pts[i-1].x+(pts[i].x-pts[i-1].x)*fr; py=pts[i-1].y+(pts[i].y-pts[i-1].y)*fr;
+            ctx.lineTo(px,py); done=true; }
+        }
+        ctx.stroke();
+        drawPencilHand(px,py);
+      });
+    });
+  }
+
+  function fitRect(wmm,hmm){
+    const sc=Math.min((CANVAS_W-250)/wmm,(CANVAS_H-130)/hmm,3.2);
+    SCALE_PXMM=sc;
+    return {sc, ox:(CANVAS_W-wmm*sc)/2-45, oy:(CANVAS_H-hmm*sc)/2};
+  }
+
+
+  function fitBox(pts,pad){
+    let a=1e9,b=-1e9,c=1e9,d=-1e9;
+    pts.forEach(p=>{a=Math.min(a,p.x);b=Math.max(b,p.x);c=Math.min(c,p.y);d=Math.max(d,p.y);});
+    const P=(pad===undefined?14:pad);
+    const fb=fitRect(b-a+2*P,d-c+2*P), s=fb.sc;
+    return {s,M:p=>({x:fb.ox+(p.x-a+P)*s, y:fb.oy+(d-p.y+P)*s})};
+  }
+  const circleFine=(cx,cy,R)=>{const o=[];for(let q=0;q<=360;q+=4)o.push({x:cx+R*Math.cos(q*Math.PI/180),y:cy+R*Math.sin(q*Math.PI/180)});return o;};
+  const upperHalf=[1,2,4,5].map(q=>-q*Math.PI/6);
+  const NTURN=v=>{ const n=Number(v); return (n===1.5)?1.5:Math.max(1,Math.min(2,Math.round(n))); };
+  const turnWords=(n,word)=>(n===1?("one "+word):n===1.5?("one and a half "+word+"s"):("two "+word+"s"));
+
+
+  /* =========================================================
+     models3d - parametric 3-D solids + wireframe renderer
+     Model = {verts:[{x,y,z}], faces:[{v:[i..],tag,curved}],
+              hard:[[i,j,tag]], dims:[{a,b,text,off,tag}], title}
+     Axes: x right, y up (axis of solid), z towards viewer.
+     Face vertices are listed anticlockwise seen from OUTSIDE.
+  ========================================================= */
+  const TAU=Math.PI*2;
+  const V=(x,y,z)=>({x:x,y:y,z:z});
+
+  function polyR(n,s){ return s/(2*Math.sin(Math.PI/n)); }        // side -> circumradius
+  function polyPts(n,R,ph){                                       // n corners on a circle
+    const o=[]; for(let i=0;i<n;i++){ const a=(ph||0)+TAU*i/n; o.push({x:R*Math.cos(a),z:R*Math.sin(a)}); }
+    return o;
+  }
+
+  /* ---- n-sided prism, base on y=0 ---- */
+  function m_prism(n,s,H,ph){
+    const R=polyR(n,s), P=polyPts(n,R,(ph===undefined?-Math.PI/2:ph));
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    P.forEach(p=>verts.push(V(p.x,H,p.z)));
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    const top=[]; for(let i=n-1;i>=0;i--) top.push(n+i);
+    faces.push({v:top,tag:"top"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"lat"+(i+1)});
+      hard.push([i,j,"base"],[n+i,n+j,"top"],[i,n+i,"edge"+(i+1)]);
+    }
+    return {verts,faces,hard,kind:"prism",n:n,R:R,H:H};
+  }
+
+  /* ---- n-sided pyramid, apex on the axis ---- */
+  function m_pyr(n,s,H,ph){
+    const R=polyR(n,s), P=polyPts(n,R,(ph===undefined?-Math.PI/2:ph));
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    verts.push(V(0,H,0));
+    const ap=n;
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,ap],tag:"lat"+(i+1)});
+      hard.push([i,j,"base"],[i,ap,"edge"+(i+1)]);
+    }
+    return {verts,faces,hard,kind:"pyr",n:n,R:R,H:H,apex:ap};
+  }
+
+  /* ---- cylinder (curved lateral faces -> only the silhouette is drawn) ---- */
+  function m_cyl(R,H,seg){
+    const n=seg||36, P=polyPts(n,R,0);
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    P.forEach(p=>verts.push(V(p.x,H,p.z)));
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    const top=[]; for(let i=n-1;i>=0;i--) top.push(n+i);
+    faces.push({v:top,tag:"top"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"lat",curved:true});
+      hard.push([i,j,"base"],[n+i,n+j,"top"]);
+    }
+    return {verts,faces,hard,kind:"cyl",n:n,R:R,H:H};
+  }
+
+  /* ---- cone ---- */
+  function m_cone(R,H,seg){
+    const n=seg||36, P=polyPts(n,R,0);
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    verts.push(V(0,H,0));
+    const ap=n;
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,ap],tag:"lat",curved:true});
+      hard.push([i,j,"base"]);
+    }
+    return {verts,faces,hard,kind:"cone",n:n,R:R,H:H,apex:ap};
+  }
+
+  /* ---- box from explicit corner + sizes: L(x) x H(y) x D(z) ---- */
+  function boxVF(x0,y0,z0,L,H,D,pre){
+    const p=pre||"b";
+    const v=[V(x0,y0,z0+D),V(x0+L,y0,z0+D),V(x0+L,y0,z0),V(x0,y0,z0),
+             V(x0,y0+H,z0+D),V(x0+L,y0+H,z0+D),V(x0+L,y0+H,z0),V(x0,y0+H,z0)];
+    const f=[{v:[0,1,5,4],tag:p+"front"},{v:[2,3,7,6],tag:p+"back"},
+             {v:[1,2,6,5],tag:p+"right"},{v:[3,0,4,7],tag:p+"left"},
+             {v:[4,5,6,7],tag:p+"top"},{v:[3,2,1,0],tag:p+"bottom"}];
+    const h=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]
+             .map(e=>[e[0],e[1],p+"edge"]);
+    return {verts:v,faces:f,hard:h};
+  }
+
+  /* =========================================================
+     dimensioning of a 3-D model
+     A dim entry is {p,q,off,text,tag}; p and q are the two points
+     being measured and off shifts the dimension line clear of the solid,
+     exactly as witness lines do on a drawing board.
+  ========================================================= */
+  function bboxM(m){
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+    m.verts.forEach(p=>{
+      if(p.x<x0)x0=p.x; if(p.x>x1)x1=p.x;
+      if(p.y<y0)y0=p.y; if(p.y>y1)y1=p.y;
+      if(p.z<z0)z0=p.z; if(p.z>z1)z1=p.z; });
+    return {x0,x1,y0,y1,z0,z1,L:x1-x0,H:y1-y0,B:z1-z0};
+  }
+
+  /* overall length / height / depth, taken straight from the bounding box */
+  function dimsBox(m,o){
+    o=o||{};
+    const b=bboxM(m), g=Math.max(b.L,b.H,b.B)*0.16+4, D=[];
+    const N=v=>{ const r=Math.round(v*10)/10; return (Math.abs(r-Math.round(r))<0.05)?String(Math.round(r)):r.toFixed(1); };
+    if(o.L!==false) D.push({p:{x:b.x0,y:b.y0,z:b.z1}, q:{x:b.x1,y:b.y0,z:b.z1},
+      off:{x:0,y:-g,z:g*0.55}, text:o.Ltext||N(b.L), tag:o.Ltag});
+    if(o.H!==false) D.push({p:{x:b.x0,y:b.y0,z:b.z1}, q:{x:b.x0,y:b.y1,z:b.z1},
+      off:{x:-g,y:0,z:g*0.55}, text:o.Htext||N(b.H), tag:o.Htag});
+    if(o.B!==false) D.push({p:{x:b.x1,y:b.y0,z:b.z1}, q:{x:b.x1,y:b.y0,z:b.z0},
+      off:{x:g*0.55,y:-g,z:0}, text:o.Btext||N(b.B), tag:o.Btag});
+    m.dims=(m.dims||[]).concat(D);
+    return m;
+  }
+
+  /* a single free dimension between two points */
+  function dimAdd(m,p,q,text,off,tag){
+    m.dims=(m.dims||[]).concat([{p:p,q:q,text:text,off:off||{x:0,y:0,z:0},tag:tag}]);
+    return m;
+  }
+
+  /* a diameter, measured across the circle on the level y, centred on (cx,cz) */
+  function dimDia(m,cx,cz,y,dia,text,off,tag){
+    const r=dia/2;
+    return dimAdd(m,{x:cx-r,y:y,z:cz},{x:cx+r,y:y,z:cz},
+                  text||("\u00d8 "+(Math.round(dia*10)/10)),off,tag);
+  }
+
+  /* ---- merge several part-models into one ---- */
+  function mergeM(){
+    const verts=[],faces=[],hard=[];
+    for(let k=0;k<arguments.length;k++){
+      const m=arguments[k]; if(!m) continue;
+      const o=verts.length;
+      m.verts.forEach(p=>verts.push(V(p.x,p.y,p.z)));
+      m.faces.forEach(f=>faces.push({v:f.v.map(i=>i+o),tag:f.tag,curved:f.curved}));
+      (m.hard||[]).forEach(e=>hard.push([e[0]+o,e[1]+o,e[2]]));
+    }
+    return {verts,faces,hard};
+  }
+
+  /* ---- solid of revolution / extrusion from a closed 2-D profile in the xy plane ---- */
+  function m_prismFromProfile(pts,D,pre){                // pts anticlockwise in xy, extruded along z
+    const n=pts.length, p=pre||"s";
+    const verts=[],faces=[],hard=[];
+    pts.forEach(q=>verts.push(V(q.x,q.y,D/2)));          // near face
+    pts.forEach(q=>verts.push(V(q.x,q.y,-D/2)));         // far face
+    const nf=[]; for(let i=0;i<n;i++) nf.push(i);
+    faces.push({v:nf,tag:p+"front"});
+    const ff=[]; for(let i=n-1;i>=0;i--) ff.push(n+i);
+    faces.push({v:ff,tag:p+"back"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:p+"side"+(i+1)});
+      hard.push([i,j,p+"front"],[n+i,n+j,p+"back"],[i,n+i,p+"edge"+(i+1)]);
+    }
+    return {verts,faces,hard};
+  }
+
+  /* ---- clip a model by the half-space  n.p <= d  (keeps the lower/inner part) ---- */
+  function clipModel(m,nx,ny,nz,d,capTag){
+    const EPS=1e-7;
+    const sd=p=>nx*p.x+ny*p.y+nz*p.z-d;
+    const verts=[], key={}, capPts=[];
+    const push=p=>{
+      const k=p.x.toFixed(4)+"|"+p.y.toFixed(4)+"|"+p.z.toFixed(4);
+      if(key[k]!==undefined) return key[k];
+      key[k]=verts.length; verts.push(V(p.x,p.y,p.z)); return key[k];
+    };
+    const faces=[], hard=[];
+    m.faces.forEach(f=>{
+      const P=f.v.map(i=>m.verts[i]), out=[];
+      for(let i=0;i<P.length;i++){
+        const A=P[i], B=P[(i+1)%P.length], da=sd(A), db=sd(B);
+        if(da<=EPS) out.push(A);
+        if((da<-EPS&&db>EPS)||(da>EPS&&db<-EPS)){
+          const t=da/(da-db);
+          const X=V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t);
+          out.push(X); capPts.push(X);
+        }
+      }
+      if(out.length>=3) faces.push({v:out.map(push),tag:f.tag,curved:f.curved});
+    });
+    /* order the cap points anticlockwise about the plane normal */
+    if(capPts.length>=3){
+      const c={x:0,y:0,z:0};
+      capPts.forEach(p=>{c.x+=p.x;c.y+=p.y;c.z+=p.z;});
+      c.x/=capPts.length; c.y/=capPts.length; c.z/=capPts.length;
+      let ux={x:capPts[0].x-c.x,y:capPts[0].y-c.y,z:capPts[0].z-c.z};
+      const ul=Math.hypot(ux.x,ux.y,ux.z)||1; ux={x:ux.x/ul,y:ux.y/ul,z:ux.z/ul};
+      const uy={x:ny*ux.z-nz*ux.y, y:nz*ux.x-nx*ux.z, z:nx*ux.y-ny*ux.x};
+      const seen={}, uniq=[];
+      capPts.forEach(p=>{
+        const k=p.x.toFixed(3)+"|"+p.y.toFixed(3)+"|"+p.z.toFixed(3);
+        if(seen[k]) return; seen[k]=1; uniq.push(p);
+      });
+      uniq.sort((p,q)=>{
+        const ap=Math.atan2((p.x-c.x)*uy.x+(p.y-c.y)*uy.y+(p.z-c.z)*uy.z,
+                            (p.x-c.x)*ux.x+(p.y-c.y)*ux.y+(p.z-c.z)*ux.z);
+        const aq=Math.atan2((q.x-c.x)*uy.x+(q.y-c.y)*uy.y+(q.z-c.z)*uy.z,
+                            (q.x-c.x)*ux.x+(q.y-c.y)*ux.y+(q.z-c.z)*ux.z);
+        return ap-aq;
+      });
+      const idx=uniq.map(push);
+      faces.push({v:idx,tag:capTag||"cut"});
+      for(let i=0;i<idx.length;i++) hard.push([idx[i],idx[(i+1)%idx.length],capTag||"cut"]);
+    }
+    /* keep original hard edges whose both ends survived */
+    (m.hard||[]).forEach(e=>{
+      const A=m.verts[e[0]], B=m.verts[e[1]];
+      const da=sd(A), db=sd(B);
+      if(da<=EPS&&db<=EPS){ hard.push([push(A),push(B),e[2]]); return; }
+      if(da<=EPS&&db>EPS){ const t=da/(da-db);
+        hard.push([push(A),push(V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t)),e[2]]); return; }
+      if(da>EPS&&db<=EPS){ const t=da/(da-db);
+        hard.push([push(V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t)),push(B),e[2]]); }
+    });
+    return {verts,faces,hard,kind:m.kind,n:m.n,R:m.R,H:m.H};
+  }
+
+  /* =========================================================
+     generic wireframe renderer with back-face culling
+     - hard edges : solid when any adjoining face is towards us,
+                    dashed when the edge is hidden
+     - soft edges (between two curved faces) : only the silhouette
+  ========================================================= */
+  function wireRender(cc,W,H,m,hl,rotY,rotX,zoom,panX,panY,opt){
+    const o=opt||{};
+    const HL=o.hlColor||"#e0561f", INK=o.ink||"#2b3a48", HID=o.hid||"#c3ccd6";
+    const cy=Math.cos(rotY),sy=Math.sin(rotY),cx=Math.cos(rotX),sx=Math.sin(rotX);
+    let c={x:0,y:0,z:0};
+    m.verts.forEach(p=>{c.x+=p.x;c.y+=p.y;c.z+=p.z;});
+    c.x/=m.verts.length; c.y/=m.verts.length; c.z/=m.verts.length;
+    let rad=1;
+    m.verts.forEach(p=>{rad=Math.max(rad,Math.hypot(p.x-c.x,p.y-c.y,p.z-c.z));});
+    const k=Math.min(W,H)*(o.fill||0.38)/rad*zoom;
+    const rot=p=>{ const dx=p.x-c.x,dy=p.y-c.y,dz=p.z-c.z;
+      const X=dx*cy-dz*sy, Z=dx*sy+dz*cy;
+      return {x:X,y:dy*cx-Z*sx,z:dy*sx+Z*cx}; };
+    const pr=p=>{ const r=rot(p); return {x:W/2+r.x*k+panX, y:H/2-r.y*k+panY, z:r.z}; };
+    const S=m.verts.map(pr);
+    const L=(a,b,col,w,dash)=>{ cc.strokeStyle=col; cc.lineWidth=w; cc.setLineDash(dash||[]);
+      cc.beginPath(); cc.moveTo(a.x,a.y); cc.lineTo(b.x,b.y); cc.stroke(); cc.setLineDash([]); };
+
+    const front={}, back={}, hot={}, curvedF={}, curvedB={};
+    m.faces.forEach(f=>{
+      const A=rot(m.verts[f.v[0]]), B=rot(m.verts[f.v[1]]), C=rot(m.verts[f.v[2]]);
+      const nz=(B.x-A.x)*(C.y-A.y)-(B.y-A.y)*(C.x-A.x);
+      f._front=(nz>0);
+      f._on=!!(f.tag&&hl&&hl.indexOf(f.tag)>=0);
+      for(let i=0;i<f.v.length;i++){
+        const a=f.v[i], b=f.v[(i+1)%f.v.length];
+        const key=Math.min(a,b)+"_"+Math.max(a,b);
+        if(f._front){ front[key]=1; if(f.curved) curvedF[key]=1; }
+        else        { back[key]=1;  if(f.curved) curvedB[key]=1; }
+        if(f._on&&f._front) hot[key]=1;
+      }
+    });
+
+
+    /* --- occlusion --------------------------------------------------------
+       Back-face culling alone marks an edge visible as soon as ANY adjoining
+       face is turned towards us. On a stepped or notched solid such an edge
+       can still lie behind another part of the same object, which is why
+       hidden edges were showing through. Each edge is therefore sampled and
+       every sample tested against the faces in front of it.              */
+    const occFaces=[];
+    if(o.noHidden){
+      m.faces.forEach(f=>{
+        if(!f._front) return;
+        const a=S[f.v[0]];
+        const e1={x:S[f.v[1]].x-a.x,y:S[f.v[1]].y-a.y};
+        const e2={x:S[f.v[2]].x-a.x,y:S[f.v[2]].y-a.y};
+        const det=e1.x*e2.y-e1.y*e2.x;
+        if(Math.abs(det)<1e-9) return;             // seen edge-on: hides nothing
+        occFaces.push({poly:f.v.map(i=>S[i]),a:a,e1:e1,e2:e2,det:det,
+                       dA:S[f.v[0]].z,dB:S[f.v[1]].z-S[f.v[0]].z,
+                       dC:S[f.v[2]].z-S[f.v[0]].z});
+      });
+    }
+    const inPoly=(poly,p)=>{ let inside=false;
+      for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+        const a=poly[i], b=poly[j];
+        if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) inside=!inside; }
+      return inside; };
+    const coverZ=(F,q)=>{ if(!inPoly(F.poly,q)) return null;
+      const rx=q.x-F.a.x, ry=q.y-F.a.y;
+      const u=( rx*F.e2.y-ry*F.e2.x)/F.det, w=(-rx*F.e1.y+ry*F.e1.x)/F.det;
+      return F.dA+u*F.dB+w*F.dC; };
+    let zSpan=1; S.forEach(p=>{zSpan=Math.max(zSpan,Math.abs(p.z));});
+    const zTol=zSpan*3e-3+1e-6;
+    /* draw only the parts of an edge that nothing covers */
+    const LV=(A,B,col,w,drop)=>{
+      if(!occFaces.length&&!drop){ L(A,B,col,w); return; }
+      const N=28, vis=[], at=t=>({x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t});
+      for(let i=0;i<=N;i++){
+        const t=(i+0.5)/(N+1), q=at(t), dz=A.z+(B.z-A.z)*t;
+        let hid=drop?drop(t):false;
+        for(let j=0;j<occFaces.length&&!hid;j++){
+          const dc=coverZ(occFaces[j],q); if(dc!==null&&dc>dz+zTol) hid=true; }
+        vis.push(!hid);
+      }
+      let s0=0;
+      for(let i=1;i<=N+1;i++){
+        if(i===N+1||vis[i]!==vis[s0]){
+          if(vis[s0]) L(at(s0/(N+1)),at(i/(N+1)),col,w);
+          s0=i;
+        }
+      }
+    };
+
+    /* --- edges that do not exist on the finished solid --------------------
+       These objects are built by merging boxes, so an edge belonging to one
+       part can fall in the middle of a flat face of another: the base box
+       ends where the upright box begins, but their side faces are flush, so
+       the surface there is smooth and no line belongs on it. An edge is
+       dropped when the surface simply continues flat across it.          */
+    const fNorm=f=>{
+      const A=m.verts[f.v[0]],B=m.verts[f.v[1]],C=m.verts[f.v[2]];
+      const u={x:B.x-A.x,y:B.y-A.y,z:B.z-A.z}, w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
+      const n={x:u.y*w.z-u.z*w.y,y:u.z*w.x-u.x*w.z,z:u.x*w.y-u.y*w.x};
+      const q=Math.hypot(n.x,n.y,n.z)||1;
+      return {x:n.x/q,y:n.y/q,z:n.z/q};
+    };
+    const FI=m.faces.map(f=>{ const n=fNorm(f), A=m.verts[f.v[0]];
+      return {f:f,n:n,d:n.x*A.x+n.y*A.y+n.z*A.z,
+              vs:f.v.reduce((o,i)=>{o[i]=1;return o;},{})}; });
+    const inFace=(F,p)=>{
+      const n=F.n, ax=Math.abs(n.x), ay=Math.abs(n.y), az=Math.abs(n.z);
+      const k=(ax>=ay&&ax>=az)?["y","z"]:((ay>=az)?["x","z"]:["x","y"]);
+      const poly=F.f.v.map(i=>({x:m.verts[i][k[0]],y:m.verts[i][k[1]]}));
+      const q={x:p[k[0]],y:p[k[1]]};
+      let inside=false;
+      for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+        const a=poly[i],b=poly[j];
+        if(((a.y>q.y)!==(b.y>q.y))&&(q.x<(b.x-a.x)*(q.y-a.y)/(b.y-a.y)+a.x)) inside=!inside;
+      }
+      return inside;
+    };
+    /* An edge may be flat over only PART of its length - the top edge of the
+       base box runs the whole length of the block, but only the stretch
+       behind the upright is buried in a smooth face. The test is therefore
+       made point by point, and only the stretches that are genuine creases
+       get drawn.                                                        */
+    const flatTest=(i0,i1)=>{
+      const P=m.verts[i0], Q=m.verts[i1];
+      const t={x:Q.x-P.x,y:Q.y-P.y,z:Q.z-P.z};
+      const tl=Math.hypot(t.x,t.y,t.z);
+      if(tl<1e-9) return null;
+      t.x/=tl; t.y/=tl; t.z/=tl;
+      const e=Math.min(tl*0.12,0.4)+1e-3;
+      const probes=[];
+      for(let a=0;a<FI.length;a++){
+        const F=FI[a];
+        if(!F.vs[i0]||!F.vs[i1]) continue;                 // edge not on this face
+        const b={x:F.n.y*t.z-F.n.z*t.y, y:F.n.z*t.x-F.n.x*t.z, z:F.n.x*t.y-F.n.y*t.x};
+        const co=[];
+        for(let g=0;g<FI.length;g++){
+          const G=FI[g]; if(G===F) continue;
+          if(G.n.x*F.n.x+G.n.y*F.n.y+G.n.z*F.n.z<0.999) continue;
+          if(Math.abs(G.d-F.d)>1e-4) continue;
+          co.push(G);
+        }
+        if(co.length) probes.push({F:F,b:b,co:co});
+      }
+      if(!probes.length) return null;
+      return u=>{
+        const p={x:P.x+(Q.x-P.x)*u, y:P.y+(Q.y-P.y)*u, z:P.z+(Q.z-P.z)*u};
+        for(let a=0;a<probes.length;a++){
+          const pr=probes[a], b=pr.b;
+          let s=1;
+          if(!inFace(pr.F,{x:p.x+b.x*e,y:p.y+b.y*e,z:p.z+b.z*e})) s=-1;
+          const out={x:p.x-b.x*e*s, y:p.y-b.y*e*s, z:p.z-b.z*e*s};
+          for(let g=0;g<pr.co.length;g++)
+            if(inFace(pr.co[g],out)) return true;          // the surface carries on
+        }
+        return false;
+      };
+    };
+    /* shaded highlighted faces, painted back to front */
+    m.faces.filter(f=>f._front&&f._on).forEach(f=>{
+      cc.beginPath();
+      f.v.forEach((vi,i)=>{ const p=S[vi]; i?cc.lineTo(p.x,p.y):cc.moveTo(p.x,p.y); });
+      cc.closePath(); cc.fillStyle=o.hlFill||"rgba(224,86,31,0.20)"; cc.fill();
+    });
+
+    /* silhouette of curved surfaces */
+    Object.keys(curvedF).forEach(key=>{
+      if(!curvedB[key]) return;
+      const p=key.split("_");
+      LV(S[+p[0]],S[+p[1]],hot[key]?HL:INK,hot[key]?2.6:1.5);
+    });
+
+    /* hard edges */
+    const drawn={};
+    (m.hard||[]).forEach(e=>{
+      const key=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
+      if(drawn[key]) return; drawn[key]=1;
+      const on=hot[key]||(e[2]&&hl&&hl.indexOf(e[2])>=0&&front[key]);
+      const rim=(e[2]==="holerim");          // a hole mouth is always a full ellipse
+      if(front[key]||rim)
+        LV(S[e[0]],S[e[1]],on?HL:INK,on?2.6:1.5,flatTest(e[0],e[1]));
+      else if(back[key]&&!o.noHidden) L(S[e[0]],S[e[1]],HID,1,[5,4]);
+    });
+
+    /* dimensions - d.a/d.b are vertex numbers, d.p/d.q are free points */
+    (m.dims||[]).forEach(d=>{
+      const on=!!(d.tag&&hl&&hl.indexOf(d.tag)>=0);
+      const va=d.p||m.verts[d.a], vb=d.q||m.verts[d.b], f=d.off||{x:0,y:0,z:0};
+      const A0=d.p?pr(d.p):S[d.a], B0=d.q?pr(d.q):S[d.b];
+      const A=pr({x:va.x+f.x,y:va.y+f.y,z:va.z+f.z});
+      const B=pr({x:vb.x+f.x,y:vb.y+f.y,z:vb.z+f.z});
+      /* projection/extension lines are thin CONTINUOUS lines */
+      L(A0,A,"#93a2b1",0.8); L(B0,B,"#93a2b1",0.8);
+      const ang=Math.atan2(B.y-A.y,B.x-A.x);
+      L(A,B,on?HL:"#93a2b1",on?1.7:1);
+      const ar=(x,y,a,col)=>{ cc.fillStyle=col; cc.beginPath(); cc.moveTo(x,y);
+        cc.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a+Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a+Math.PI/2));
+        cc.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a-Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a-Math.PI/2));
+        cc.closePath(); cc.fill(); };
+      ar(A.x,A.y,ang+Math.PI,on?HL:"#93a2b1"); ar(B.x,B.y,ang,on?HL:"#93a2b1");
+      const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-7;
+      cc.font="bold 11px Arial";
+      const w=cc.measureText(d.text).width+6;
+      cc.fillStyle="rgba(255,255,255,0.88)"; cc.fillRect(mx-w/2,my-7,w,14);
+      cc.fillStyle=on?HL:INK; cc.textAlign="center"; cc.textBaseline="middle";
+      cc.fillText(d.text,mx,my);
+    });
+    return {pr:pr,S:S,k:k};
+  }
+
+  /* =========================================================
+     ISOMETRIC PROJECTIONS
+     Isometric axes : one vertical, two at 30 degrees to the horizontal.
+     Object space   : x = 0..L along the length, y = 0..H upwards,
+                      z = 0..B from the REAR to the FRONT.
+     The nearest corner of the picture is (x=0, y=0, z=B).
+       canvas x = OX2 + (x + z)*cos30
+       canvas y = OY2 - (x - z)*sin30 - y
+  ========================================================= */
+  const C30=Math.cos(Math.PI/6), S30=0.5;
+  const COL_CONS="#9aa7b4", PATTERN_CL=[16,3,3,3];
+
+  function m_holeY(cx,cz,r,y0,y1,seg){
+    const n=seg||24, verts=[],faces=[],hard=[];
+    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),y0,cz+r*Math.sin(a))); }
+    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),y1,cz+r*Math.sin(a))); }
+    for(let i=0;i<n;i++){ const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"hole",curved:true});
+      hard.push([i,j,"holerim"],[n+i,n+j,"holerim"]); }
+    return {verts,faces,hard};
+  }
+
+  /* ---- the four-centre construction for an isometric circle ---- */
+  function fourCentre(PJ,c,e1,e2,r){
+    const P4=[[1,1],[1,-1],[-1,-1],[-1,1]].map(s=>PJ({
+      x:c.x+r*(s[0]*e1.x+s[1]*e2.x),
+      y:c.y+r*(s[0]*e1.y+s[1]*e2.y),
+      z:c.z+r*(s[0]*e1.z+s[1]*e2.z)}));
+    const A=P4[0],Bc=P4[1],Cc=P4[2],Dc=P4[3];
+    const mid=(p,q)=>({x:(p.x+q.x)/2,y:(p.y+q.y)/2});
+    const d=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);
+    /* the obtuse corners are the ends of the SHORTER diagonal */
+    let O1=A,O2=Cc,X1=Bc,X2=Dc;
+    if(d(A,Cc)>d(Bc,Dc)){ O1=Bc; O2=Dc; X1=Cc; X2=A; }
+    const P=mid(O1,X1), Q=mid(X1,O2), R=mid(O2,X2), S=mid(X2,O1);
+    const X=(p1,p2,p3,p4)=>{                       /* line-line intersection */
+      const a1=p2.y-p1.y,b1=p1.x-p2.x,c1=a1*p1.x+b1*p1.y;
+      const a2=p4.y-p3.y,b2=p3.x-p4.x,c2=a2*p3.x+b2*p3.y;
+      const dt=a1*b2-a2*b1;
+      if(Math.abs(dt)<1e-9) return {x:(p1.x+p3.x)/2,y:(p1.y+p3.y)/2};
+      return {x:(b2*c1-b1*c2)/dt, y:(a1*c2-a2*c1)/dt};
+    };
+    const m=X(O1,Q,O2,P), n=X(O1,R,O2,S);
+    const ang=(ct,p)=>Math.atan2(p.y-ct.y,p.x-ct.x);
+    const arc=(ct,p,q)=>{
+      const a1=ang(ct,p), a2=ang(ct,q);
+      let sw=a2-a1; while(sw>Math.PI) sw-=TAU; while(sw<-Math.PI) sw+=TAU;
+      return {cx:ct.x,cy:ct.y,r:d(ct,p),a1:a1,a2:a1+sw,ccw:(sw<0)};
+    };
+    const arcs=[arc(O1,Q,R),arc(O2,S,P),arc(m,P,Q),arc(n,R,S)];
+    /* polyline of the finished curve - the four arcs taken in the order in
+       which they follow each other round the ellipse: P-Q, Q-R, R-S, S-P     */
+    const pts=[];
+    [2,0,3,1].forEach(k=>{ const a=arcs[k], N=26;
+      for(let i=0;i<=N;i++){ const t=a.a1+(a.a2-a.a1)*i/N;
+        pts.push({x:a.cx+a.r*Math.cos(t), y:a.cy+a.r*Math.sin(t)}); } });
+    return {rhombus:[O1,X1,O2,X2],mids:{P,Q,R,S},centres:{O1,O2,m,n},arcs,pts,
+            lines:[[O1,Q],[O1,R],[O2,P],[O2,S]]};
+  }
+  const extremeX=E=>{ let L=E.pts[0],R=E.pts[0];
+    E.pts.forEach(p=>{ if(p.x<L.x)L=p; if(p.x>R.x)R=p; }); return {L,R}; };
+  function arcPortion(E,p1,p2,wantLower){
+    const near=p=>{ let bi=0,bd=1e18;
+      E.pts.forEach((q,i)=>{ const d=(q.x-p.x)*(q.x-p.x)+(q.y-p.y)*(q.y-p.y);
+        if(d<bd){bd=d;bi=i;} }); return bi; };
+    const n=E.pts.length, i1=near(p1), i2=near(p2);
+    const fwd=[]; for(let i=i1;;i=(i+1)%n){ fwd.push(E.pts[i]); if(i===i2) break; }
+    const bwd=[]; for(let i=i1;;i=(i-1+n)%n){ bwd.push(E.pts[i]); if(i===i2) break; }
+    const midY=a=>a[Math.floor(a.length/2)].y;
+    const pick=(wantLower===false)?(midY(fwd)<midY(bwd)?fwd:bwd)
+                                  :(midY(fwd)>midY(bwd)?fwd:bwd);
+    return pick;
+  }
+  function boreVisible(E,dy){
+    let cy=0; E.pts.forEach(p=>{cy+=p.y;}); cy/=E.pts.length;
+    const back=E.pts.filter(p=>p.y<cy), front=E.pts.filter(p=>p.y>=cy);
+    const yfAt=x=>{ let b=null,bd=1e18;
+      front.forEach(q=>{ const d=Math.abs(q.x-x); if(d<bd){bd=d;b=q;} });
+      return b?b.y:cy; };
+    const out=[];
+    back.forEach(p=>{ if(dy<yfAt(p.x)-p.y) out.push({x:p.x,y:p.y+dy}); });
+    out.sort((a,b)=>a.x-b.x);
+    return out;
+  }
+  function tangentsFrom(E,ap){                    /* the two tangent points seen from ap */
+    let lo=E.pts[0],hi=E.pts[0],la=1e9,ha=-1e9;
+    E.pts.forEach(p=>{ const a=Math.atan2(p.y-ap.y,p.x-ap.x);
+      if(a<la){la=a;lo=p;} if(a>ha){ha=a;hi=p;} });
+    return [lo,hi];
+  }
+
+  function ptInPoly(poly,p){                       /* ray-crossing test */
+    let inside=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+      const a=poly[i], b=poly[j];
+      if(((a.y>p.y)!==(b.y>p.y)) &&
+         (p.x < (b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) inside=!inside;
+    }
+    return inside;
+  }
+  const AP=arcPortion;
+
+  function buildIso(v,def){
+    const O=def(v);
+    const L=O.L, B=O.B, H=O.H;
+    const wmm=(L+B)*C30, hmm=(L+B)*S30+H;
+    const sc=Math.min((CANVAS_W-190)/wmm,(CANVAS_H-110)/hmm,3.6);
+    SCALE_PXMM=sc;
+    const OX2=(CANVAS_W-wmm*sc)/2+60, OY2=(CANVAS_H-hmm*sc)/2+(L*S30+H)*sc;
+    const PJ=p=>({x:OX2+(p.x+p.z)*C30*sc, y:OY2-(p.x-p.z)*S30*sc-p.y*sc});
+    const p3=(x,y,z)=>PJ({x:x,y:y,z:z});
+    const seg=(a,b,col,w,dash)=>drawLine(a.x,a.y,b.x,b.y,col||COL_THICK,w||LW_THICK,dash);
+    const SET=(arr,col,w,dash)=>{ if(arr.length) lineSet(arr.map(e=>[e[0].x,e[0].y,e[1].x,e[1].y]),col,w,dash); };
+    /* every edge of the box is parallel to an axis already on the paper, so
+       it is put in with the ROLL-AND-DRAW scale rather than measured afresh */
+    const ROLL=(arr,col,w,dash)=>{ if(arr.length) rollSet(arr.map(e=>[e[0].x,e[0].y,e[1].x,e[1].y]),col,w,dash); };
+    const EX={x:1,y:0,z:0}, EY={x:0,y:1,z:0}, EZ={x:0,y:0,z:1};
+    const PLANE={top:[EX,EZ], front:[EX,EY], side:[EZ,EY]};
+    const ISOC=(c,plane,r)=>fourCentre(PJ,c,PLANE[plane][0],PLANE[plane][1],r);
+    /* ---- axis and centre lines ------------------------------------------
+       Every standard solid carries its axis: a chain line run a little past
+       each end of the solid.  A circular face carries the two centre lines
+       of its isometric circle, drawn along the isometric directions of the
+       face it lies in - not along the paper's horizontal and vertical.   */
+    const AX_OVER=8;                       // mm the centre line projects past
+    const axisLine=(cx,cz,y0,y1)=>{
+      const a=p3(cx,y0-AX_OVER,cz), b=p3(cx,y1+AX_OVER,cz);
+      drawLine(a.x,a.y,b.x,b.y,COL_AXIS,LW_THIN,PATTERN_CENTRE);
+    };
+    const faceCL=(c,plane,r)=>{
+      const e=r+AX_OVER;
+      PLANE[plane].forEach(d=>{
+        const a=p3(c.x-d.x*e,c.y-d.y*e,c.z-d.z*e);
+        const b=p3(c.x+d.x*e,c.y+d.y*e,c.z+d.z*e);
+        drawLine(a.x,a.y,b.x,b.y,COL_AXIS,LW_THIN,PATTERN_CENTRE);
+      });
+    };
+    const CTX={L,B,H,PJ,p3,seg,SET,ISOC,extremeX,tangentsFrom,arcPortion:AP,
+               boreVisible:boreVisible,ptInPoly:ptInPoly,sc,EX,EY,EZ,v,
+               axisLine:axisLine,faceCL:faceCL,PLANE:PLANE};
+
+    /* ---- visible edges taken straight from the 3-D model ----
+       Back-face culling on its own is not enough. On a stepped, notched or
+       L-shaped solid an edge can belong to a face that is turned towards the
+       observer and STILL be hidden behind another part of the same solid -
+       which is why back edges were appearing dark through the block. Every
+       candidate edge is therefore sampled along its length and each sample
+       tested against the faces in front of it; only the spans that nothing
+       covers are drawn. Hidden edges are left out altogether, never dashed. */
+    function modelEdges(){
+      const m=O.model(v);
+      const S=m.verts.map(PJ);
+      /* the direction along which the projection is degenerate: two points
+         differing by this vector fall on the same spot on the paper       */
+      let K={x:1,y:-1,z:-1};
+      const dep=p=>p.x*K.x+p.y*K.y+p.z*K.z;
+      const front={},back={},cF={},cB={};
+      const frontFaces=[], backFaces=[];
+      m.faces.forEach(f=>{
+        const a=S[f.v[0]],b=S[f.v[1]],c=S[f.v[2]];
+        const cr=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+        const fr=(cr<0);
+        for(let i=0;i<f.v.length;i++){
+          const p=f.v[i], q=f.v[(i+1)%f.v.length];
+          const k=Math.min(p,q)+"_"+Math.max(p,q);
+          if(fr){ front[k]=1; if(f.curved) cF[k]=1; } else { back[k]=1; if(f.curved) cB[k]=1; }
+        }
+        (fr?frontFaces:backFaces).push(f);
+      });
+      /* settle the sign of K from the faces culling has already decided are
+         towards us: those must come out NEARER than the ones behind        */
+      const mid=fs=>{ if(!fs.length) return 0; let t=0;
+        fs.forEach(f=>{ let d=0; f.v.forEach(i=>d+=dep(m.verts[i])); t+=d/f.v.length; });
+        return t/fs.length; };
+      if(frontFaces.length&&backFaces.length&&mid(frontFaces)<mid(backFaces))
+        K={x:-K.x,y:-K.y,z:-K.z};
+
+      /* the front faces, prepared so that the depth of any covered point can
+         be read off; a face seen exactly edge-on can hide nothing           */
+      const occl=[];
+      frontFaces.forEach(f=>{
+        const a=S[f.v[0]];
+        const e1={x:S[f.v[1]].x-a.x,y:S[f.v[1]].y-a.y};
+        const e2={x:S[f.v[2]].x-a.x,y:S[f.v[2]].y-a.y};
+        const det=e1.x*e2.y-e1.y*e2.x;
+        if(Math.abs(det)<1e-9) return;
+        occl.push({poly:f.v.map(i=>S[i]),a:a,e1:e1,e2:e2,det:det,
+                   dA:dep(m.verts[f.v[0]]),
+                   dB:dep(m.verts[f.v[1]])-dep(m.verts[f.v[0]]),
+                   dC:dep(m.verts[f.v[2]])-dep(m.verts[f.v[0]])});
+      });
+      const cover=(F,q)=>{
+        if(!ptInPoly(F.poly,q)) return null;
+        const rx=q.x-F.a.x, ry=q.y-F.a.y;
+        const u=( rx*F.e2.y-ry*F.e2.x)/F.det;
+        const w=(-rx*F.e1.y+ry*F.e1.x)/F.det;
+        return F.dA+u*F.dB+w*F.dC;
+      };
+      let span=1; m.verts.forEach(p=>{span=Math.max(span,Math.abs(dep(p)));});
+      const TOL=span*2e-3+1e-6, SAMP=56;
+      const spans=(i0,i1)=>{
+        const A=S[i0], B=S[i1];
+        const d0=dep(m.verts[i0]), d1=dep(m.verts[i1]);
+        const vis=[];
+        for(let k=0;k<=SAMP;k++){
+          const t=k/SAMP, q={x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t};
+          const d=d0+(d1-d0)*t;
+          let hid=false;
+          for(let j=0;j<occl.length&&!hid;j++){
+            const dc=cover(occl[j],q);
+            if(dc!==null&&dc>d+TOL) hid=true;
+          }
+          vis.push(!hid);
+        }
+        const out=[]; let s=null;
+        const at=t=>({x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t});
+        for(let k=0;k<=SAMP;k++){
+          if(vis[k]&&s===null) s=k;
+          if((!vis[k]||k===SAMP)&&s!==null){
+            const e=vis[k]?k:k-1;
+            if(e>s) out.push([at(s/SAMP),at(e/SAMP)]);
+            s=null;
+          }
+        }
+        return out;
+      };
+
+      const out=[], seen={};
+      (m.hard||[]).forEach(e=>{
+        const k=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
+        if(seen[k]||!front[k]) return; seen[k]=1;
+        spans(e[0],e[1]).forEach(sp=>out.push(sp));
+      });
+      Object.keys(cF).forEach(k=>{ if(!cB[k]||seen[k]) return; seen[k]=1;
+        const p=k.split("_"); spans(+p[0],+p[1]).forEach(sp=>out.push(sp)); });
+      return out;
+    }
+
+    const AXO=p3(0,0,B);                            /* the nearest bottom corner */
+    const steps=[];
+
+    steps.push({text:"Draw the ISOMETRIC AXES. From the nearest bottom corner draw one line vertically upward for the HEIGHT and two lines at 30° to the horizontal - one to the right for the LENGTH and one to the left for the DEPTH. All three axes are 120° apart.",
+      hl:[],
+      d:()=>{ const up=p3(0,H*1.30,B), rt=p3(L*1.18,0,B), lf=p3(0,0,B-B*1.18);
+        SET([[AXO,up],[AXO,rt],[AXO,lf]],COL_THIN,LW_THIN);   /* axes are construction, not outline */
+        drawText(AXO.x-14,AXO.y-46,"height",COL_CONS,FONT_DIM,"right","middle");
+        const rl=p3(L*1.02,0,B), ll=p3(0,0,B-B*1.02);   /* captions sit BELOW the axes, clear of the solid */
+        drawText(rl.x+6,rl.y+18,"length (30°)",COL_CONS,FONT_DIM,"left","middle");
+        drawText(ll.x-6,ll.y+18,"depth (30°)",COL_CONS,FONT_DIM,"right","middle");
+        drawPoint(AXO.x,AXO.y,"O",{x:-16,y:12});
+        drawAngleDimOutward(AXO.x,AXO.y,32,"30°",0,-toRad(30),true,true); }});
+
+    /* MEASURE first: the three sizes are set off along the axes with the
+       scale and marked, before any line of the box is drawn.            */
+    steps.push({text:`Set off the three overall sizes along the axes with the scale, and mark the points: length ${R1(L)} mm along the axis to the right, depth ${R1(B)} mm along the axis to the left and height ${R1(H)} mm up the vertical. Along an isometric axis a distance is marked TRUE LENGTH, so the scale is used directly. Nothing is drawn until the three points are marked.`,
+      hl:O.hlAll||[],
+      d:()=>{ const PL=p3(L,0,B), PB=p3(0,0,0), PH=p3(0,H,B);
+        [[PL,"L"],[PB,"B"],[PH,"H"]].forEach(q=>drawPoint(q[0].x,q[0].y,"",{x:0,y:0}));
+        drawAlignedLabel(AXO.x,AXO.y,PL.x,PL.y,R1(L),-12,0.66);
+        drawAlignedLabel(AXO.x,AXO.y,PB.x,PB.y,R1(B),-12,0.66);
+        drawAlignedLabel(AXO.x,AXO.y,PH.x,PH.y,R1(H),10,0.5); }});
+
+    steps.push({text:"Now complete the ISOMETRIC BOX that just encloses the object. Every edge of the box is parallel to one of the three axes already on the paper, so each is put in with the ROLL-AND-DRAW scale rolled along the axis it is parallel to - not measured again. Draw it in thin construction lines.",
+      hl:O.hlAll||[],
+      d:()=>{ const C=[];
+        [[0,0,0],[L,0,0],[L,0,B],[0,0,B]].forEach((a,i,arr)=>{
+          const b=arr[(i+1)%4];
+          C.push([p3(a[0],0,a[2]),p3(b[0],0,b[2])]);
+          C.push([p3(a[0],H,a[2]),p3(b[0],H,b[2])]);
+          C.push([p3(a[0],0,a[2]),p3(a[0],H,a[2])]); });
+        ROLL(C,COL_CONS,LW_THIN); }});
+
+    steps.push({text:"Remember the golden rule of isometric drawing: distances are marked TRUE LENGTH only along the three isometric axes, or along lines parallel to them. Any line NOT parallel to an axis - a slope, a diagonal - must be found by locating its two end points first.",
+      hl:O.hlAll||[], d:()=>{ }});
+
+    /* ---- measure before drawing ------------------------------------------
+       A step is never allowed to put a line down and give its size
+       afterwards. The points a group is about to use are collected by
+       running it once with the drawing suppressed and p3 recording the
+       co-ordinates it is asked for; those points are then marked, and the
+       distances that fix them set off along the axes, in a step of their
+       own before a single line of that group is drawn.                  */
+    const measured={};
+    /* the same dry run also records the SEGMENTS the group is about to draw,
+       as pairs of model points, so the given orthographic views can pick out
+       the very edge the student is drawing at that moment                */
+    const measureOf=g=>{
+      const pts=[], seen={}, segs=[], circs=[];
+      const cap=Object.create(CTX);
+      cap.p3=function(x,y,z){
+        const k=[x,y,z].map(t=>Math.round(t*100)).join(",");
+        if(!seen[k]){ seen[k]=1; pts.push({x:x,y:y,z:z}); }
+        const q=p3(x,y,z); q._3d={x:x,y:y,z:z}; return q;
+      };
+      const grab=arr=>{ (arr||[]).forEach(e=>{
+        if(e&&e[0]&&e[1]&&e[0]._3d&&e[1]._3d) segs.push([e[0]._3d,e[1]._3d]); }); };
+      cap.SET=function(arr,c,w,d){ grab(arr); return SET(arr,c,w,d); };
+      cap.ROLL=function(arr,c,w,d){ grab(arr); return ROLL(arr,c,w,d); };
+      /* a circular feature is not a straight edge, so it is recorded on its
+         own terms: centre, the face it lies in, and its radius            */
+      cap.ISOC=function(c,plane,r){ circs.push({c:c,plane:plane,r:r}); return ISOC(c,plane,r); };
+      const keep=REC; REC=[];
+      try{ g.d(cap); }catch(e){ REC=keep; return null; }
+      REC=keep;
+      g._segs=segs; g._circs=circs;
+      if(!pts.length) return {pts:[],ux:[],uy:[],uz:[],words:[],none:true};
+      const ux=[],uy=[],uz=[];
+      /* a distance already set off in an earlier step is not measured twice */
+      const add=(a,val,max,ax)=>{ if(val<=0.6||val>=max-0.6) return;
+        if(a.some(t=>Math.abs(t-val)<0.5)) return;
+        const k=ax+":"+Math.round(val*10); if(measured[k]) return;
+        measured[k]=1; a.push(val); };
+      pts.forEach(q=>{ add(ux,q.x,L,"x"); add(uy,q.y,H,"y"); add(uz,q.z,B,"z"); });
+      if(!ux.length&&!uy.length&&!uz.length) return {pts:pts,ux:[],uy:[],uz:[],words:[],none:true};
+      const words=[];
+      if(uy.length) words.push(uy.map(t=>R1(t)).join(" and ")+" mm up the vertical edges");
+      if(ux.length) words.push(ux.map(t=>R1(t)).join(" and ")+" mm along the length axis");
+      if(uz.length) words.push(uz.map(t=>R1(t)).join(" and ")+" mm along the depth axis");
+      return {pts:pts,ux:ux,uy:uy,uz:uz,words:words};
+    };
+    (O.groups||[]).forEach(g=>{
+      const M=measureOf(g);
+      const SG=g._segs||[], CR=g._circs||[];
+      if(M&&!M.none) steps.push({
+        hlSeg3:SG, hlCirc:CR,
+        text:"Set off "+M.words.join(", and ")+", and mark the points. Along an isometric "
+             +"axis a distance is marked TRUE LENGTH, so the scale is used directly. "
+             +"Nothing is drawn until the points are marked.",
+        hl:g.hl||[],
+        d:()=>{
+          M.pts.forEach(q=>{ const P=p3(q.x,q.y,q.z); drawPoint(P.x,P.y,"",{x:0,y:0}); });
+          M.uy.forEach(t=>{ const A=p3(0,0,B), Bp=p3(0,t,B);
+            drawAlignedLabel(A.x,A.y,Bp.x,Bp.y,R1(t),12,0.5); });
+          M.ux.forEach(t=>{ const A=p3(0,0,B), Bp=p3(t,0,B);
+            drawAlignedLabel(A.x,A.y,Bp.x,Bp.y,R1(t),-12,0.5); });
+          M.uz.forEach(t=>{ const A=p3(0,0,B), Bp=p3(0,0,B-t);
+            drawAlignedLabel(A.x,A.y,Bp.x,Bp.y,R1(t),-12,0.5); });
+        }});
+      steps.push({text:g.text, hl:g.hl||[], hlSeg3:SG, hlCirc:CR, d:()=>g.d(CTX)});
+    });
+
+    if(!O.custom){
+      steps.push({text:"Line in the finished isometric view. Only the edges that can actually be SEEN are drawn - in an isometric view hidden edges are left out altogether.",
+        hl:O.hlAll||[],
+        d:()=>{ const E=modelEdges();
+          const hz=E.filter(e=>Math.abs(e[0].y-e[1].y)<0.6);
+          const rest=E.filter(e=>Math.abs(e[0].y-e[1].y)>=0.6);
+          SET(hz,COL_THICK,LW_THICK); SET(rest,COL_THICK,LW_THICK); }});
+    }
+
+    if(O.axis){
+      steps.push({text:O.axis.text||"Mark the axis of the solid with a chain line, and put in the centre lines of every circular face. The centre lines of an isometric circle run along the isometric directions of the face, not along the horizontal and vertical of the paper.",
+        hl:O.hlAll||[],
+        d:()=>{ (O.axis.lines||[]).forEach(a=>{
+            if(a.k==="axis") axisLine(a.x,a.z,a.y0,a.y1);
+            else faceCL({x:a.x,y:a.y,z:a.z},a.plane||"top",a.r); }); }});
+    }
+
+    steps.push({text:"The isometric view is complete. Check it against the given orthographic views: the length runs up to the right, the depth up to the left and the height stays vertical.",
+      hl:O.hlAll||[], d:()=>{ }});
+
+    const results=`<b>Isometric data:</b>
+      <table>
+        <tr><td>Length L</td><td>${R1(L)} mm</td><td>Depth B</td><td>${R1(B)} mm</td><td>Height H</td><td>${R1(H)} mm</td></tr>
+        <tr><td>Axes</td><td colspan="3">vertical, 30° right, 30° left (120° apart)</td><td>Scale</td><td>isometric drawing (full size)</td></tr>
+      </table>`;
+
+    return {steps,results,
+      /* Two 3-D panels with two different jobs.  The question figure above is
+         pinned, dimensioned and free of hidden lines; the panel below appears
+         only when the drawing is finished and is there to be turned and
+         zoomed, so it keeps its dotted hidden edges.                        */
+      given:{type:"ortho",title:"Given: front view and top view",
+             draw:(values,hl,seg3,circ)=>drawGivenOrthoAuto(()=>O.model(v))(values,hl,seg3,circ),
+             model3d:()=>O.model(v),
+             box:O.box, dimExtra:O.dimExtra},
+      space:{title:"The finished object in 3-D - drag to turn it, scroll to zoom",model:()=>O.model(v),
+             note:"Turn the solid until the three axes are 120° apart on the screen - that is the isometric position."}};
+  }
+
+  /* ================= reverse-direction problems =================
+     Same solids, same construction steps - buildIso is not touched at all.
+     Only the given panel changes: instead of a 3-D reference model, the
+     student is given the actual FRONT VIEW and TOP VIEW, exactly as they
+     would appear in an orthographic-projection question paper, and has to
+     read the dimensions off them the way a real exam expects.             */
+  /* Every isometric problem is now given as orthographic views generated
+     from the solid, so these two need nothing special beyond their title.
+     They kept a pair of hand-drawn figures from before the generator
+     existed, which were laid out differently and ran off the panel.    */
+  function buildIsoFromOrtho(v,def,drawGiven,title){
+    const r=buildIso(v,def);
+    if(title) r.given.title=title;
+    return r;
+  }
+
+  /* ================= the objects ================= */
+  const IS={};
+
+  IS.block=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>boxVF(0,0,0,v.L,v.H,v.B,"m"),
+    hlAll:["mfront","mtop","mleft"],
+    groups:[{text:"For a plain rectangular block the isometric box IS the object - no points have to be located inside it. Every edge of the box is an edge of the block.",
+      hl:["mfront","mtop","mleft"], d:C=>{} }]});
+
+  IS.step=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
+                     boxVF(0,v.h1,0,v.l2,v.H-v.h1,v.B,"b")),
+    hlAll:["afront","btop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:b.x0,y:b.y1,z:b.z1},{x:v.l2,y:b.y1,z:b.z1},R1(v.l2),{x:0,y:g,z:g*0.55});
+    },
+    groups:[
+      {text:`Mark the height of the base, ${R1(v.h1)} mm, up the vertical edges, and the length of the step, ${R1(v.l2)} mm, along the two length edges. These distances are all parallel to the axes, so they are marked TRUE LENGTH.`,
+       hl:["atop","bright"],
+       d:C=>{ const A=[];
+         [0,v.B].forEach(z=>{ A.push([C.p3(0,v.h1,z),C.p3(v.L,v.h1,z)]); });
+         A.push([C.p3(v.l2,0,0),C.p3(v.l2,0,v.B)]);
+         C.SET(A,COL_CONS,LW_THIN);
+         [[0,v.h1,v.B],[v.l2,v.h1,v.B],[v.l2,v.h1,0],[v.L,v.h1,v.B]].forEach(q=>{
+           const p=C.p3(q[0],q[1],q[2]); drawPoint(p.x,p.y,"",{x:0,y:0}); }); }},
+      {text:"Draw the top face of the base and the vertical face of the step, each parallel to an isometric axis, and complete the upper block on top of the base.",
+       hl:["atop","bright"],
+       d:C=>{ C.SET([[C.p3(v.l2,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
+                     [C.p3(v.l2,v.h1,0),C.p3(v.l2,v.h1,v.B)],
+                     [C.p3(v.l2,v.h1,v.B),C.p3(v.l2,v.H,v.B)]],COL_THICK,LW_THICK); }}]});
+
+  IS.lshape=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
+                     boxVF(0,v.h1,0,v.w,v.H-v.h1,v.B,"b")),
+    hlAll:["afront","btop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:b.x0,y:b.y1,z:b.z1},{x:v.w,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+    },
+    groups:[
+      {text:`Mark the thickness of the horizontal limb, ${R1(v.h1)} mm, up the vertical edges and the width of the vertical limb, ${R1(v.w)} mm, along the length edges. Join the points with lines parallel to the isometric axes to get the L-shaped face.`,
+       hl:["atop","bright"],
+       d:C=>{ C.SET([[C.p3(0,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
+                     [C.p3(v.w,0,v.B),C.p3(v.w,v.H,v.B)]],COL_CONS,LW_THIN); }},
+      {text:"The L-shaped face is parallel to the length-height plane, so it keeps its shape in the isometric view - only the right angles look different. Draw the finished L on the near face, then carry the same shape back along the depth axis.",
+       hl:["afront","bright"],
+       d:C=>{ C.SET([[C.p3(v.w,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
+                     [C.p3(v.w,v.h1,v.B),C.p3(v.w,v.H,v.B)],
+                     [C.p3(v.w,v.h1,0),C.p3(v.L,v.h1,0)],
+                     [C.p3(v.w,v.h1,0),C.p3(v.w,v.h1,v.B)]],COL_THICK,LW_THICK); }}]});
+
+  IS.tee=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
+                     boxVF((v.L-v.w)/2,v.h1,0,v.w,v.H-v.h1,v.B,"b")),
+    hlAll:["afront","btop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+    },
+    groups:[
+      {text:`Mark the height of the base, ${R1(v.h1)} mm, and set out the central upstand ${R1(v.w)} mm wide, that is ${R1((v.L-v.w)/2)} mm in from each end. All these distances lie along isometric axes, so they are true lengths.`,
+       hl:["atop","bleft","bright"],
+       d:C=>{ C.SET([[C.p3(0,v.h1,v.B),C.p3(v.L,v.h1,v.B)],
+                     [C.p3((v.L-v.w)/2,v.h1,0),C.p3((v.L-v.w)/2,v.h1,v.B)],
+                     [C.p3((v.L+v.w)/2,v.h1,0),C.p3((v.L+v.w)/2,v.h1,v.B)]],COL_CONS,LW_THIN); }},
+      {text:"Erect the two vertical faces of the upstand from the top of the base and close it with its top face, drawn parallel to the length and depth axes.",
+       hl:["bleft","bright","btop"],
+       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.h1,v.B),C.p3((v.L-v.w)/2,v.H,v.B)],
+                     [C.p3((v.L+v.w)/2,v.h1,v.B),C.p3((v.L+v.w)/2,v.H,v.B)]],COL_THICK,LW_THICK); }}]});
+
+  IS.groove=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.H-v.g,v.B,"a"),
+                     boxVF(0,v.H-v.g,0,(v.L-v.w)/2,v.g,v.B,"b"),
+                     boxVF((v.L+v.w)/2,v.H-v.g,0,(v.L-v.w)/2,v.g,v.B,"c")),
+    hlAll:["afront","btop","ctop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y1-v.g,z:b.z1},{x:b.x1,y:b.y1,z:b.z1},R1(v.g),{x:g,y:0,z:g*0.55});
+    },
+    groups:[
+      {text:`Set out the groove on the TOP face of the box: it is ${R1(v.w)} mm wide, so mark ${R1((v.L-v.w)/2)} mm in from each end along the length axis, and draw the two lines back along the depth axis.`,
+       hl:["bright","cleft"],
+       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.H,0),C.p3((v.L-v.w)/2,v.H,v.B)],
+                     [C.p3((v.L+v.w)/2,v.H,0),C.p3((v.L+v.w)/2,v.H,v.B)]],COL_CONS,LW_THIN); }},
+      {text:`Drop the two sides of the groove ${R1(v.g)} mm vertically and join their lower ends to give the bottom of the groove, which is parallel to the top face.`,
+       hl:["bright","cleft","atop"],
+       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.H,v.B),C.p3((v.L-v.w)/2,v.H-v.g,v.B)],
+                     [C.p3((v.L+v.w)/2,v.H,v.B),C.p3((v.L+v.w)/2,v.H-v.g,v.B)],
+                     [C.p3((v.L-v.w)/2,v.H-v.g,v.B),C.p3((v.L+v.w)/2,v.H-v.g,v.B)],
+                     [C.p3((v.L-v.w)/2,v.H-v.g,0),C.p3((v.L+v.w)/2,v.H-v.g,0)]],
+                    COL_THICK,LW_THICK); }}]});
+
+  IS.vnotch=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>{ const prof=[{x:0,y:0},{x:v.L,y:0},{x:v.L,y:v.H},{x:(v.L+v.w)/2,y:v.H},
+                            {x:v.L/2,y:v.H-v.g},{x:(v.L-v.w)/2,y:v.H},{x:0,y:v.H}];
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; }); return m; },
+    hlAll:["sfront","sside4","sside5"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y1-v.g,z:b.z1},{x:b.x1,y:b.y1,z:b.z1},R1(v.g),{x:g,y:0,z:g*0.55});
+    },
+    groups:[
+      {text:`Locate the three corners of the V on the near face: the two top corners ${R1((v.L-v.w)/2)} mm in from each end, and the apex on the centre of the top face, ${R1(v.g)} mm down. Mark the same three points on the far face.`,
+       hl:["sside4","sside5"],
+       d:C=>{ [[(v.L-v.w)/2,v.H],[v.L/2,v.H-v.g],[(v.L+v.w)/2,v.H]].forEach(q=>{
+           [0,v.B].forEach(z=>{ const p=C.p3(q[0],q[1],z); drawPoint(p.x,p.y,"",{x:0,y:0}); }); });
+         C.SET([[C.p3(v.L/2,v.H,v.B),C.p3(v.L/2,v.H-v.g,v.B)],
+                [C.p3(v.L/2,v.H,0),C.p3(v.L/2,v.H-v.g,0)]],COL_CONS,LW_THIN); }},
+      {text:"Join the points to form the V. NOTE that the two sloping faces of the notch are NOT parallel to any isometric axis, so their lengths in the drawing are not true lengths - they had to be found by locating their end points first.",
+       hl:["sside4","sside5"],
+       d:C=>{ C.SET([[C.p3((v.L-v.w)/2,v.H,v.B),C.p3(v.L/2,v.H-v.g,v.B)],
+                     [C.p3(v.L/2,v.H-v.g,v.B),C.p3((v.L+v.w)/2,v.H,v.B)],
+                     [C.p3((v.L-v.w)/2,v.H,0),C.p3(v.L/2,v.H-v.g,0)],
+                     [C.p3(v.L/2,v.H-v.g,0),C.p3((v.L+v.w)/2,v.H,0)],
+                     [C.p3(v.L/2,v.H-v.g,0),C.p3(v.L/2,v.H-v.g,v.B)]],COL_THICK,LW_THICK); }}]});
+
+  IS.hexprism=v=>({L:2*polyR(6,v.s),B:2*polyR(6,v.s)*C30*0+2*polyR(6,v.s)*Math.sin(Math.PI/3)*0+2*polyR(6,v.s)*0.8660254,H:v.h,
+    axis:{lines:[{k:"axis",x:polyR(6,v.s),z:polyR(6,v.s)*0.8660254,y0:0,y1:v.h}],
+      text:"Mark the axis of the prism: a chain line through the centre of the base, drawn along the isometric vertical and run a little past each end."},
+    model:()=>{ const m=m_prism(6,v.s,v.h,Math.PI/2-Math.PI/6);
+      const R=polyR(6,v.s), d=R*0.8660254;
+      m.verts.forEach(p=>{ p.x+=R; p.z+=d; }); return m; },
+    hlAll:["lat1","lat2","top"],
+    box:{L:false,B:false},
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,mm.verts[0],mm.verts[1],R1(v.s),{x:0,y:-g,z:0});
+    },
+    groups:[
+      {text:`Set out the hexagonal base by the OFFSET method. The hexagon of side ${R1(v.s)} mm fits inside a rectangle ${R1(2*polyR(6,v.s))} mm × ${R1(2*polyR(6,v.s)*0.866)} mm - that rectangle is the bottom of the isometric box. Mark the six corners on it by their offsets.`,
+       hl:["base"],
+       d:C=>{ const R=polyR(6,v.s), d=R*0.8660254, ph=Math.PI/2-Math.PI/6;
+         const pts=[]; for(let i=0;i<6;i++){ const a=ph+TAU*i/6;
+           pts.push([R+R*Math.cos(a), d+R*Math.sin(a)]); }
+         pts.forEach(q=>{ const p=C.p3(q[0],0,q[1]); drawPoint(p.x,p.y,"",{x:0,y:0}); });
+         const A=[]; pts.forEach(q=>{ A.push([C.p3(q[0],0,0),C.p3(q[0],0,2*d)]); });
+         C.SET(A,COL_CONS,LW_THIN); }},
+      {text:"Join the six points to give the hexagon in isometric. Only the two sides that run along the length axis keep their true length of the side - all the others are drawn shorter or longer, which is why the offset method must be used.",
+       hl:["base"],
+       d:C=>{ const R=polyR(6,v.s), d=R*0.8660254, ph=Math.PI/2-Math.PI/6, A=[];
+         for(let i=0;i<6;i++){ const a1=ph+TAU*i/6, a2=ph+TAU*((i+1)%6)/6;
+           A.push([C.p3(R+R*Math.cos(a1),0,d+R*Math.sin(a1)),
+                   C.p3(R+R*Math.cos(a2),0,d+R*Math.sin(a2))]); }
+         C.SET(A,COL_CONS,LW_THIN); }},
+      {text:`Erect verticals of ${R1(v.h)} mm from each corner of the hexagon - heights are always true lengths - and join their tops to give the top hexagonal face.`,
+       hl:["top"],
+       d:C=>{ const R=polyR(6,v.s), d=R*0.8660254, ph=Math.PI/2-Math.PI/6, A=[];
+         for(let i=0;i<6;i++){ const a1=ph+TAU*i/6, a2=ph+TAU*((i+1)%6)/6;
+           A.push([C.p3(R+R*Math.cos(a1),0,d+R*Math.sin(a1)),
+                   C.p3(R+R*Math.cos(a1),v.h,d+R*Math.sin(a1))]);
+           A.push([C.p3(R+R*Math.cos(a1),v.h,d+R*Math.sin(a1)),
+                   C.p3(R+R*Math.cos(a2),v.h,d+R*Math.sin(a2))]); }
+         C.SET(A,COL_CONS,LW_THIN); }}]});
+
+  IS.pyramid=v=>({L:v.s,B:v.s,H:v.h,
+    axis:{lines:[{k:"axis",x:v.s/2,z:v.s/2,y0:0,y1:v.h}],
+      text:"Mark the axis of the pyramid: a chain line from the centre of the base up to the apex, run a little past each end."},
+    model:()=>{ const m=m_pyr(4,v.s,v.h,Math.PI/4);
+      const R=polyR(4,v.s);
+      m.verts.forEach(p=>{ p.x+=v.s/2; p.z+=v.s/2; }); return m; },
+    hlAll:["lat1","lat2"],
+    groups:[
+      {text:`Draw the square base ${R1(v.s)} mm × ${R1(v.s)} mm as the bottom of the isometric box, then draw its two diagonals. They cross at the centre of the base - the diagonals are NOT true lengths, but their intersection still gives the true centre.`,
+       hl:["base"],
+       d:C=>{ C.SET([[C.p3(0,0,0),C.p3(v.s,0,v.s)],[C.p3(v.s,0,0),C.p3(0,0,v.s)]],COL_CONS,LW_THIN);
+         const c=C.p3(v.s/2,0,v.s/2); drawPoint(c.x,c.y,"o",{x:8,y:10}); }},
+      {text:`From that centre erect the axis ${R1(v.h)} mm vertically - a height is always a true length - and mark the apex o′.`,
+       hl:["lat1"],
+       d:C=>{ C.SET([[C.p3(v.s/2,0,v.s/2),C.p3(v.s/2,v.h,v.s/2)]],COL_CONS,LW_THIN);
+         const a=C.p3(v.s/2,v.h,v.s/2); drawPoint(a.x,a.y,"o′",{x:8,y:-10}); }},
+      {text:"Join the apex to the four corners of the base. These slant edges are not parallel to any isometric axis, so they are NOT true lengths - they come out simply by joining the points already found.",
+       hl:["lat1","lat2","lat3","lat4"],
+       d:C=>{ const ap=C.p3(v.s/2,v.h,v.s/2);
+         C.SET([[ap,C.p3(0,0,0)],[ap,C.p3(v.s,0,0)],[ap,C.p3(v.s,0,v.s)],[ap,C.p3(0,0,v.s)]],
+               COL_THICK,LW_THICK); }}]});
+
+  IS.cylinder=v=>({L:v.d,B:v.d,H:v.h, custom:true,
+    axis:{lines:[{k:"axis",x:v.d/2,z:v.d/2,y0:0,y1:v.h},
+                 {k:"cl",x:v.d/2,y:v.h,z:v.d/2,plane:"top",r:v.d/2}],
+      text:"Mark the axis of the cylinder with a chain line, and put in the two centre lines of the top isometric circle. They run along the isometric directions of the top face, not along the horizontal and vertical of the paper."},
+    model:()=>{ const m=m_cyl(v.d/2,v.h,36);
+      m.verts.forEach(p=>{ p.x+=v.d/2; p.z+=v.d/2; }); return m; },
+    hlAll:["lat","top"],
+    box:{L:false,B:false},
+    dimExtra:mm=>{
+      dimAdd(mm,mm.verts[0],mm.verts[18],"\u00d8 "+R1(v.d),{x:0,y:-Math.max(v.d,v.h)*0.16-4,z:0});
+    },
+    groups:[
+      {text:`Draw the isometric square (a rhombus) of side ${R1(v.d)} mm on the TOP of the box - this is the isometric view of the square that just encloses the Ø ${R1(v.d)} mm circle. Mark the mid-point of each of its four sides.`,
+       hl:["top"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2), Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         ["P","Q","R","S"].forEach(k=>{ const p=E.mids[k]; drawPoint(p.x,p.y,k,{x:6,y:-8}); }); }},
+      {text:"FOUR-CENTRE METHOD. From each of the two OBTUSE corners of the rhombus draw lines to the mid-points of the two opposite sides. The four lines cross at two more points on the long diagonal - these, with the two obtuse corners, are the four centres.",
+       hl:["top"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
+         C.SET(E.lines,COL_CONS,LW_THIN);
+         [E.centres.O1,E.centres.O2,E.centres.m,E.centres.n].forEach(p=>drawPoint(p.x,p.y,"",{x:0,y:0})); }},
+      {text:"With those four centres draw the four arcs. Each large arc runs between the two far mid-points and each small arc closes the ends, giving the isometric circle of the top face.",
+       hl:["top"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:`Repeat the whole construction on the BOTTOM face, ${R1(v.h)} mm lower. In practice only the visible front half of the lower ellipse is needed.`,
+       hl:["base"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:"Finally draw the two vertical outlines of the cylinder, each touching the extreme left and right points of the two ellipses. The isometric view of the cylinder is complete.",
+       hl:["lat"],
+       d:C=>{ const T=C.extremeX(C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2));
+         const Bo=C.extremeX(C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2));
+         C.SET([[T.L,Bo.L],[T.R,Bo.R]],COL_CONS,LW_THIN); }},
+      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
+       hl:["lat","top"],
+       d:C=>{ const T=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
+         const Bo=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
+         drawCurve(T.pts.concat([T.pts[0]]),COL_THICK,LW_THICK);
+         const tx=C.extremeX(T), bx=C.extremeX(Bo);
+         drawCurve(C.arcPortion(Bo,bx.L,bx.R,true),COL_THICK,LW_THICK);
+         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_THICK,LW_THICK); }}
+]});
+
+  IS.hollowcyl=v=>({L:v.d,B:v.d,H:v.h, custom:true,
+    axis:{lines:[{k:"axis",x:v.d/2,z:v.d/2,y0:0,y1:v.h},
+                 {k:"cl",x:v.d/2,y:v.h,z:v.d/2,plane:"top",r:v.d/2}],
+      text:"Mark the axis with a chain line. The bore is on the same axis, so one axis serves both the outside and the hole; add the two centre lines of the top isometric circle along the isometric directions of that face."},
+    model:()=>{ const m=m_cyl(v.d/2,v.h,36);
+      m.verts.forEach(p=>{ p.x+=v.d/2; p.z+=v.d/2; });
+      return mergeM(m,m_holeY(v.d/2,v.d/2,v.d2/2,0,v.h,30)); },
+    hlAll:["lat","top","hole"],
+    box:{L:false,B:false},
+    dimExtra:mm=>{
+      const g=Math.max(v.d,v.h)*0.16+4;
+      dimAdd(mm,mm.verts[0],mm.verts[18],"\u00d8 "+R1(v.d),{x:0,y:-g,z:0});
+      dimAdd(mm,mm.verts[72],mm.verts[87],"\u00d8 "+R1(v.d2),{x:0,y:g*0.4,z:0});
+    },
+    groups:[
+      {text:`Draw the outer isometric circle of Ø ${R1(v.d)} mm on the top face by the four-centre method: rhombus, mid-points, the four centres, then the four arcs.`,
+       hl:["top"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
+         const Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         C.SET(E.lines,COL_CONS,LW_THIN);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:`Now the bore. Draw a second isometric circle of Ø ${R1(v.d2)} mm about the SAME centre, again by the four-centre method. The two ellipses are concentric but they are NOT the same shape scaled - each needs its own construction.`,
+       hl:["hole"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d2/2);
+         const Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:`Drop the whole construction ${R1(v.h)} mm to the bottom face and draw the outer ellipse there too - only its visible front half is required.`,
+       hl:["base"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:"Draw the two vertical outlines touching the extreme points of the outer ellipses."+
+            (v.d2*0.70711>v.h
+              ? " Then drop the bore ellipse the full height of the cylinder and draw the crescent of the FAR wall that can still be seen down the bore."
+              : " Now test whether the inside of the bore can be seen: drop the bore ellipse the full height of the cylinder and it falls clear below the mouth, so NO part of the inside wall shows. Nothing further is drawn inside the mouth."),
+       hl:["lat","hole"],
+       d:C=>{ const T=C.extremeX(C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2));
+         const Bo=C.extremeX(C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2));
+         C.SET([[T.L,Bo.L],[T.R,Bo.R]],COL_CONS,LW_THIN);
+         const Ei=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d2/2);
+         const cr=C.boreVisible(Ei,v.h*C.sc);
+         if(cr.length>2) drawCurve(cr,COL_CONS,LW_THIN); }},
+      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
+       hl:["lat","top","hole"],
+       d:C=>{ const T=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d/2);
+         const I=C.ISOC({x:v.d/2,y:v.h,z:v.d/2},"top",v.d2/2);
+         const Bo=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
+         drawCurve(T.pts.concat([T.pts[0]]),COL_THICK,LW_THICK);
+         drawCurve(I.pts.concat([I.pts[0]]),COL_THICK,LW_THICK);
+         const tx=C.extremeX(T), bx=C.extremeX(Bo);
+         drawCurve(C.arcPortion(Bo,bx.L,bx.R,true),COL_THICK,LW_THICK);
+         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_THICK,LW_THICK);
+         const cr=C.boreVisible(I,v.h*C.sc);
+         if(cr.length>2) drawCurve(cr,COL_THICK,LW_THICK); }}
+]});
+
+  IS.cone=v=>({L:v.d,B:v.d,H:v.h, custom:true,
+    axis:{lines:[{k:"axis",x:v.d/2,z:v.d/2,y0:0,y1:v.h},
+                 {k:"cl",x:v.d/2,y:0,z:v.d/2,plane:"top",r:v.d/2}],
+      text:"Mark the axis of the cone: a chain line from the centre of the base up to the apex. Add the two centre lines of the base isometric circle, along the isometric directions of the base."},
+    model:()=>{ const m=m_cone(v.d/2,v.h,36);
+      m.verts.forEach(p=>{ p.x+=v.d/2; p.z+=v.d/2; }); return m; },
+    hlAll:["lat","base"],
+    box:{L:false,B:false},
+    dimExtra:mm=>{
+      dimAdd(mm,mm.verts[0],mm.verts[18],"\u00d8 "+R1(v.d),{x:0,y:-Math.max(v.d,v.h)*0.16-4,z:0});
+    },
+    groups:[
+      {text:`Draw the isometric circle of the base, Ø ${R1(v.d)} mm, on the BOTTOM of the box by the four-centre method - rhombus, mid-points, four centres, four arcs.`,
+       hl:["base"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2), Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         C.SET(E.lines,COL_CONS,LW_THIN);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:`From the centre of the base erect the axis ${R1(v.h)} mm vertically and mark the apex.`,
+       hl:["lat"],
+       d:C=>{ C.SET([[C.p3(v.d/2,0,v.d/2),C.p3(v.d/2,v.h,v.d/2)]],COL_CONS,LW_THIN);
+         const a=C.p3(v.d/2,v.h,v.d/2); drawPoint(a.x,a.y,"o′",{x:8,y:-10}); }},
+      {text:"Draw the two outlines of the cone as TANGENTS from the apex to the base ellipse. They must touch the ellipse - they do not run to its extreme left and right points, and that is a mistake often made.",
+       hl:["lat"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
+         const ap=C.p3(v.d/2,v.h,v.d/2), T=C.tangentsFrom(E,ap);
+         C.SET([[ap,T[0]],[ap,T[1]]],COL_CONS,LW_THIN);
+         T.forEach(p=>drawPoint(p.x,p.y,"",{x:0,y:0})); }},
+      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
+       hl:["lat","base"],
+       d:C=>{ const E=C.ISOC({x:v.d/2,y:0,z:v.d/2},"top",v.d/2);
+         const ap=C.p3(v.d/2,v.h,v.d/2), T=C.tangentsFrom(E,ap);
+         drawCurve(C.arcPortion(E,T[0],T[1],true),COL_THICK,LW_THICK);
+         C.SET([[ap,T[0]],[ap,T[1]]],COL_THICK,LW_THICK); }}
+]});
+
+  IS.cylOnPlate=v=>({L:v.L,B:v.B,H:v.h1+v.h2, custom:true,
+    axis:{lines:[{k:"axis",x:v.L/2,z:v.B/2,y0:v.h1,y1:v.h1+v.h2},
+                 {k:"cl",x:v.L/2,y:v.h1+v.h2,z:v.B/2,plane:"top",r:v.d/2}],
+      text:"Mark the axis of the cylinder with a chain line, and add the two centre lines of its top isometric circle."},
+    model:()=>{ const cyl=m_cyl(v.d/2,v.h2,36);
+      cyl.verts.forEach(p=>{ p.x+=v.L/2; p.y+=v.h1; p.z+=v.B/2; });
+      return mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),cyl); },
+    hlAll:["afront","atop","lat"],
+    box:{H:false},
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,mm.verts[0],mm.verts[4],R1(v.h1),{x:-g,y:0,z:0});
+      dimAdd(mm,mm.verts[8],mm.verts[44],R1(v.h2),{x:g,y:0,z:0});
+      dimAdd(mm,mm.verts[8],mm.verts[26],"\u00d8 "+R1(v.d),{x:0,y:g*0.3,z:0});
+    },
+    groups:[
+      {text:`Draw the base plate first: a box ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.h1)} mm thick, using the three isometric axes.`,
+       hl:["afront","atop"],
+       d:C=>{ const A=[];
+         [[0,0],[v.L,0],[v.L,v.B],[0,v.B]].forEach((a,i,arr)=>{ const b=arr[(i+1)%4];
+           A.push([C.p3(a[0],v.h1,a[1]),C.p3(b[0],v.h1,b[1])]); });
+         A.push([C.p3(0,0,v.B),C.p3(0,v.h1,v.B)],[C.p3(v.L,0,v.B),C.p3(v.L,v.h1,v.B)],
+                [C.p3(v.L,0,0),C.p3(v.L,v.h1,0)]);
+         C.SET(A,COL_THICK,LW_THICK); }},
+      {text:`On the top face of the plate mark the centre and set out the isometric square of side ${R1(v.d)} mm for the cylinder. Draw the isometric circle by the four-centre method.`,
+       hl:["lat"],
+       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.h1,z:v.B/2},"top",v.d/2), Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         C.SET(E.lines,COL_CONS,LW_THIN);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:`Repeat the ellipse ${R1(v.h2)} mm higher for the top of the cylinder, then join the two with vertical outlines touching their extreme points.`,
+       hl:["lat"],
+       d:C=>{ const T=C.ISOC({x:v.L/2,y:v.h1+v.h2,z:v.B/2},"top",v.d/2);
+         T.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN));
+         const tx=C.extremeX(T), bx=C.extremeX(C.ISOC({x:v.L/2,y:v.h1,z:v.B/2},"top",v.d/2));
+         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_CONS,LW_THIN); }},
+      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
+       hl:["lat","atop"],
+       d:C=>{ const T=C.ISOC({x:v.L/2,y:v.h1+v.h2,z:v.B/2},"top",v.d/2);
+         const Bo=C.ISOC({x:v.L/2,y:v.h1,z:v.B/2},"top",v.d/2);
+         drawCurve(T.pts.concat([T.pts[0]]),COL_THICK,LW_THICK);
+         const tx=C.extremeX(T), bx=C.extremeX(Bo);
+         drawCurve(C.arcPortion(Bo,bx.L,bx.R,true),COL_THICK,LW_THICK);
+         C.SET([[tx.L,bx.L],[tx.R,bx.R]],COL_THICK,LW_THICK); }}
+]});
+
+  IS.holeTop=v=>({L:v.L,B:v.B,H:v.H, custom:true,
+    axis:{lines:[{k:"axis",x:v.L/2,z:v.B/2,y0:0,y1:v.H},
+                 {k:"cl",x:v.L/2,y:v.H,z:v.B/2,plane:"top",r:v.D/2}],
+      text:"Mark the axis of the hole with a chain line, and add the two centre lines of the isometric circle on the top face."},
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.H,v.B,"m"),
+                     m_holeY(v.L/2,v.B/2,v.D/2,0,v.H,30)),
+    hlAll:["mfront","mtop","hole"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:v.L/2-v.D/2,y:b.y1,z:v.B/2},{x:v.L/2+v.D/2,y:b.y1,z:v.B/2},"\u00d8 "+R1(v.D),{x:0,y:g*0.4,z:0});
+    },
+    groups:[
+      {text:"Draw the isometric box - for this object the box IS the block. Line in its nine visible edges.",
+       hl:["mfront","mtop","mleft"],
+       d:C=>{ const A=[];
+         [[0,0],[v.L,0],[v.L,v.B],[0,v.B]].forEach((a,i,arr)=>{ const b=arr[(i+1)%4];
+           A.push([C.p3(a[0],v.H,a[1]),C.p3(b[0],v.H,b[1])]); });
+         A.push([C.p3(0,0,v.B),C.p3(v.L,0,v.B)],[C.p3(v.L,0,0),C.p3(v.L,0,v.B)],
+                [C.p3(0,0,v.B),C.p3(0,v.H,v.B)],[C.p3(v.L,0,v.B),C.p3(v.L,v.H,v.B)],
+                [C.p3(v.L,0,0),C.p3(v.L,v.H,0)]);
+         C.SET(A,COL_THICK,LW_THICK); }},
+      {text:`Mark the centre of the Ø ${R1(v.D)} mm hole on the top face and draw the isometric square of side ${R1(v.D)} mm about it, with the mid-points of its sides.`,
+       hl:["hole"],
+       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2), Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         ["P","Q","R","S"].forEach(k=>{ const p=E.mids[k]; drawPoint(p.x,p.y,"",{x:0,y:0}); }); }},
+      {text:"Draw the four construction lines from the obtuse corners, find the four centres and draw the four arcs - the mouth of the hole on the top face.",
+       hl:["hole"],
+       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2);
+         C.SET(E.lines,COL_CONS,LW_THIN);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:"Show the inside of the hole. Looking down into it you see the FAR wall, never the near one, so drop the mouth ellipse by the full depth of the hole and keep only the part of it that still lies ABOVE the front edge of the mouth."+
+            (v.D*0.70711>v.H
+              ? " Here a crescent of the far wall does show. No vertical lines are ever drawn for a hole."
+              : " Here the hole is deeper than the mouth is wide, so the dropped ellipse falls clear of the mouth and nothing at all can be seen inside. No vertical lines are ever drawn for a hole."),
+       hl:["hole"],
+       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2);
+         const cr=C.boreVisible(E,v.H*C.sc);
+         if(cr.length>2) drawCurve(cr,COL_CONS,LW_THIN); }},
+      {text:"Line in the finished isometric view. Draw dark only the part of each ellipse that can actually be SEEN - the back half of a base circle is hidden and is left out. Hidden edges are never shown in an isometric view.",
+       hl:["mtop","hole"],
+       d:C=>{ const E=C.ISOC({x:v.L/2,y:v.H,z:v.B/2},"top",v.D/2);
+         drawCurve(E.pts.concat([E.pts[0]]),COL_THICK,LW_THICK);
+         const cr=C.boreVisible(E,v.H*C.sc);
+         if(cr.length>2) drawCurve(cr,COL_THICK,LW_THICK); }}
+]});
+
+  IS.arch=v=>{
+    const R=v.L/2, HT=v.h1+R;
+    /* the two isometric circles - front (near) face and back (far) face */
+    const NE=C=>C.ISOC({x:R,y:v.h1,z:v.B},"front",R);
+    const FE=C=>C.ISOC({x:R,y:v.h1,z:0},"front",R);
+    /* the half of an isometric circle that lies ABOVE the springing line */
+    const upper=(C,E,z)=>C.arcPortion(E,C.p3(0,v.h1,z),C.p3(v.L,v.h1,z),false);
+    /* how much of the BACK arc shows over the top, and where it is met by the
+       line parallel to the depth axis that touches both arcs                */
+    const backSeen=C=>{
+      const F=FE(C), N=NE(C), up=upper(C,F,0), poly=N.pts;
+      const out=[];
+      for(let i=0;i<up.length;i++){
+        if(C.ptInPoly(poly,up[i])) break;
+        out.push(up[i]);
+      }
+      const d={x:C.p3(0,0,v.B).x-C.p3(0,0,0).x, y:C.p3(0,0,v.B).y-C.p3(0,0,0).y};
+      const T=out.length?out[out.length-1]:null;
+      return {arc:out, T:T, T2:T?{x:T.x+d.x,y:T.y+d.y}:null};
+    };
+    return {L:v.L,B:v.B,H:HT, custom:true,
+    axis:{lines:[{k:"cl",x:R,y:v.h1,z:v.B,plane:"front",r:R},
+                 {k:"axis",x:R,z:v.B/2,y0:0,y1:HT}],
+      text:"Put in the centre lines of the semicircular top on the near face - they run along the isometric directions of that face - and mark the vertical centre line of the plate."},
+    model:()=>{ const prof=[{x:0,y:0},{x:v.L,y:0},{x:v.L,y:v.h1}];
+      for(let i=0;i<=24;i++){ const a=i*Math.PI/24; prof.push({x:R+R*Math.cos(a),y:v.h1+R*Math.sin(a)}); }
+      prof.push({x:0,y:v.h1});
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; }); return m; },
+    hlAll:["sfront"],
+    box:{H:false},
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.3});
+    },
+    groups:[
+      {text:`Block in the rectangular part first - ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.h1)} mm up to the SPRINGING of the arch. Keep it in thin construction lines until the very last step.`,
+       hl:["sfront"],
+       d:C=>{ const A=[];
+         [[0,0],[v.L,0],[v.L,v.B],[0,v.B]].forEach((a,i,arr)=>{ const b=arr[(i+1)%4];
+           A.push([C.p3(a[0],0,a[1]),C.p3(b[0],0,b[1])]);
+           A.push([C.p3(a[0],v.h1,a[1]),C.p3(b[0],v.h1,b[1])]);
+           A.push([C.p3(a[0],0,a[1]),C.p3(a[0],v.h1,a[1])]); });
+         C.SET(A,COL_CONS,LW_THIN); }},
+      {text:`The semicircular top stands in a VERTICAL plane, so its isometric square goes on the FRONT face - not on the top. About the mid-point of the springing line set out the rhombus of side ${R1(v.L)} mm with its sides parallel to the LENGTH and HEIGHT axes, and mark the mid-points of the four sides.`,
+       hl:["sfront"],
+       d:C=>{ const E=NE(C), Rh=E.rhombus;
+         C.SET([[Rh[0],Rh[1]],[Rh[1],Rh[2]],[Rh[2],Rh[3]],[Rh[3],Rh[0]]],COL_CONS,LW_THIN);
+         ["P","Q","R","S"].forEach(k=>{ const p=E.mids[k]; drawPoint(p.x,p.y,"",{x:0,y:0}); }); }},
+      {text:"Join the obtuse corners to the opposite mid-points to fix the four centres, and swing the four arcs. Two of the mid-points ARE the springing points, so the arch is exactly the half of this isometric circle that lies above the springing line.",
+       hl:["sfront"],
+       d:C=>{ const E=NE(C);
+         C.SET(E.lines,COL_CONS,LW_THIN);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }},
+      {text:`Carry the same construction back ${R1(v.B)} mm along the DEPTH axis and draw the identical isometric circle on the back face. Then draw the line parallel to the depth axis that just TOUCHES both arcs - it is the highest generator of the curved surface and it fixes how much of the back arc can be seen over the top.`,
+       hl:["sfront"],
+       d:C=>{ const E=FE(C);
+         E.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN));
+         const b=backSeen(C);
+         if(b.T) C.SET([[b.T,b.T2]],COL_CONS,LW_THIN); }},
+      {text:"Line in the finished view. The whole front face shows; of the back face only the left-hand edge and the piece of arc lying outside the front one are seen. Nothing is drawn where the flat side runs smoothly into the curved top - that joint is tangential, so it shows no line.",
+       hl:["sfront"],
+       d:C=>{ const N=NE(C), b=backSeen(C);
+         C.SET([[C.p3(0,0,v.B),C.p3(v.L,0,v.B)],
+                [C.p3(v.L,0,v.B),C.p3(v.L,v.h1,v.B)],
+                [C.p3(0,v.h1,v.B),C.p3(0,0,v.B)],
+                [C.p3(0,0,v.B),C.p3(0,0,0)],
+                [C.p3(0,0,0),C.p3(0,v.h1,0)]],COL_THICK,LW_THICK);
+         drawCurve(upper(C,N,v.B),COL_THICK,LW_THICK);
+         if(b.arc.length>2) drawCurve(b.arc,COL_THICK,LW_THICK);
+         if(b.T) C.SET([[b.T,b.T2]],COL_THICK,LW_THICK); }}
+]};};
+
+  /* ================= problem list ================= */
+  const IL={id:"L",label:"Length L",unit:"mm"},
+        IB={id:"B",label:"Depth B",unit:"mm"},
+        IH={id:"H",label:"Height H",unit:"mm"};
+  const vB=v=>(v.L<=0||v.B<=0||v.H<=0)?"Length, depth and height must all be positive.":null;
+
+  const PROBLEMS=[
+    { title:"Problem 1 - Isometric view of a rectangular block",
+      fields:[IL,IB,IH], defaults:{L:70,B:45,H:40},
+      statement:v=>`The front view and top view of a rectangular block show it to be ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.H)} mm high. Draw its isometric view.`,
+      validate:vB, build:v=>buildIso(v,IS.block) },
+
+    { title:"Problem 2 - Isometric view of a stepped block",
+      fields:[IL,IB,IH,{id:"l2",label:"Length of the step",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
+      defaults:{L:75,B:45,H:50,l2:35,h1:22},
+      statement:v=>`A stepped block is ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.H)} mm high. The base is ${R1(v.h1)} mm thick and the upper block, ${R1(v.l2)} mm long, stands on it at the left-hand end for the full depth. Draw the isometric view.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.l2>=v.L) return "The step must be shorter than the block.";
+        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
+      build:v=>buildIso(v,IS.step) },
+
+    { title:"Problem 3 - Isometric view of an L-shaped block",
+      fields:[IL,IB,IH,{id:"w",label:"Width of the vertical limb",unit:"mm"},{id:"h1",label:"Thickness of the base limb",unit:"mm"}],
+      defaults:{L:75,B:45,H:52,w:22,h1:18},
+      statement:v=>`An L-shaped block has a horizontal limb ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick, with a vertical limb ${R1(v.w)} mm wide at the left-hand end rising to a total height of ${R1(v.H)} mm. Draw its isometric view.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.w>=v.L) return "The vertical limb must be narrower than the block.";
+        if(v.h1>=v.H) return "The base limb must be thinner than the overall height."; return null; },
+      build:v=>buildIso(v,IS.lshape) },
+
+    { title:"Problem 4 - Isometric view of a T-shaped block",
+      fields:[IL,IB,IH,{id:"w",label:"Width of the upstand",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
+      defaults:{L:75,B:45,H:52,w:28,h1:20},
+      statement:v=>`A T-shaped block has a base ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick, with a central upstand ${R1(v.w)} mm wide running the full depth and rising to ${R1(v.H)} mm. Draw its isometric view.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.w>=v.L) return "The upstand must be narrower than the block.";
+        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
+      build:v=>buildIso(v,IS.tee) },
+
+    { title:"Problem 5 - Isometric view of a block with a rectangular groove",
+      fields:[IL,IB,IH,{id:"w",label:"Width of the groove",unit:"mm"},{id:"g",label:"Depth of the groove",unit:"mm"}],
+      defaults:{L:75,B:45,H:45,w:26,g:18},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a central groove ${R1(v.w)} mm wide and ${R1(v.g)} mm deep cut in its top face, running right through from front to back. Draw the isometric view.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.w>=v.L) return "The groove must be narrower than the block.";
+        if(v.g>=v.H) return "The groove must be shallower than the height."; return null; },
+      build:v=>buildIso(v,IS.groove) },
+
+    { title:"Problem 6 - Isometric view of a block with a V-notch",
+      fields:[IL,IB,IH,{id:"w",label:"Width of the notch at the top",unit:"mm"},{id:"g",label:"Depth of the notch",unit:"mm"}],
+      defaults:{L:75,B:45,H:45,w:34,g:20},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a V-shaped notch cut centrally in its top face, ${R1(v.w)} mm wide at the top and ${R1(v.g)} mm deep, running through the full depth. Draw its isometric view and note which lines are NOT true lengths.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.w>=v.L) return "The notch must be narrower than the block.";
+        if(v.g>=v.H) return "The notch must be shallower than the height."; return null; },
+      build:v=>buildIso(v,IS.vnotch) },
+
+    { title:"Problem 7 - Isometric view of a hexagonal prism",
+      fields:[{id:"s",label:"Side of the hexagon",unit:"mm"},{id:"h",label:"Height of the prism",unit:"mm"}],
+      defaults:{s:25,h:60},
+      statement:v=>`A hexagonal prism of base side ${R1(v.s)} mm and height ${R1(v.h)} mm stands on the HP on its base. Draw its isometric view using the offset (box) method.`,
+      validate:v=>{ if(v.s<=0||v.h<=0) return "Side and height must be positive."; return null; },
+      build:v=>buildIso(v,IS.hexprism) },
+
+    { title:"Problem 8 - Isometric view of a square pyramid",
+      fields:[{id:"s",label:"Side of the base",unit:"mm"},{id:"h",label:"Height of the axis",unit:"mm"}],
+      defaults:{s:50,h:60},
+      statement:v=>`A square pyramid of base side ${R1(v.s)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. Draw its isometric view.`,
+      validate:v=>{ if(v.s<=0||v.h<=0) return "Side and height must be positive."; return null; },
+      build:v=>buildIso(v,IS.pyramid) },
+
+    { title:"Problem 9 - Isometric view of a cylinder (four-centre method)",
+      fields:[{id:"d",label:"Diameter",unit:"mm"},{id:"h",label:"Height",unit:"mm"}],
+      defaults:{d:56,h:65},
+      statement:v=>`A cylinder of base diameter ${R1(v.d)} mm and height ${R1(v.h)} mm rests on the HP on its base. Draw its isometric view, constructing the isometric circles by the four-centre method.`,
+      validate:v=>{ if(v.d<=0||v.h<=0) return "Diameter and height must be positive."; return null; },
+      build:v=>buildIso(v,IS.cylinder) },
+
+    { title:"Problem 10 - Isometric view of a hollow cylinder",
+      fields:[{id:"d",label:"Outside diameter",unit:"mm"},{id:"d2",label:"Bore diameter",unit:"mm"},{id:"h",label:"Height",unit:"mm"}],
+      defaults:{d:60,d2:32,h:60},
+      statement:v=>`A hollow cylinder of outside diameter ${R1(v.d)} mm, bore ${R1(v.d2)} mm and height ${R1(v.h)} mm stands on the HP. Draw its isometric view.`,
+      validate:v=>{ if(v.d<=0||v.h<=0) return "Diameter and height must be positive.";
+        if(v.d2>=v.d) return "The bore must be smaller than the outside diameter."; return null; },
+      build:v=>buildIso(v,IS.hollowcyl) },
+
+    { title:"Problem 11 - Isometric view of a cone",
+      fields:[{id:"d",label:"Base diameter",unit:"mm"},{id:"h",label:"Height",unit:"mm"}],
+      defaults:{d:56,h:65},
+      statement:v=>`A cone of base diameter ${R1(v.d)} mm and axis ${R1(v.h)} mm long rests on the HP on its base. Draw its isometric view, taking care that the outlines are TANGENTS to the base ellipse.`,
+      validate:v=>{ if(v.d<=0||v.h<=0) return "Diameter and height must be positive."; return null; },
+      build:v=>buildIso(v,IS.cone) },
+
+    { title:"Problem 12 - Isometric view of a plate with a circular hole",
+      fields:[IL,IB,IH,{id:"D",label:"Hole diameter",unit:"mm"}],
+      defaults:{L:90,B:70,H:18,D:44},
+      statement:v=>`A rectangular plate ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.H)} mm thick has a Ø ${R1(v.D)} mm hole drilled centrally through it. Draw its isometric view.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.D>=Math.min(v.L,v.B)) return "The hole must be smaller than the plate."; return null; },
+      build:v=>buildIso(v,IS.holeTop) },
+
+    { title:"Problem 13 - Isometric view of a cylinder on a base plate",
+      fields:[IL,IB,{id:"h1",label:"Thickness of the plate",unit:"mm"},
+              {id:"d",label:"Cylinder diameter",unit:"mm"},{id:"h2",label:"Height of the cylinder",unit:"mm"}],
+      defaults:{L:76,B:56,h1:16,d:42,h2:40},
+      statement:v=>`A base plate ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick carries a cylinder of Ø ${R1(v.d)} mm and ${R1(v.h2)} mm high standing centrally on it. Draw the isometric view of the composite solid.`,
+      validate:v=>{ if(v.L<=0||v.B<=0||v.h1<=0||v.h2<=0) return "All sizes must be positive.";
+        if(v.d>=Math.min(v.L,v.B)) return "The cylinder must sit inside the plate."; return null; },
+      build:v=>buildIso(v,IS.cylOnPlate) },
+
+    { title:"Problem 14 - Isometric view of a plate with a semicircular top",
+      fields:[IL,IB,{id:"h1",label:"Height to the centre",unit:"mm"}],
+      defaults:{L:60,B:30,h1:36},
+      statement:v=>`A plate ${R1(v.L)} mm wide and ${R1(v.B)} mm thick is ${R1(v.h1)} mm high to the centre of its semicircular top, the radius of the semicircle being half the width. Draw its isometric view - note that the semicircle lies in a VERTICAL plane.`,
+      validate:v=>{ if(v.L<=0||v.B<=0||v.h1<=0) return "All sizes must be positive."; return null; },
+      build:v=>buildIso(v,IS.arch) },
+
+    { title:"Problem 15 - Isometric from orthographic views: rectangular block",
+      fields:[IL,IB,IH], defaults:{L:70,B:45,H:40},
+      statement:v=>`The front view and top view of a rectangular block are given below, ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm. Draw its isometric view.`,
+      validate:vB, build:v=>buildIsoFromOrtho(v,IS.block,drawGivenOrtho_block,"Given: front view and top view") },
+
+    { title:"Problem 16 - Isometric from orthographic views: stepped block",
+      fields:[IL,IB,IH,{id:"l2",label:"Length of the step",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
+      defaults:{L:75,B:45,H:50,l2:35,h1:22},
+      statement:v=>`The front view and top view of a stepped block are given below. Draw its isometric view.`,
+      validate:v=>{ const e=vB(v); if(e) return e;
+        if(v.l2>=v.L) return "The step must be shorter than the block.";
+        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
+      build:v=>buildIsoFromOrtho(v,IS.step,drawGivenOrtho_step,"Given: front view and top view") }
+  ];
+
+  /* ---------------- engine / UI ---------------- */
+
+  /* ---------------- given-figure panel (question) ---------------- */
+  const GW=330, GH=290;
+  const gCanvas=document.getElementById("givenCanvas");
+  /* the given figure is part of the QUESTION, so the same drawing is wanted
+     twice: full size on the solve screen, and small on each question card.
+     The g-helpers therefore draw to whichever context is current.        */
+  let gctx=gCanvas.getContext("2d");
+  function withGivenTarget(ctx,fn){ const keep=gctx; gctx=ctx;
+    try{ fn(); } finally { gctx=keep; } }
+  const HLC="#e0561f", GINK="#2b3a48", GSOFT="#93a2b1";
+  const GHL="#d2662a";   // the edge the step is drawing, picked out in the given views
+  let gGiven=null, gHL=[], gRotY=-0.62, gRotX=0.42, gZoom=1, gPanX=0, gPanY=0;
+
+  function gArcHL(cx,cy,r){
+    gctx.strokeStyle=GHL; gctx.lineWidth=3; gctx.setLineDash([]);
+    gctx.beginPath(); gctx.arc(cx,cy,Math.abs(r),0,Math.PI*2); gctx.stroke();
+  }
+  function gLine(x1,y1,x2,y2,color,w,dash){
+    gctx.strokeStyle=color||GINK; gctx.lineWidth=w||1.2; gctx.setLineDash(dash||[]);
+    gctx.beginPath(); gctx.moveTo(x1,y1); gctx.lineTo(x2,y2); gctx.stroke(); gctx.setLineDash([]);
+  }
+  function gText(x,y,t,color,font,al,bl){
+    gctx.font=font||"11px Arial"; gctx.fillStyle=color||GINK;
+    gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
+  }
+  function gLabel(x,y,t,color){
+    gctx.font="bold 11px Arial";
+    const w=gctx.measureText(t).width+6;
+    gctx.fillStyle="rgba(255,255,255,0.88)";
+    gctx.fillRect(x-w/2,y-7,w,14);
+    gText(x,y,t,color||GINK,"bold 11px Arial");
+  }
+  function gArrow(x,y,a,color){
+    gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
+    gctx.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a+Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a+Math.PI/2));
+    gctx.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a-Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a-Math.PI/2));
+    gctx.closePath(); gctx.fill();
+  }
+  function gDimH(y,x1,x2,text,on){
+    const c=on?HLC:GSOFT, w=on?1.7:1;
+    gLine(x1,y,x2,y,c,w); gArrow(x1,y,Math.PI,c); gArrow(x2,y,0,c);
+    gLabel((x1+x2)/2,y-8,text,on?HLC:GINK);
+  }
+  function gDimV(x,y1,y2,text,on){
+    const c=on?HLC:GSOFT, w=on?1.7:1;
+    gLine(x,y1,x,y2,c,w); gArrow(x,y1,-Math.PI/2,c); gArrow(x,y2,Math.PI/2,c);
+    gctx.save(); gctx.translate(x-9,(y1+y2)/2); gctx.rotate(-Math.PI/2);
+    gLabel(0,0,text,on?HLC:GINK); gctx.restore();
+  }
+  function gFit(wmm,hmm){
+    const s=Math.min((GW-56)/wmm,(GH-42)/hmm);
+    return {s, ox:(GW-wmm*s)/2+8, oy:(GH-hmm*s)/2};
+  }
+  function gRect(x0,y0,x1,y1,color,w){
+    gLine(x0,y0,x1,y0,color,w); gLine(x1,y0,x1,y1,color,w);
+    gLine(x1,y1,x0,y1,color,w); gLine(x0,y1,x0,y0,color,w);
+  }
+
+  /* ---- "given" panels that show the ORTHOGRAPHIC views instead of a 3-D
+     model, for the reverse-direction problems: orthographic views given,
+     isometric view is the answer. Plain black/ink, matching a real
+     question-paper figure - no colour, no highlighting need apply here
+     since there is nothing pictorial yet to highlight.                   */
+  /* ===== the given orthographic views, generated from the solid =========
+     For an isometric problem the QUESTION is a set of orthographic views, so
+     they are produced straight from the 3-D model instead of being drawn by
+     hand for every shape. Each edge is projected on to the vertical plane
+     for the front view and on to the horizontal plane for the top view, and
+     any part of an edge lying behind material is drawn as a hidden line.  */
+  function gInPoly(poly,p){
+    let inside=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+      const a=poly[i], b=poly[j];
+      if(((a.y>p.y)!==(b.y>p.y)) &&
+         (p.x < (b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) inside=!inside;
+    }
+    return inside;
+  }
+  /* map : model point -> point on the sheet;  dep : larger is nearer the eye */
+  function orthoSpans(m,map,dep,vd){
+    const S=m.verts.map(map), D=m.verts.map(dep), faces=[];
+    /* On a curved solid the outline is not a hard edge at all - it is the
+       silhouette, where a facet turned towards the eye meets one turned
+       away. Which side is which does not matter, only that they differ, so
+       no assumption about face winding is needed here.                   */
+    const cA={}, cB2={};
+    m.faces.forEach(f=>{
+      if(!f.curved) return;
+      const A=m.verts[f.v[0]], Bv=m.verts[f.v[1]], C=m.verts[f.v[2]];
+      const u={x:Bv.x-A.x,y:Bv.y-A.y,z:Bv.z-A.z};
+      const w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
+      const nx=u.y*w.z-u.z*w.y, ny=u.z*w.x-u.x*w.z, nz=u.x*w.y-u.y*w.x;
+      const side=(nx*vd.x+ny*vd.y+nz*vd.z)>0?cA:cB2;
+      for(let i=0;i<f.v.length;i++){
+        const q1=f.v[i], q2=f.v[(i+1)%f.v.length];
+        side[Math.min(q1,q2)+"_"+Math.max(q1,q2)]=1;
+      }
+    });
+    m.faces.forEach(f=>{
+      const a=S[f.v[0]];
+      const e1={x:S[f.v[1]].x-a.x,y:S[f.v[1]].y-a.y};
+      const e2={x:S[f.v[2]].x-a.x,y:S[f.v[2]].y-a.y};
+      const det=e1.x*e2.y-e1.y*e2.x;
+      if(Math.abs(det)<1e-9) return;               // this face is seen edge-on
+      faces.push({poly:f.v.map(i=>S[i]),a:a,e1:e1,e2:e2,det:det,
+                  dA:D[f.v[0]],dB:D[f.v[1]]-D[f.v[0]],dC:D[f.v[2]]-D[f.v[0]]});
+    });
+    const cover=(F,q)=>{
+      if(!gInPoly(F.poly,q)) return null;
+      const rx=q.x-F.a.x, ry=q.y-F.a.y;
+      const u=( rx*F.e2.y-ry*F.e2.x)/F.det;
+      const w=(-rx*F.e1.y+ry*F.e1.x)/F.det;
+      return F.dA+u*F.dB+w*F.dC;
+    };
+    let sp=1; D.forEach(d=>sp=Math.max(sp,Math.abs(d)));
+    const TOL=sp*3e-3+1e-6, N=36, out=[], seen={};
+    const edges=(m.hard||[]).map(e=>[e[0],e[1]]);
+    Object.keys(cA).forEach(k=>{ if(cB2[k]){ const q=k.split("_");
+      edges.push([+q[0],+q[1]]); } });          // the silhouette of a curved face
+    edges.forEach(e=>{
+      const k=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
+      if(seen[k]) return; seen[k]=1;
+      const A=S[e[0]], B=S[e[1]], d0=D[e[0]], d1=D[e[1]];
+      if(Math.hypot(B.x-A.x,B.y-A.y)<1e-7) return;  // projects to a single point
+      const at=t=>({x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t});
+      const vis=[];
+      for(let i=0;i<=N;i++){
+        const t=(i+0.5)/(N+1), q=at(t), d=d0+(d1-d0)*t;
+        let hid=false;
+        for(let j=0;j<faces.length&&!hid;j++){
+          const dc=cover(faces[j],q); if(dc!==null&&dc>d+TOL) hid=true; }
+        vis.push(!hid);
+      }
+      let s0=0;
+      for(let i=1;i<=N+1;i++){
+        if(i===N+1||vis[i]!==vis[s0]){
+          out.push({a:at(s0/(N+1)),b:at(i/(N+1)),hid:!vis[s0]});
+          s0=i;
+        }
+      }
+    });
+    return out;
+  }
+  /* the whole given panel: front view above, top view below, dimensioned */
+  function drawGivenOrthoAuto(model){
+    return function(values,hl,seg3,circ){
+      const m=model(values);
+      let xs=[],ys=[],zs=[];
+      m.verts.forEach(p=>{xs.push(p.x);ys.push(p.y);zs.push(p.z);});
+      const x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs);
+      const y0=Math.min.apply(null,ys), y1=Math.max.apply(null,ys);
+      const z0=Math.min.apply(null,zs), z1=Math.max.apply(null,zs);
+      const L=x1-x0, H=y1-y0, B=z1-z0, GAP=16;
+      const {s,ox,oy}=gFit(L+30,H+B+GAP+40);
+      const gS=s;
+      const X=x=>ox+15*s+(x-x0)*s;
+      const YF=y=>oy+8*s+(y1-y)*s;                 // front view, height upward
+      const YT=z=>oy+8*s+H*s+GAP*s+(z1-z)*s;       // top view, near edge lowest
+      const put=(sp,YY)=>{
+        sp.filter(e=>e.hid).forEach(e=>gLine(e.a.x,YY(e.a.y),e.b.x,YY(e.b.y),"#93a1b0",1,[5,3]));
+        sp.filter(e=>!e.hid).forEach(e=>gLine(e.a.x,YY(e.a.y),e.b.x,YY(e.b.y),GINK,1.7));
+      };
+      /* FRONT VIEW : looking along the depth, the near face is at max z */
+      put(orthoSpans(m,p=>({x:X(p.x),y:p.y}),p=>p.z,{x:0,y:0,z:1}),YF);
+      /* TOP VIEW : looking down, the highest face is nearest */
+      put(orthoSpans(m,p=>({x:X(p.x),y:p.z}),p=>p.y,{x:0,y:1,z:0}),YT);
+      gLine(X(x0)-12,YF(y0),X(x1)+12,YF(y0),GSOFT,1);   // the XY line
+      /* overall sizes, and the intermediate steps when there are few of them */
+      const uniq=a=>{const o=[];a.slice().sort((p,q)=>p-q).forEach(t=>{
+        if(!o.length||Math.abs(t-o[o.length-1])>0.5) o.push(t);}); return o;};
+      const ux=uniq(xs), uy=uniq(ys), uz=uniq(zs);
+      gDimV(X(x0)-18,YF(y1),YF(y0),R1(H));
+      gDimH(YT(z0)+20,X(x0),X(x1),R1(L));
+      gDimV(X(x0)-18,YT(z1),YT(z0),R1(B));
+      /* EVERY intermediate step has to be dimensioned - these views are the
+         question, and a size left off cannot be worked out from them. On a
+         curved shape the vertices are facet points rather than features, so
+         those are left to the diameter below instead of being measured.  */
+      if(ux.length<=6) ux.slice(1,-1).forEach((t,k)=>
+        gDimH(YF(y0)+16+13*k,X(x0),X(t),R1(t-x0)));
+      if(uy.length<=6) uy.slice(1,-1).forEach((t,k)=>
+        gDimV(X(x1)+18+13*k,YF(t),YF(y0),R1(t-y0)));
+      if(uz.length<=6) uz.slice(1,-1).forEach((t,k)=>
+        gDimV(X(x1)+18+13*k,YT(z1),YT(t),R1(z1-t)));
+      /* a circular feature is given by its diameter, not by its outline */
+      let dRow=0;
+      ["D","d","d2","d1"].forEach(k=>{
+        const val=values[k];
+        if(typeof val!=="number"||!(val>0)) return;
+        if(Math.abs(val-L)<0.5||Math.abs(val-B)<0.5) return;   // already the overall size
+        gText(X(x1)+10,YT(z0+B/2)+14*dRow++,"\u00d8 "+R1(val),GINK,"11px Arial","left");
+      });
+      /* pick out, in the given views, the very edge the step is drawing.
+         A line in the front view stands for the model's (x,y); in the top
+         view for its (x,z). Both are marked, so the student can see which
+         edge of the question the line on the sheet belongs to.         */
+      (seg3||[]).forEach(sg=>{
+        const a=sg[0], b=sg[1];
+        if(Math.abs(a.x-b.x)>0.4||Math.abs(a.y-b.y)>0.4)
+          gLine(X(a.x),YF(a.y),X(b.x),YF(b.y),GHL,3);
+        if(Math.abs(a.x-b.x)>0.4||Math.abs(a.z-b.z)>0.4)
+          gLine(X(a.x),YT(a.z),X(b.x),YT(b.z),GHL,3);
+      });
+      /* a circle on the top face shows as a LINE in the front view and as a
+         circle in the top view, so each is picked out in its own way     */
+      (circ||[]).forEach(cc=>{
+        const c=cc.c, r=cc.r;
+        if(cc.plane==="top"){
+          gLine(X(c.x-r),YF(c.y),X(c.x+r),YF(c.y),GHL,3);
+          gArcHL(X(c.x),YT(c.z),r*gS);
+        } else if(cc.plane==="front"){
+          gArcHL(X(c.x),YF(c.y),r*gS);
+          gLine(X(c.x-r),YT(c.z),X(c.x+r),YT(c.z),GHL,3);
+        } else {
+          gLine(X(c.x),YF(c.y-r),X(c.x),YF(c.y+r),GHL,3);
+          gLine(X(c.x),YT(c.z-r),X(c.x),YT(c.z+r),GHL,3);
+        }
+      });
+      gText(X(x0+L/2),YF(y1)-13,"FRONT VIEW",GINK,"bold 11px Arial");
+      gText(X(x0+L/2),YT(z0)+34,"TOP VIEW",GINK,"bold 11px Arial");
+    };
+  }
+
+  function drawGivenOrtho_block(values){
+    const L=values.L,B=values.B,H=values.H;
+    const {s,ox,oy}=gFit(L+26,H+B+46);
+    const X=x=>ox+13*s+x*s, YF=y=>oy+8*s+(H-y)*s, YT=d=>oy+8*s+H*s+22*s+d*s;
+    gRect(X(0),YF(H),X(L),YF(0),GINK,1.6);
+    gLine(X(0)-10,YF(0),X(L)+10,YF(0),GSOFT,1);
+    gRect(X(0),YT(0),X(L),YT(B),GINK,1.6);
+    gDimV(X(0)-16,YF(H),YF(0),R1(H));
+    gDimV(X(0)-16,YT(0),YT(B),R1(B));
+    gDimH(YT(B)+18,X(0),X(L),R1(L));
+    gText(X(L/2),YF(H)-13,"FRONT VIEW",GINK,"bold 11px Arial");
+    gText(X(L/2),YT(B)+32,"TOP VIEW",GINK,"bold 11px Arial");
+  }
+  function drawGivenOrtho_step(values){
+    const L=values.L,B=values.B,H=values.H,l2=values.l2,h1=values.h1;
+    const {s,ox,oy}=gFit(L+26,H+B+46);
+    const X=x=>ox+13*s+x*s, YF=y=>oy+8*s+(H-y)*s, YT=d=>oy+8*s+H*s+22*s+d*s;
+    gLine(X(0),YF(0),X(0),YF(H),GINK,1.6);
+    gLine(X(0),YF(H),X(l2),YF(H),GINK,1.6);
+    gLine(X(l2),YF(H),X(l2),YF(h1),GINK,1.6);
+    gLine(X(l2),YF(h1),X(L),YF(h1),GINK,1.6);
+    gLine(X(L),YF(h1),X(L),YF(0),GINK,1.6);
+    gLine(X(L),YF(0),X(0),YF(0),GINK,1.6);
+    gLine(X(0)-10,YF(0),X(L)+10,YF(0),GSOFT,1);
+    gRect(X(0),YT(0),X(L),YT(B),GINK,1.6);
+    gLine(X(l2),YT(0),X(l2),YT(B),GINK,1.2);
+    gDimV(X(0)-16,YF(H),YF(h1),R1(H-h1));
+    gDimV(X(L)+16,YF(h1),YF(0),R1(h1));
+    gDimH(YF(H)-14,X(0),X(l2),R1(l2),true);
+    gDimV(X(0)-34,YT(0),YT(B),R1(B));
+    gDimH(YT(B)+18,X(0),X(L),R1(L));
+    gText(X(L/2),YF(H)-30,"FRONT VIEW",GINK,"bold 11px Arial");
+    gText(X(L/2),YT(B)+32,"TOP VIEW",GINK,"bold 11px Arial");
+  }
+
+  function gClear(){
+    gctx.setTransform(1,0,0,1,0,0);
+    gctx.fillStyle="#fff"; gctx.fillRect(0,0,GW,GH);
+  }
+
+  /* -------- how the question figure is presented --------------------
+     This panel is the drawing the student is HANDED, so it behaves like a
+     printed question figure: it carries its sizes, it hides nothing behind
+     dotted lines, and it does not turn.  The rotatable, zoomable view of the
+     same solid belongs at the end of the construction, not here.
+     Flip these three switches to change that.                          */
+  const GIVEN_DIMS=true, GIVEN_HIDDEN=false, GIVEN_STATIC=true;
+
+  /* the sizes written on the question figure - overall box first, then any
+     feature dimension the problem adds for itself through given.dimExtra   */
+  function dimsGiven(m){
+    if(!m||m._dimd) return m; m._dimd=1;
+    try{
+      if(gGiven&&gGiven.dims===false) return m;
+      if(!gGiven||gGiven.box!==false) dimsBox(m,(gGiven&&gGiven.box)||{});
+      if(gGiven&&typeof gGiven.dimExtra==="function") gGiven.dimExtra(m,values);
+    }catch(e){}
+    return m;
+  }
+
+  /* ---- wireframe 3-D renderer (shared with the big 3-D panel) ---- */
+  function render3D(m,hl){
+    if(GIVEN_DIMS) dimsGiven(m);
+    wireRender(gctx,GW,GH,m,hl,gRotY,gRotX,gZoom,gPanX,gPanY,
+               {fill:GIVEN_DIMS?0.30:0.38, noHidden:!GIVEN_HIDDEN});
+  }
+
+  /* true while the question figure is pinned to its isometric attitude */
+  function gLocked(){ return GIVEN_STATIC&&gGiven&&gGiven.type==="3d"; }
+
+  let gSeg3=[], gCirc3=[];
+  function renderGiven(hl,seg3,circ){
+    if(hl) gHL=hl;
+    if(seg3!==undefined) gSeg3=seg3;
+    if(circ!==undefined) gCirc3=circ;
+    if(!gGiven) return;
+    gClear();
+    try{
+      if(gGiven.type==="3d"){ render3D(gGiven.model(values),gHL); }
+      else{
+        gctx.save();
+        gctx.translate(GW/2+gPanX,GH/2+gPanY); gctx.scale(gZoom,gZoom); gctx.translate(-GW/2,-GH/2);
+        gGiven.draw(values,gHL,gSeg3,gCirc3);
+        gctx.restore();
+      }
+    }catch(e){ /* invalid data - leave blank */ }
+  }
+
+  function setupGiven(reset){
+    gGiven=(P&&P.given)||PROBLEMS[probIndex].given||null;
+    const box=document.getElementById("given-fig");
+    if(!gGiven){ box.style.display="none"; return; }
+    box.style.display="block";
+    document.getElementById("given-fig-title").innerText=gGiven.title||"Given figure";
+    document.getElementById("given-hint").innerText=(gGiven.type==="3d"&&!gLocked())
+      ? "Drag to rotate · Scroll to zoom · Double-click to reset"
+      : "Drag to pan · Scroll to zoom · Double-click to reset";
+    if(reset){ gRotY=-0.62; gRotX=0.42; gZoom=1; gPanX=0; gPanY=0; gHL=[]; }
+    renderGiven(reset?[]:gHL);
+  }
+
+  (function(){
+    let gd=false, glx=0, gly=0;
+    function pos(e){
+      const r=gCanvas.getBoundingClientRect();
+      const t=(e.touches&&e.touches[0])||e;
+      return {x:(t.clientX-r.left)*(GW/r.width), y:(t.clientY-r.top)*(GH/r.height)};
+    }
+    gCanvas.addEventListener("mousedown",e=>{ gd=true; const p=pos(e); glx=p.x; gly=p.y; gCanvas.classList.add("dragging"); });
+    window.addEventListener("mousemove",e=>{
+      if(!gd||!gGiven) return;
+      const p=pos(e), dx=p.x-glx, dy=p.y-gly; glx=p.x; gly=p.y;
+      if(gGiven.type==="3d"&&!gLocked()){ gRotY+=dx*0.012; gRotX+=dy*0.012;
+        gRotX=Math.max(-1.35,Math.min(1.35,gRotX)); }
+      else { gPanX+=dx; gPanY+=dy; }
+      renderGiven();
+    });
+    window.addEventListener("mouseup",()=>{ gd=false; gCanvas.classList.remove("dragging"); });
+    gCanvas.addEventListener("wheel",e=>{
+      if(!gGiven) return;
+      e.preventDefault();
+      gZoom=Math.max(0.5,Math.min(4,gZoom*(e.deltaY<0?1.12:1/1.12)));
+      renderGiven();
+    },{passive:false});
+    gCanvas.addEventListener("dblclick",()=>{
+      gRotY=-0.62; gRotX=0.42; gZoom=1; gPanX=0; gPanY=0; renderGiven();
+    });
+    gCanvas.addEventListener("touchstart",e=>{ if(e.touches.length===1){ gd=true; const p=pos(e); glx=p.x; gly=p.y; } },{passive:true});
+    gCanvas.addEventListener("touchmove",e=>{
+      if(!gd||!gGiven||e.touches.length!==1) return;
+      e.preventDefault();
+      const p=pos(e), dx=p.x-glx, dy=p.y-gly; glx=p.x; gly=p.y;
+      if(gGiven.type==="3d"&&!gLocked()){ gRotY+=dx*0.012; gRotX=Math.max(-1.35,Math.min(1.35,gRotX+dy*0.012)); }
+      else { gPanX+=dx; gPanY+=dy; }
+      renderGiven();
+    },{passive:false});
+    gCanvas.addEventListener("touchend",()=>{ gd=false; },{passive:true});
+  })();
+
+
+  let probIndex=0, values={}, P=null, currentStep=1, started=false;
+  let viewZoom=1, viewPanX=0, viewPanY=0;
+  const ZOOM_MIN=0.4, ZOOM_MAX=6;
+
+  function renderList(){
+    const el=document.getElementById("screen-list");
+    el.innerHTML="";
+    PROBLEMS.forEach((p,i)=>{
+      const card=document.createElement("div");
+      card.className="prob-card";
+      card.innerHTML=`<h3>${p.title}</h3><p>${p.statement(p.defaults)}</p>`;
+      /* the figure that forms part of the question, shown with it */
+      try{
+        const g=p.given||(p.build&&p.build(p.defaults).given);
+        if(g&&g.draw){
+          const wrap=document.createElement("div");
+          wrap.className="card-fig";
+          const cv=document.createElement("canvas");
+          cv.width=GW; cv.height=GH; wrap.appendChild(cv);
+          const cap=document.createElement("div");
+          cap.className="card-fig-cap"; cap.innerText=g.title||"Given figure";
+          wrap.appendChild(cap);
+          card.appendChild(wrap);
+          const c2=cv.getContext("2d");
+          c2.fillStyle="#fff"; c2.fillRect(0,0,GW,GH);
+          withGivenTarget(c2,()=>g.draw(p.defaults,[]));
+        }
+      }catch(e){ /* a figure that cannot be built is simply not shown */ }
+      const btn=document.createElement("button");
+      btn.innerText="Solve this problem ▶";
+      btn.onclick=()=>openProblem(i);
+      card.appendChild(btn);
+      el.appendChild(card);
+    });
+  }
+
+  function openProblem(i){
+    probIndex=i;
+    values=Object.assign({},PROBLEMS[i].defaults);
+    document.getElementById("screen-list").style.display="none";
+    document.getElementById("screen-solve").style.display="block";
+    renderGivenInputs();
+    rebuild(true);
+  }
+
+  function showList(){
+    document.getElementById("screen-solve").style.display="none";
+    document.getElementById("screen-list").style.display="block";
+  }
+
+  function renderGivenInputs(){
+    const grid=document.getElementById("given-grid");
+    grid.innerHTML="";
+    PROBLEMS[probIndex].fields.forEach(fld=>{
+      const lab=document.createElement("label"); lab.innerText=fld.label;
+      let inp;
+      if(fld.choices){
+        inp=document.createElement("select");
+        fld.choices.forEach(c=>{
+          const o=document.createElement("option");
+          o.value=c.v; o.text=c.t;
+          if(+values[fld.id]===+c.v) o.selected=true;
+          inp.appendChild(o);
+        });
+        inp.onchange=()=>{ values[fld.id]=parseFloat(inp.value); rebuild(true); };
+      } else {
+        inp=document.createElement("input"); inp.type="number";
+        if(fld.fixed!==undefined){ inp.value=fld.fixed; inp.disabled=true; }
+        else{
+          inp.value=values[fld.id];
+          inp.onchange=()=>{ values[fld.id]=parseFloat(inp.value)||0; rebuild(false); };
+        }
+      }
+      const unit=document.createElement("span"); unit.className="unit"; unit.innerText=fld.unit;
+      grid.appendChild(lab); grid.appendChild(inp); grid.appendChild(unit);
+    });
+  }
+
+  function syncStartUI(){
+    const r=document.getElementById("start-row");
+    if(r) r.style.display=started?"none":"flex";
+  }
+  function startDrawing(){
+    if(!P) return;
+    started=true; currentStep=1; lastSpoken=-1; compassPose=null; syncStartUI(); drawStep(1,true);
+  }
+
+  function rebuild(resetStep){
+    const prob=PROBLEMS[probIndex];
+    document.getElementById("statement").innerHTML="<b>"+prob.title+"</b><br>"+prob.statement(values)
+      ;
+    const err=prob.validate(values);
+    const vEl=document.getElementById("validation");
+    if(err){
+      vEl.innerText="⚠ "+err;
+      P=null; gGiven=null;
+      document.getElementById("given-fig").style.display="none";
+      clearCanvasWhite();
+      document.getElementById("stepList").innerHTML="";
+      document.getElementById("results").innerHTML="";
+      document.getElementById("stepCounter").innerText="";
+      return;
+    }
+    vEl.innerText="";
+    P=prob.build(values);
+    setupGiven(!!resetStep);
+    if(resetStep){ currentStep=1; started=false; compassPose=null; sRotY=S_HOME.ry; sRotX=S_HOME.rx; sZoom=1; }
+    syncStartUI();
+    currentStep=Math.min(currentStep,P.steps.length);
+    lastSpoken=-1;
+    renderStepList();
+    resetView();
+  }
+
+  const STEP_ITEM_H=128;
+  function renderStepList(){
+    const ol=document.getElementById("stepList");
+    ol.innerHTML="";
+    P.steps.forEach((st,i)=>{
+      const li=document.createElement("li");
+      li.innerHTML='<span class="step-num">'+(i+1)+'</span><span>'+st.text+'</span>';
+      ol.appendChild(li);
+    });
+    ol.style.transform="translateY(-"+((currentStep-1)*STEP_ITEM_H)+"px)";
+  }
+
+
+  /* ---------------- big rotatable 3-D view of the solid ---------------- */
+  const SW=820, SH=430;
+  const sCanvas=document.getElementById("spaceCanvas");
+  const sctx=sCanvas.getContext("2d");
+  const S_HOME={ry:-0.62, rx:0.42};
+  let sRotY=S_HOME.ry, sRotX=S_HOME.rx, sZoom=1;
+
+  function renderSpace(){
+    if(!P||!P.space) return;
+    sctx.setTransform(1,0,0,1,0,0);
+    sctx.fillStyle="#fff"; sctx.fillRect(0,0,SW,SH);
+    let m=null;
+    try{ m=(typeof P.space.model==="function")?P.space.model(values):P.space.model; }catch(e){ return; }
+    if(!m) return;
+    wireRender(sctx,SW,SH,m,P.space.hl||[],sRotY,sRotX,sZoom,0,0,{fill:0.40});
+    if(P.space.note){
+      sctx.font="12px Arial"; sctx.fillStyle="#44576b";
+      sctx.textAlign="left"; sctx.textBaseline="middle";
+      sctx.fillText(P.space.note,14,18);
+    }
+    document.getElementById("space-title").innerText=P.space.title||"3-D view of the solid";
+  }
+
+
+  function syncSpace(show){
+    const wp=document.getElementById("space-wrap");
+    wp.style.display=show?"block":"none";
+    if(show) renderSpace();
+  }
+
+  (function(){
+    let dr=false,lx=0,ly=0;
+    function pos(e){const r=sCanvas.getBoundingClientRect();const t=(e.touches&&e.touches[0])||e;
+      return {x:(t.clientX-r.left)*(SW/r.width),y:(t.clientY-r.top)*(SH/r.height)};}
+    function turn(p){ sRotY+=(p.x-lx)*0.011; sRotX=Math.max(-1.4,Math.min(1.4,sRotX+(p.y-ly)*0.011));
+      lx=p.x;ly=p.y; renderSpace(); }
+    sCanvas.addEventListener("mousedown",e=>{dr=true;const p=pos(e);lx=p.x;ly=p.y;sCanvas.classList.add("dragging");});
+    window.addEventListener("mousemove",e=>{if(dr)turn(pos(e));});
+    window.addEventListener("mouseup",()=>{dr=false;sCanvas.classList.remove("dragging");});
+    sCanvas.addEventListener("wheel",e=>{e.preventDefault();
+      sZoom=Math.max(0.5,Math.min(4,sZoom*(e.deltaY<0?1.12:1/1.12)));renderSpace();},{passive:false});
+    sCanvas.addEventListener("dblclick",()=>{sRotY=S_HOME.ry;sRotX=S_HOME.rx;sZoom=1;renderSpace();});
+    sCanvas.addEventListener("touchstart",e=>{if(e.touches.length===1){dr=true;const p=pos(e);lx=p.x;ly=p.y;}},{passive:true});
+    sCanvas.addEventListener("touchmove",e=>{if(!dr||e.touches.length!==1)return;e.preventDefault();turn(pos(e));},{passive:false});
+    sCanvas.addEventListener("touchend",()=>{dr=false;},{passive:true});
+  })();
+
+  function drawStep(s,animate=false){
+    if(!P) return;
+    animId++;                      // cancel any running animation
+    const myId=animId;
+
+    const N=P.steps.length;
+    document.getElementById("stepCounter").innerText=started?("Step "+s+" of "+N):("Ready - "+N+" steps");
+    document.getElementById("prevButton").disabled=(!started||s<=1);
+    document.getElementById("nextButton").disabled=(started&&s>=N);
+    document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
+    syncSpace(started&&s>=N&&!!P.space);
+    document.getElementById("stepList").style.transform="translateY(-"+((s-1)*STEP_ITEM_H)+"px)";
+    if(!started){
+      renderGiven([]);
+      clearCanvasWhite();
+      return;
+    }
+    speakCurrent();                 // narration and drawing run together
+    renderGiven(P.steps[s-1].hl||[],P.steps[s-1].hlSeg3||[],P.steps[s-1].hlCirc||[]);
+
+    if(!animate){ frameDraw(s,[],0,null); return; }
+    REC=[]; P.steps[s-1].d(); const items=REC; REC=null;   // capture, don't draw
+    runAnimation(s,items,myId);
+  }
+
+  function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
+    if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
+  function prevStep(){ if(P&&started&&currentStep>1){currentStep--; compassPose=null; drawStep(currentStep);} }
+  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
+  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
+
+  /* ---------------- voice narration ---------------- */
+  let voiceOn=false, lastSpoken=-1;
+  const voiceSupported=("speechSynthesis" in window);
+
+  function toggleVoice(){
+    if(!voiceSupported){ alert("Voice is not supported in this browser."); return; }
+    voiceOn=!voiceOn;
+    const b=document.getElementById("voiceBtn");
+    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
+    b.classList.toggle("on",voiceOn);
+    if(voiceOn){ lastSpoken=-1; speakCurrent(); }
+    else speechSynthesis.cancel();
+  }
+
+  const LETTER={a:"ay",b:"bee",c:"see",d:"dee",m:"em",n:"en",o:"oh",p:"pee",q:"cue",v:"vee"};
+  function sayTok(tok){
+    const out=[];
+    tok.replace(/([a-z])([0-9]?)(′?)/g,(m,L,d,pr)=>{
+      out.push((LETTER[L]||L)+(d?" "+d:"")+(pr?" dash":"")); return m; });
+    return out.join(" ");
+  }
+  function speechText(t){
+    t=t.replace(/\b([a-z][0-9]?′?)[-–—]([a-z][0-9]?′?)(?![a-zA-Z])/g,(m,p,q)=>sayTok(p)+" "+sayTok(q)+" ");
+    t=t.replace(/\b([a-z][0-9]?′)([a-z][0-9]?′?)/g,(m,p,q)=>sayTok(p)+" "+sayTok(q)+" ");
+    t=t.replace(/\b([ab]′?)\s+([ab][12]′?)\b/g,(m,p,q)=>sayTok(p)+" "+sayTok(q)+" ");
+    t=t.replace(/\b([a-z][0-9]?′)/g,(m,p)=>sayTok(p)+" ");
+    t=t.replace(/\b([ab][0-9])\b/g,(m,p)=>sayTok(p)+" ");
+    t=t.replace(/\bab\b/g,"ay bee");
+    t=t.replace(/\b(Mark|mark|Centre|centre|center|radius|through|get|swing|Join|join|Project|project|From|from|At|at|Verify|verify)\s+([abmn])\b/g,
+                (m,w,L)=>w+" "+LETTER[L]);
+    t=t.replace(/\blocus of ([ab])\b/g,(m,L)=>"locus of "+LETTER[L]);
+    t=t.replace(/\b([abmn])\s+is\b/g,(m,L)=>LETTER[L]+" is");
+    t=t.replace(/\b([abmn])(?=\s*[.,;:)(]|\s+[0-9])/g,(m,L)=>LETTER[L]);
+    return t
+      .replace(/′/g," dash")
+      .replace(/θ/g,"theta").replace(/φ/g,"phi")
+      .replace(/α/g,"alpha").replace(/β/g,"beta")
+      .replace(/°/g," degrees")
+      .replace(/[–—]/g," ")
+      .replace(/⟂/g," perpendicular to ")
+      .replace(/\bmm\b/g,"millimeters")
+      .replace(/\bTL\b/g,"true length")
+      .replace(/\bEL\b/g,"elevation length").replace(/\bPL\b/g,"plan length")
+      .replace(/\bFV\b/g,"front view").replace(/\bTV\b/g,"top view")
+      .replace(/\bHP\b/g,"H P").replace(/\bVP\b/g,"V P")
+      .replace(/\s+([.,;:])/g,"$1")
+      .replace(/\s{2,}/g," ");
+  }
+
+  // Pick the most natural-sounding English voice available on this machine.
+  // Priority: neural "Natural" voices (Edge) > Google voices (Chrome) > Indian English > any English.
+  let cachedVoice=null;
+  function pickVoice(){
+    const vs=speechSynthesis.getVoices();
+    if(!vs.length) return null;
+    const en=vs.filter(v=>v.lang&&v.lang.toLowerCase().indexOf("en")===0);
+    return en.find(v=>/natural/i.test(v.name)&&v.lang==="en-IN")
+        || en.find(v=>/natural/i.test(v.name))
+        || en.find(v=>/google/i.test(v.name)&&v.lang==="en-IN")
+        || en.find(v=>/google/i.test(v.name))
+        || en.find(v=>v.lang==="en-IN")
+        || en[0] || null;
+  }
+  if(voiceSupported){
+    speechSynthesis.getVoices();                       // trigger async voice-list load
+    speechSynthesis.onvoiceschanged=()=>{ cachedVoice=pickVoice(); };
+  }
+
+  function speakStep(force){
+    if(!P||!voiceSupported) return;
+    if(!force){
+      if(!voiceOn) return;
+      if(currentStep===lastSpoken) return;   // don't re-speak on zoom/pan redraws
+    }
+    lastSpoken=currentStep;
+    speechSynthesis.cancel();
+    const pre=(currentStep===1)?"First step. ":"Next step. ";
+    const u=new SpeechSynthesisUtterance(pre+speechText(P.steps[currentStep-1].text));
+    u.rate=0.95;
+    u.pitch=1;
+    if(!cachedVoice) cachedVoice=pickVoice();
+    if(cachedVoice) u.voice=cachedVoice;
+    // speak on the next tick: Chrome drops an utterance queued in the same frame as cancel()
+    setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} },30);
+  }
+  function speakCurrent(){ speakStep(false); }
+
+  // Tap / click the step card to hear it read aloud (works even when auto-voice is off)
+  document.getElementById("step-viewport").addEventListener("click",()=>speakStep(true));
+
+  /* ---------------- zoom / pan ---------------- */
+  function updateZoomDisplay(){ document.getElementById("zoom-level").innerText=Math.round(viewZoom*100)+"%"; }
+  function redraw(){ drawStep(currentStep); updateZoomDisplay(); }
+  function zoomAt(cx,cy,f){
+    const nz=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,viewZoom*f));
+    const wx=(cx-viewPanX)/viewZoom, wy=(cy-viewPanY)/viewZoom;
+    viewZoom=nz; viewPanX=cx-wx*nz; viewPanY=cy-wy*nz;
+    redraw();
+  }
+  function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
+  function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
+  function canvasPos(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:(e.clientX-r.left)*(canvas.width/r.width), y:(e.clientY-r.top)*(canvas.height/r.height)};
+  }
+  canvas.addEventListener("wheel",e=>{
+    if(!e.ctrlKey) return;            // plain scroll = page scrolls; Ctrl+scroll = zoom
+    e.preventDefault();
+    const p=canvasPos(e);
+    zoomAt(p.x,p.y,e.deltaY<0?1.15:1/1.15);
+  },{passive:false});
+  let drag=false,lx=0,ly=0;
+  canvas.addEventListener("mousedown",e=>{ drag=true; const p=canvasPos(e); lx=p.x; ly=p.y; canvas.classList.add("dragging"); });
+  window.addEventListener("mousemove",e=>{ if(!drag)return; const p=canvasPos(e); viewPanX+=p.x-lx; viewPanY+=p.y-ly; lx=p.x; ly=p.y; redraw(); });
+  window.addEventListener("mouseup",()=>{ drag=false; canvas.classList.remove("dragging"); });
+  // One-finger touch is left free so the page can be scrolled up/down during simulation.
+  // Two-finger pinch on the canvas zooms and pans the drawing.
+  let lastDist=null, lastMid=null;
+  function touchMid(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:((e.touches[0].clientX+e.touches[1].clientX)/2-r.left)*(canvas.width/r.width),
+            y:((e.touches[0].clientY+e.touches[1].clientY)/2-r.top)*(canvas.height/r.height)};
+  }
+  canvas.addEventListener("touchstart",e=>{
+    if(e.touches.length===2){
+      lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      lastMid=touchMid(e);
+    }
+  },{passive:true});
+  canvas.addEventListener("touchmove",e=>{
+    if(e.touches.length===2&&lastDist){
+      e.preventDefault();
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      const mid=touchMid(e);
+      const nz=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,viewZoom*(d/lastDist)));
+      const wx=(lastMid.x-viewPanX)/viewZoom, wy=(lastMid.y-viewPanY)/viewZoom;
+      viewZoom=nz;
+      viewPanX=mid.x-wx*nz;   // pinch point stays under the fingers,
+      viewPanY=mid.y-wy*nz;   // moving both fingers together pans
+      lastDist=d; lastMid=mid;
+      redraw();
+    }
+  },{passive:false});
+  canvas.addEventListener("touchend",e=>{ if(e.touches.length<2){ lastDist=null; lastMid=null; } });
+
+  renderList();
+
+
+  /* ---- full-screen sketch mode, for a phone ---------------------------
+     The drawing fills the screen and the step is changed by tapping: the
+     right of the screen goes on, the left goes back. The step wording sits
+     in a bar along the bottom so nothing covers the sheet.              */
+  function fsSync(){
+    if(!document.body.classList.contains("fs")) return;
+    const t=document.getElementById("fsText"), c=document.getElementById("fsCount");
+    if(!P){ if(t) t.innerText=""; return; }
+    const n=P.steps.length;
+    const i=Math.max(1,Math.min(currentStep||1,n));
+    if(c) c.innerText="Step "+(started?i:0)+" of "+n;
+    if(t) t.innerText=started&&P.steps[i-1]?P.steps[i-1].text:"Tap the right-hand side to start drawing.";
+  }
+  function fsNext(){ nextStep(); setTimeout(fsSync,60); }
+  function fsPrev(){ prevStep(); setTimeout(fsSync,60); }
+  function fsOn(){
+    document.body.classList.add("fs");
+    /* full screen is asked for on the PAGE, not on the sketch: in native
+       full screen the browser paints only the chosen element and its
+       children, which would hide the tap bar and the exit button      */
+    const el=document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    if(screen.orientation&&screen.orientation.lock) screen.orientation.lock("landscape").catch(()=>{});
+    fsSync();
+  }
+  function fsOff(){
+    document.body.classList.remove("fs");
+    if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  }
+  function fsToggle(){ document.body.classList.contains("fs")?fsOff():fsOn(); }
+  document.addEventListener("fullscreenchange",()=>{
+    if(!document.fullscreenElement) document.body.classList.remove("fs"); });
+  document.addEventListener("keydown",e=>{
+    if(!document.body.classList.contains("fs")) return;
+    if(e.key==="ArrowRight"||e.key===" ") { e.preventDefault(); fsNext(); }
+    else if(e.key==="ArrowLeft") { e.preventDefault(); fsPrev(); }
+    else if(e.key==="Escape") fsOff();
+  });
+</script>
+
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M Jadhav</a></footer>
+
+<div id="fsTapL" onclick="fsPrev()"></div>
+<div id="fsTapR" onclick="fsNext()"></div>
+<button id="fsExit" onclick="fsOff()">Exit full screen</button>
+<div id="fsBar"><b><span id="fsCount"></span> &nbsp;·&nbsp; tap right to go on, left to go back</b><span id="fsText"></span></div>
+</body>
+</html>

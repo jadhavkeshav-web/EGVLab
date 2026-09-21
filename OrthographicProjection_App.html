@@ -1,0 +1,3307 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Orthographic Projections - Problems with Stepwise Solutions</title>
+  <style>
+    :root{
+      --ink:#1b4430; --ink-2:#2c6d4c; --accent:#c96a2b;
+      --line:#dfe5ec; --paper:#eef5f1; --card:#ffffff; --muted:#6b7686;
+      --tint:#e5f0ea;
+    }
+    *{box-sizing:border-box;}
+    body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px 14px;background:linear-gradient(180deg,var(--tint) 0%,var(--paper) 340px,var(--paper) 100%);background-attachment:fixed;color:#16202b;}
+    h1{font-size:1.3rem;margin:0 auto 6px;text-align:center;color:var(--ink);letter-spacing:.3px;font-weight:700;}
+    .h-rule{width:72px;height:3px;background:var(--ink-2);margin:0 auto 12px;border-radius:2px;}
+
+    /* ---- Screen 1 : problem list ---- */
+    #screen-list{max-width:820px;margin:0 auto;}
+    .prob-card{border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;background:var(--card);box-shadow:0 1px 3px rgba(22,52,79,.06);}
+    .card-fig{margin:10px 0 4px;display:inline-block;border:1px solid var(--line);
+      border-radius:8px;padding:6px 6px 2px;background:#fff;}
+    .card-fig canvas{display:block;width:250px;height:220px;}
+    .card-fig-cap{text-align:center;font-size:.76rem;color:var(--muted);padding:2px 0 4px;}
+    .prob-card h3{margin:0 0 8px;font-size:1rem;color:var(--ink);}
+    .prob-card p{margin:0 0 12px;font-size:.93rem;line-height:1.45rem;color:#2c3644;}
+    .prob-card button{padding:9px 20px;border:1px solid var(--ink);border-radius:8px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;}
+    .prob-card button:hover{background:var(--ink-2);border-color:var(--ink-2);}
+
+    /* ---- Screen 2 : solver ---- */
+    #screen-solve{display:none;}
+    #topbar{display:flex;gap:14px;align-items:flex-start;max-width:1330px;margin:0 auto 16px;}
+    #backBtn{flex:0 0 auto;padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
+    #backBtn:hover{background:#eef2f7;}
+    .dim-note{margin-top:8px;padding:5px 10px;display:inline-block;
+      background:#eef4fb;border:1px solid #cfe0f0;border-left:3px solid var(--ink-2);
+      border-radius:6px;font-size:.82rem;font-weight:600;color:var(--ink);letter-spacing:.2px;}
+    #statement{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ink-2);border-radius:10px;font-size:.95rem;line-height:1.5rem;box-shadow:0 1px 3px rgba(22,52,79,.06);}
+
+    #solve-container{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;}
+    #left-panel{width:360px;background:var(--card);padding:16px;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px rgba(22,52,79,.06);}
+    #left-panel h4{margin:0 0 10px;font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+    #left-panel h4+*{margin-top:0;}
+    #given-grid{display:grid;grid-template-columns:1.6fr 1fr 40px;gap:8px;margin-bottom:14px;}
+    #given-grid label{text-align:right;align-self:center;font-size:.9rem;color:#2c3644;}
+    #given-grid select{padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;width:100%;box-sizing:border-box;}
+    #given-grid input{padding:7px;border:1px solid #c8d2dd;border-radius:6px;text-align:center;font-size:.95rem;width:100%;background:#fff;}
+    #given-grid input:focus{outline:2px solid var(--ink-2);outline-offset:-1px;}
+    #given-grid .unit{align-self:center;font-size:.85rem;color:var(--muted);}
+    #validation{color:#b00020;font-size:.85rem;margin:-6px 0 10px;min-height:0;}
+
+    .btn-group{display:flex;gap:8px;margin-bottom:10px;}
+    .btn-group button{flex:1;padding:9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-weight:600;background:var(--card);color:var(--ink);}
+    .btn-group button:hover{background:#eef2f7;}
+    .btn-group button:disabled{background:#f0f2f5;cursor:not-allowed;color:#aab3bf;border-color:var(--line);}
+    #nextButton{background:var(--ink);color:#fff;border-color:var(--ink);}
+    #nextButton:hover{background:var(--ink-2);border-color:var(--ink-2);}
+    #nextButton:disabled{background:#f0f2f5;color:#aab3bf;}
+    #voiceBtn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+    #stepCounter{text-align:center;font-size:.86rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.4px;}
+
+    /* one-step viewport with auto-scroll */
+    #step-viewport{height:128px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;cursor:pointer;}
+    #stepList{list-style:none;margin:0;padding:0;transition:transform .35s ease;}
+    #stepList li{height:128px;display:flex;gap:12px;align-items:flex-start;padding:14px 14px;font-size:.89rem;line-height:1.4rem;color:#2c3644;}
+    #stepList li .step-num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;margin-top:1px;}
+
+    #results{margin-top:12px;font-size:.92rem;}
+    table{width:100%;border-collapse:collapse;margin-top:8px;}
+    td{border:1px solid var(--line);padding:6px;text-align:center;font-size:.88rem;}
+    tr:first-child{background:#eef2f7;font-weight:700;color:var(--ink);}
+
+    .start-btn{background:var(--ink);color:#fff;border-color:var(--ink);}
+    .start-btn:hover{background:var(--ink-2);}
+    .speed-row{align-items:center;}
+    .speed-row label{font-size:.85rem;color:var(--ink);flex:0 0 auto;}
+    .speed-row select{flex:1;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
+    #given-fig{margin-top:14px;}
+    #given-wrap{background:#fbfcfd;border:1px solid var(--line);border-radius:10px;padding:6px;}
+    #givenCanvas{display:block;background:#fff;width:100%;height:auto;cursor:grab;touch-action:none;border:1px solid #eef1f5;border-radius:6px;}
+    #givenCanvas.dragging{cursor:grabbing;}
+    #given-hint{font-size:.72rem;color:#7c8896;text-align:center;margin-top:5px;}
+    #given-fig h4{margin:0 0 8px;}
+    #canvas-wrapper{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(22,52,79,.06);}
+    canvas{display:block;background:#fff;cursor:grab;border:1px solid #eef1f5;border-radius:6px;width:100%;max-width:820px;height:auto;}
+    canvas.dragging{cursor:grabbing;}
+    #space-wrap{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
+    #space-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+    #space-title{font-weight:700;color:var(--ink);font-size:.95rem;}
+    #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
+    #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:grab;}
+    #spaceCanvas.dragging{cursor:grabbing;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
+    #zoom-toolbar button:hover{background:#eef2f7;}
+    #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
+    #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
+  
+    /* ---- mobile: the sketch on its own, full screen ---------------------- */
+    #fsBtn{margin-left:auto;}
+    /* the sketch sits inside a flex container; hide its siblings, not the
+       container itself, or the canvas goes with it                       */
+    body.fs #solve-container > *:not(#canvas-wrapper){display:none !important;}
+    body.fs #screen-solve > *:not(#solve-container){display:none !important;}
+    body.fs #solve-container{display:block !important;}
+    body.fs #canvas-wrapper{position:fixed;inset:0;z-index:9000;margin:0;padding:0;
+      border:0;border-radius:0;box-shadow:none;background:#fff;
+      display:flex;align-items:center;justify-content:center;}
+    body.fs #zoom-toolbar{position:fixed;top:6px;left:6px;right:6px;z-index:9002;
+      background:rgba(255,255,255,.92);border-radius:8px;padding:4px 6px;}
+    body.fs #zoom-hint,body.fs #fsBtn{display:none;}
+    body.fs #zoom-toolbar{width:auto;right:auto;}
+    /* a flex item will not shrink below its own size unless min-width is
+       cleared, which is why the sketch overflowed a narrow screen      */
+    body.fs #projectionCanvas{max-width:100vw;max-height:calc(100vh - 56px);
+      width:auto;height:auto;min-width:0;min-height:0;flex:0 1 auto;
+      border:0;border-radius:0;}
+    body.fs header,body.fs footer,body.fs h1,body.fs .h-rule{display:none !important;}
+    #fsTapL,#fsTapR{position:fixed;top:0;bottom:0;width:34vw;z-index:9001;display:none;}
+    #fsTapL{left:0;} #fsTapR{right:0;}
+    body.fs #fsTapL,body.fs #fsTapR{display:block;}
+    #fsBar{position:fixed;left:0;right:0;bottom:0;z-index:9003;display:none;
+      background:#ffffff;border-top:1px solid #cfd7e0;box-shadow:0 -2px 8px rgba(0,0,0,.08);
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom));font-size:.9rem;color:#16202b;}
+    body.fs #fsBar{display:block;}
+    #fsBar b{display:block;font-size:.78rem;color:var(--muted);margin-bottom:2px;}
+    #fsExit{position:fixed;top:8px;right:8px;z-index:9004;display:none;
+      background:var(--ink);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:.9rem;}
+    body.fs #fsExit{display:block;}
+    @media (max-width:820px){
+      #screen-solve{display:block;}
+      #canvas-wrapper{margin-top:12px;}
+      .btn-group{flex-wrap:wrap;}
+      button{min-height:40px;}
+    }
+</style>
+
+</head>
+<body>
+
+<h1>📐 Orthographic Projections (First Angle) - Problems with Stepwise Solutions</h1>
+<div class="h-rule"></div>
+
+<!-- ================= SCREEN 1 : PROBLEM LIST ================= -->
+<div id="screen-list"></div>
+
+<!-- ================= SCREEN 2 : SOLVER ================= -->
+<div id="screen-solve">
+  <div id="topbar">
+    <button id="backBtn" onclick="showList()">◀ All problems</button>
+    <div id="statement"></div>
+  </div>
+
+  <div id="solve-container">
+    <div id="left-panel">
+      <h4>Given data (editable)</h4>
+      <div id="given-grid"></div>
+      <div id="validation"></div>
+
+      <div id="given-fig" style="display:none;">
+        <h4 id="given-fig-title">Given figure</h4>
+        <div id="given-wrap">
+          <canvas id="givenCanvas" width="330" height="290"></canvas>
+          <div id="given-hint"></div>
+        </div>
+      </div>
+
+      <h4>Step-by-step solution</h4>
+      <div class="btn-group" id="start-row">
+        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+      </div>
+      <div class="btn-group">
+        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+        <button id="nextButton" onclick="nextStep()">Next ▶</button>
+      </div>
+      <div class="btn-group">
+        <button onclick="restartSteps()">Restart</button>
+        <button onclick="showAll()">Show all</button>
+        <button id="voiceBtn" onclick="toggleVoice()">🔊 Voice off</button>
+      </div>
+      <div class="btn-group speed-row">
+        <label for="speedSel">Drawing speed</label>
+        <select id="speedSel" onchange="setSpeed(this.value)">
+          <option value="1.7">Slow</option>
+          <option value="1" selected>Normal</option>
+          <option value="0.62">Fast</option>
+          <option value="0.35">Very fast</option>
+        </select>
+      </div>
+      <div id="stepCounter"></div>
+      <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
+      <div id="results"></div>
+    </div>
+
+    <div id="canvas-wrapper">
+      <div id="zoom-toolbar">
+        <button onclick="zoomBy(1/1.2)" title="Zoom out">−</button>
+        <span id="zoom-level">100%</span>
+        <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
+        <button class="fit-btn" onclick="resetView()">Fit view</button>
+        <button id="fsBtn" onclick="fsToggle()" title="Full screen sketch">⛶ Full screen</button>
+        <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <canvas id="projectionCanvas" width="820" height="540"></canvas>
+
+      <div id="space-wrap" style="display:none;">
+        <div id="space-head">
+          <span id="space-title">The given object in space - turn it round to see where each view comes from</span>
+          <span id="space-hint">Drag to rotate · Scroll to zoom · Double-click to reset</span>
+        </div>
+        <canvas id="spaceCanvas" width="820" height="430"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const CANVAS_W=820, CANVAS_H=540;
+  const LW_THIN=1.2, LW_THICK=2.8;
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
+  const COL_CUT="#b8541f";   // cutting-plane line and section-related colour, matching the Development app's convention
+  const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
+  const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
+  const PATTERN_CENTRE=[20,4,5,4];
+  let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
+  const ARROW_HALF_W=3, ARROW_LEN=9;
+
+  const canvas=document.getElementById("projectionCanvas");
+  const ctx=canvas.getContext("2d");
+  const toRad=d=>d*Math.PI/180;
+  const R1=v=>(+v).toFixed(1).replace(/\.0$/,"");   // 65.1 or 90
+
+  /* ---------------- drawing helpers ---------------- */
+  function clearCanvasWhite(){
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); ctx.restore();
+  }
+  function drawArrowhead(x,y,a,color="#000",hw=ARROW_HALF_W,len=ARROW_LEN){
+    ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(x,y);
+    ctx.lineTo(x-len*Math.cos(a)+hw*Math.cos(a+Math.PI/2), y-len*Math.sin(a)+hw*Math.sin(a+Math.PI/2));
+    ctx.lineTo(x-len*Math.cos(a)+hw*Math.cos(a-Math.PI/2), y-len*Math.sin(a)+hw*Math.sin(a-Math.PI/2));
+    ctx.closePath(); ctx.fill();
+  }
+  function drawLine(x1,y1,x2,y2,color,w,dash=SOLID,arrow="none"){
+    if(REC){REC.push({f:"drawLine",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.setLineDash([]);
+    const a=Math.atan2(y2-y1,x2-x1);
+    if(arrow==="mid") drawArrowhead((x1+x2)/2,(y1+y2)/2,a,color);
+    else if(arrow==="end") drawArrowhead(x2,y2,a,color);
+    else if(arrow==="both"){ drawArrowhead(x2,y2,a,color); drawArrowhead(x1,y1,a+Math.PI,color); }
+  }
+  function drawPoint(x,y,label,off={x:6,y:6}){
+    if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
+    ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
+    if(label){ ctx.font="10px Arial"; ctx.fillStyle="#222";
+      ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
+  }
+  function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
+    if(REC){REC.push({f:"drawText",a:Array.from(arguments)});return;}
+    ctx.font=font; ctx.fillStyle=color; ctx.textAlign=al; ctx.textBaseline=bl; ctx.fillText(t,x,y);
+  }
+  function drawArc(cx,cy,r,a1,a2,ccw,color){
+    if(REC){REC.push({f:"drawArc",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2,ccw); ctx.stroke();
+  }
+  function drawArcWithMidArrow(cx,cy,r,a1,a2,ccw,color){
+    if(REC){REC.push({f:"drawArcWithMidArrow",a:Array.from(arguments)});return;}
+    drawArc(cx,cy,r,a1,a2,ccw,color);
+    const m=(a1+a2)/2, t=m+(ccw?-Math.PI/2:Math.PI/2);
+    drawArrowhead(cx+r*Math.cos(m),cy+r*Math.sin(m),t,color);
+  }
+  function drawAngleDimOutward(cx,cy,r,text,a1,a2,ccw,above){
+    if(REC){REC.push({f:"drawAngleDimOutward",a:Array.from(arguments)});return;}
+    drawArc(cx,cy,r,a1,a2,ccw,COL_DIM);
+    const st=a1+(ccw?-Math.PI/2:Math.PI/2), et=a2+(ccw?-Math.PI/2:Math.PI/2);
+    drawArrowhead(cx+r*Math.cos(a1),cy+r*Math.sin(a1),st+Math.PI,COL_DIM);
+    drawArrowhead(cx+r*Math.cos(a2),cy+r*Math.sin(a2),et,COL_DIM);
+    const m=(a1+a2)/2;
+    drawText(cx+(r+20)*Math.cos(m), cy+(r+20)*Math.sin(m)+(above?-8:8), text,"#111",FONT_DIM,"center","middle");
+  }
+  function drawVerticalDim(x,yT,yB,label){
+    if(REC){REC.push({f:"drawVerticalDim",a:Array.from(arguments)});return;}
+    drawLine(x,yT,x,yB,COL_DIM,LW_THIN);
+    drawArrowhead(x,yT,-Math.PI/2,COL_DIM); drawArrowhead(x,yB,Math.PI/2,COL_DIM);
+    ctx.save(); ctx.translate(x-7,(yT+yB)/2); ctx.rotate(-Math.PI/2);
+    drawText(0,0,label,"#111",FONT_DIM,"center","middle"); ctx.restore();
+  }
+  function drawHorizontalDim(y,x1,x2,label){
+    if(REC){REC.push({f:"drawHorizontalDim",a:Array.from(arguments)});return;}
+    drawLine(x1,y,x2,y,COL_DIM,LW_THIN);
+    drawArrowhead(x1,y,Math.PI,COL_DIM); drawArrowhead(x2,y,0,COL_DIM);
+    drawText((x1+x2)/2,y-8,label,"#111",FONT_DIM,"center","bottom");
+  }
+  function drawAlignedLabel(x1,y1,x2,y2,text,off=12,t=0.5){
+    if(REC){REC.push({f:"drawAlignedLabel",a:Array.from(arguments)});return;}
+    const mx=x1+(x2-x1)*t,my=y1+(y2-y1)*t,a=Math.atan2(y2-y1,x2-x1);
+    ctx.save(); ctx.translate(mx,my);
+    let r=a; if(r>Math.PI/2||r<-Math.PI/2)r+=Math.PI; ctx.rotate(r);
+    if(off>=0) drawText(0,-off,text,"#111",FONT_DIM,"center","bottom");
+    else       drawText(0,-off,text,"#111",FONT_DIM,"center","top");
+    ctx.restore();
+  }
+  function frame(topH,botH,maxW){
+    const sc=Math.min((CANVAS_H-140)/(topH+botH),(CANVAS_W-330)/(maxW+40),3.2);
+    const AX=(CANVAS_W-maxW*sc)/2-70;
+    const REF=(CANVAS_H-(topH+botH)*sc)/2+topH*sc;
+    SCALE_PXMM=sc;
+    return {sc,AX,REF,lineStart:AX-95,lineEnd:AX+maxW*sc+70};
+  }
+
+  /* =========================================================
+     DRAWING INSTRUMENTS + STEP ANIMATION
+     Each new step is drawn live: pencil (with hand) for lines,
+     compass for arcs, protractor for setting angles.
+  ========================================================= */
+  let REC=null;      // when set, helper calls are recorded instead of drawn
+  let animId=0;      // token to cancel a running animation
+  let compassPose=null;   // {ax,ay,bx,by} - where the compass legs last were, so it can move (not vanish) to its next job
+
+  /* ---- calculation box -------------------------------------------------
+     Calculations are NOT drawn over the views. They are collected and printed
+     together in the lower-right corner of the sheet, black and white only.  */
+  let SHEET_CALCS=[];
+  function calcBox(title,lines){
+    if(REC){ REC.push({f:"calcBox",a:[title,lines]}); return; }
+    SHEET_CALCS.push({title:title,lines:lines});
+  }
+
+  function drawSheetCorner(){
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    const pad=8, lh=14, mR=14, mB=12;
+    const tf="bold 11px Arial", bf="11px Arial", nf="bold 11.5px Arial";
+    const note="NOTE: All dimensions are in mm.";
+    const blocks=SHEET_CALCS.map(c=>{
+      ctx.font=tf; let w=ctx.measureText(c.title).width;
+      ctx.font=bf; c.lines.forEach(t=>{ w=Math.max(w,ctx.measureText(t).width); });
+      return {c:c, w:w+pad*2, h:pad*2+lh*(c.lines.length+1)};
+    });
+    ctx.font=nf;
+    const nw=ctx.measureText(note).width+pad*2, nh=pad*1.6+lh;
+    let y=CANVAS_H-mB-nh;
+    ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=1.1;
+    ctx.beginPath(); ctx.rect(CANVAS_W-mR-nw,y,nw,nh); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
+    ctx.font=nf; ctx.fillText(note,CANVAS_W-mR-nw+pad,y+nh/2);
+    for(let i=blocks.length-1;i>=0;i--){
+      const b=blocks[i]; y-=b.h+8;
+      ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=0.9;
+      ctx.beginPath(); ctx.rect(CANVAS_W-mR-b.w,y,b.w,b.h); ctx.fill(); ctx.stroke();
+      ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
+      ctx.font=tf; ctx.fillText(b.c.title,CANVAS_W-mR-b.w+pad,y+pad+lh/2);
+      ctx.font=bf;
+      b.c.lines.forEach((t,j)=>ctx.fillText(t,CANVAS_W-mR-b.w+pad,y+pad+lh*(j+1)+lh/2));
+    }
+    ctx.restore();
+  }
+
+  const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
+              drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
+              drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
+              drawCut,drawArcPlain,lineSet,calcBox};
+  function execItem(it){ EXEC[it.f].apply(null,it.a); }
+
+  // draw: full steps 0..baseCount-1, then items[0..k-1], then an optional partial element
+  function frameDraw(baseCount,items,k,partial){
+    clearCanvasWhite();
+    SHEET_CALCS=[];
+    ctx.save();
+    ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
+    for(let i=0;i<baseCount;i++) P.steps[i].d();
+    for(let i=0;i<k;i++) execItem(items[i]);
+    if(partial) partial();
+    ctx.restore();
+    drawSheetCorner();          // calculations + units note, clear of the views
+  }
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  function animateFrames(dur,cb){
+    return new Promise(res=>{
+      const t0=performance.now();
+      function tick(now){
+        const t=Math.min(1,(now-t0)/dur);
+        if(cb(t)===false){res();return;}
+        if(t<1) requestAnimationFrame(tick); else res();
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  /* ---- extra recordable primitives ---- */
+  function drawRLine(x1,y1,x2,y2,color,w,dash){          // always roll-and-draw
+    if(REC){REC.push({f:"drawRLine",a:Array.from(arguments)});return;}
+    drawLine(x1,y1,x2,y2,color,w,dash);
+  }
+  function drawSLine(x1,y1,x2,y2,color,w,dash){          // always plain scale
+    if(REC){REC.push({f:"drawSLine",a:Array.from(arguments)});return;}
+    drawLine(x1,y1,x2,y2,color,w,dash);
+  }
+  function drawCircle(cx,cy,r,color,w){                  // always compass
+    if(REC){REC.push({f:"drawCircle",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color||COL_THIN; ctx.lineWidth=w||LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.stroke();
+  }
+  function markAngles(cx,cy,r,angs,labels){              // protractor division
+    if(REC){REC.push({f:"markAngles",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=COL_DIM; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+    (angs||[]).forEach(a=>{
+      ctx.beginPath();
+      ctx.moveTo(cx+(r-5)*Math.cos(a),cy+(r-5)*Math.sin(a));
+      ctx.lineTo(cx+(r+5)*Math.cos(a),cy+(r+5)*Math.sin(a));
+      ctx.stroke();
+    });
+    // division ticks only - the angle value is stated in the step text, not written on the drawing
+  }
+  function stepOff(x1,y1,x2,y2,n){                       // divider walking a line
+    if(REC){REC.push({f:"stepOff",a:Array.from(arguments)});return;}
+    for(let i=0;i<=n;i++){
+      const x=x1+(x2-x1)*i/n, y=y1+(y2-y1)*i/n;
+      ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
+    }
+  }
+  function rollSet(arr,color,w,dash){
+    if(REC){REC.push({f:"rollSet",a:Array.from(arguments)});return;}
+    arr.forEach(L=>drawLine(L[0],L[1],L[2],L[3],color,w,dash));
+  }
+  function lineSet(arr,color,w,dash){
+    if(REC){REC.push({f:"lineSet",a:Array.from(arguments)});return;}
+    arr.forEach(L=>drawLine(L[0],L[1],L[2],L[3],color,w,dash));
+  }
+  function drawCut(cx,cy,r,ang,color){
+    if(REC){REC.push({f:"drawCut",a:Array.from(arguments)});return;}
+    const half=Math.min(0.40,9/Math.max(r,1));
+    ctx.strokeStyle=color||COL_THIN; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,ang-half,ang+half,false); ctx.stroke();
+  }
+  function drawArcPlain(cx,cy,r,a1,a2,ccw,color,width){
+    if(REC){REC.push({f:"drawArcPlain",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color||COL_THIN; ctx.lineWidth=width||LW_THIN; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2,ccw); ctx.stroke();
+  }
+  function measureSpan(x1,y1,x2,y2){
+    if(REC){REC.push({f:"measureSpan",a:Array.from(arguments)});return;}
+    // A compass "measuring" span is a transient instrument cue, not a permanent
+    // mark on the drawing - it is rendered live by animMeasure() while the
+    // compass is being set, and must NOT persist once that step is behind us
+    // (otherwise every later step keeps re-drawing a stray dashed line).
+  }
+  function scaleMarks(x1,y1,x2,y2,n){
+    if(REC){REC.push({f:"scaleMarks",a:Array.from(arguments)});return;}
+    for(let q=0;q<=n;q++){
+      const x=x1+(x2-x1)*q/n, y=y1+(y2-y1)*q/n;
+      ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
+    }
+  }
+  function radOff(cx,cy,px,py,d){                        // label offset, radially outward
+    const a=Math.atan2(py-cy,px-cx);
+    const dx=Math.cos(a)*d, dy=Math.sin(a)*d;
+    return {x:(dx>=0?dx+3:dx-17), y:dy};
+  }
+
+  let SPEED=1;                       // 1 = normal, >1 slower, <1 faster
+  function setSpeed(v){ SPEED=parseFloat(v)||1; }
+
+  /* ---- one graduated scale, used plain or mounted on rollers ---- */
+  const SCALE_SKIN={fill:"rgba(247,219,140,0.45)",edge:"rgba(146,108,32,0.9)",
+                    tick:"rgba(120,88,20,0.85)",text:"rgba(110,80,15,0.95)"};
+  const SC_TOP=4, SC_HH=31, SC_EXT=30;
+
+  function scaleGeom(x1,y1,x2,y2,off){
+    const a=Math.atan2(y2-y1,x2-x1), L=Math.hypot(x2-x1,y2-y1);
+    const ux=Math.cos(a), uy=Math.sin(a);
+    let nx=-Math.sin(a), ny=Math.cos(a);
+    if(ny<-1e-4||(Math.abs(ny)<=1e-4&&nx<0)){ nx=-nx; ny=-ny; }
+    const o=off||0;
+    return {a,L,X:(d,h)=>({x:x1+ux*d+nx*(h+o), y:y1+uy*d+ny*(h+o)})};
+  }
+
+  // the scale body: graduated in real millimetres of the current drawing
+  function scaleBody(g,alpha){
+    const X=g.X, L=g.L, C=SCALE_SKIN;
+    ctx.save();
+    ctx.globalAlpha=(alpha===undefined?1:alpha);
+    ctx.setLineDash([]);
+    const c1=X(-SC_EXT,SC_TOP), c2=X(L+SC_EXT,SC_TOP),
+          c3=X(L+SC_EXT,SC_TOP+SC_HH), c4=X(-SC_EXT,SC_TOP+SC_HH);
+    ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y);
+    ctx.lineTo(c3.x,c3.y); ctx.lineTo(c4.x,c4.y); ctx.closePath();
+    ctx.fillStyle=C.fill; ctx.fill();
+    ctx.strokeStyle=C.edge; ctx.lineWidth=1.1; ctx.stroke();
+    const pm=SCALE_PXMM||0;
+    ctx.strokeStyle=C.tick; ctx.lineWidth=0.9;
+    if(pm>0.35){
+      const minor=(pm>=2.4)?2:(pm>=1.1?5:10);
+      const major=(pm*10>=17)?10:20;
+      for(let mm=0; mm*pm<=L+0.5; mm+=minor){
+        const big=(mm%major===0);
+        const p=X(mm*pm,SC_TOP), q=X(mm*pm,SC_TOP+(big?14:7));
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+      }
+      let rot=g.a; if(rot>Math.PI/2||rot<-Math.PI/2) rot+=Math.PI;
+      ctx.fillStyle=C.text; ctx.font="9px Arial";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      for(let mm=0; mm*pm<=L+0.5; mm+=major){
+        const p=X(mm*pm,SC_TOP+22);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(rot); ctx.fillText(String(mm),0,0); ctx.restore();
+      }
+    } else {
+      let i=0;
+      for(let d=0; d<=L; d+=8){ const big=(i%5===0); i++;
+        const p=X(d,SC_TOP), q=X(d,SC_TOP+(big?12:6));
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+
+  function drawScale(x1,y1,x2,y2,off,alpha){
+    scaleBody(scaleGeom(x1,y1,x2,y2,off),alpha);
+  }
+
+  // the scale carried on a rolling cylinder - a roll-and-draw scale
+  function drawRoller(x1,y1,x2,y2,off,spin,alpha){
+    const g=scaleGeom(x1,y1,x2,y2,off);
+    scaleBody(g,alpha);
+    const X=g.X, L=g.L, A=(alpha===undefined?1:alpha);
+    const hb=SC_TOP+SC_HH+10, rr=9.5, e=17, sp=spin||0;
+    ctx.save(); ctx.setLineDash([]); ctx.globalAlpha=A;
+    const c1=X(-e,hb-rr), c2=X(L+e,hb-rr), c3=X(L+e,hb+rr), c4=X(-e,hb+rr);
+    ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y);
+    ctx.lineTo(c3.x,c3.y); ctx.lineTo(c4.x,c4.y); ctx.closePath();
+    ctx.fillStyle="rgba(88,100,112,0.94)"; ctx.fill();
+    ctx.strokeStyle="rgba(46,56,66,0.9)"; ctx.lineWidth=1; ctx.stroke();
+    for(let q=0;q<10;q++){
+      const ph=sp+q*Math.PI/5, c=Math.cos(ph);
+      if(c<=0.06) continue;
+      const hh=hb+rr*0.86*Math.sin(ph);
+      const p1=X(-e,hh), p2=X(L+e,hh);
+      ctx.globalAlpha=A*0.42*c; ctx.strokeStyle="#e4eef6"; ctx.lineWidth=1.1;
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    }
+    ctx.globalAlpha=A;
+    const hl1=X(-e,hb-rr*0.5), hl2=X(L+e,hb-rr*0.5);
+    ctx.strokeStyle="rgba(226,238,246,0.5)"; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(hl1.x,hl1.y); ctx.lineTo(hl2.x,hl2.y); ctx.stroke();
+    [-e,L+e].forEach(dw=>{
+      const c=X(dw,hb);
+      ctx.fillStyle="rgba(56,68,80,0.96)";
+      ctx.beginPath(); ctx.arc(c.x,c.y,rr+2.6,0,2*Math.PI); ctx.fill();
+      ctx.strokeStyle="rgba(228,238,246,0.8)"; ctx.lineWidth=1.4;
+      for(let q=0;q<3;q++){
+        const ph=sp+q*Math.PI/3, r=rr*0.95;
+        const p1=X(dw-r*Math.cos(ph),hb-r*Math.sin(ph));
+        const p2=X(dw+r*Math.cos(ph),hb+r*Math.sin(ph));
+        ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+      }
+      ctx.fillStyle="#dce7ef"; ctx.beginPath(); ctx.arc(c.x,c.y,3.1,0,2*Math.PI); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+
+  /* ---- pencil held in a hand ---- */
+  function drawPencilHand(x,y,alpha){
+    ctx.save();
+    ctx.globalAlpha=(alpha===undefined?1:alpha);
+    ctx.translate(x,y); ctx.rotate(-Math.PI/3.2);
+    // graphite + wood tip
+    ctx.fillStyle="#3a3a3a";
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(9,-3); ctx.lineTo(9,3); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#e9c79a";
+    ctx.beginPath(); ctx.moveTo(9,-3.5); ctx.lineTo(24,-6.5); ctx.lineTo(24,6.5); ctx.lineTo(9,3.5); ctx.closePath(); ctx.fill();
+    // body
+    ctx.fillStyle="#f4b52e"; ctx.fillRect(24,-6.5,80,13);
+    ctx.strokeStyle="#d99f1d"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(24,-2.2); ctx.lineTo(104,-2.2);
+    ctx.moveTo(24,2.2); ctx.lineTo(104,2.2); ctx.stroke();
+    // ferrule + eraser
+    ctx.fillStyle="#b8c4cc"; ctx.fillRect(104,-6.5,9,13);
+    ctx.fillStyle="#e88a8a"; ctx.fillRect(113,-6.5,11,13);
+    // hand: palm under the pencil + three fingers over it
+    ctx.fillStyle="#eeb48f"; ctx.strokeStyle="#d09468"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(56,13,27,17,-0.30,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(37,-1.5,9.5,6,-0.55,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(49,-3.5,9.5,6,-0.45,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(61,-5,9.5,6,-0.35,0,2*Math.PI); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---- compass: needle at (cx,cy), pencil leg at (px,py) ---- */
+  function drawCompass(cx,cy,px,py){
+    const mx=(cx+px)/2, my=(cy+py)/2;
+    const dx=px-cx, dy=py-cy; const d=Math.hypot(dx,dy)||1;
+    let nx=-dy/d, ny=dx/d;
+    if(ny>0){nx=-nx;ny=-ny;}                    // hinge upward on screen
+    const h=Math.max(45,d*0.40);
+    const jx=mx+nx*h, jy=my+ny*h;
+    ctx.save(); ctx.lineCap="round";
+    ctx.strokeStyle="#7d8a94"; ctx.lineWidth=3.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(jx,jy); ctx.stroke();   // needle leg
+    ctx.strokeStyle="#8fa0ab";
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(jx,jy); ctx.stroke();   // pencil leg
+    // yellow pencil stub near the drawing point
+    const lx=jx-px, ly=jy-py; const ll=Math.hypot(lx,ly)||1;
+    ctx.strokeStyle="#f4b52e"; ctx.lineWidth=5.5;
+    ctx.beginPath(); ctx.moveTo(px+lx/ll*4,py+ly/ll*4); ctx.lineTo(px+lx/ll*24,py+ly/ll*24); ctx.stroke();
+    // knob + handle
+    ctx.strokeStyle="#5f6b73"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(jx+nx*15,jy+ny*15); ctx.stroke();
+    ctx.fillStyle="#5f6b73";
+    ctx.beginPath(); ctx.arc(jx,jy,6,0,2*Math.PI); ctx.fill();
+    // needle point
+    ctx.fillStyle="#3a3a3a";
+    ctx.beginPath(); ctx.arc(cx,cy,2.5,0,2*Math.PI); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---- divider: two needle legs, used to step off equal divisions ---- */
+  function drawDivider(ax,ay,bx,by){
+    const mx=(ax+bx)/2,my=(ay+by)/2;
+    const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy)||1;
+    let nx=-dy/d,ny=dx/d; if(ny>0){nx=-nx;ny=-ny;}
+    const h=Math.max(54,d*1.7);
+    const jx=mx+nx*h, jy=my+ny*h;
+    ctx.save(); ctx.lineCap="round";
+    ctx.strokeStyle="#7d8a94"; ctx.lineWidth=3.4;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(jx,jy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(jx,jy); ctx.stroke();
+    ctx.strokeStyle="#5f6b73"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(jx+nx*14,jy+ny*14); ctx.stroke();
+    ctx.fillStyle="#5f6b73"; ctx.beginPath(); ctx.arc(jx,jy,6,0,2*Math.PI); ctx.fill();
+    ctx.fillStyle="#3a3a3a";
+    ctx.beginPath(); ctx.arc(ax,ay,2.6,0,2*Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx,by,2.6,0,2*Math.PI); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---- protractor at a vertex; dome up or down; red marker at markAng ---- */
+  function drawProtractor(cx,cy,up,op,markAng){
+    const Rp=88;
+    ctx.save();
+    ctx.globalAlpha=op;
+    ctx.translate(cx,cy);
+    ctx.scale(1, up?1:-1);
+    ctx.fillStyle="rgba(147,184,216,0.32)";
+    ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,0,Rp,Math.PI,2*Math.PI); ctx.closePath(); ctx.fill(); ctx.stroke();
+    for(let dg=0;dg<=180;dg+=10){
+      const a=Math.PI+dg*Math.PI/180;
+      const ri=dg%90===0?Rp-16:dg%30===0?Rp-12:Rp-7;
+      ctx.beginPath();
+      ctx.moveTo(ri*Math.cos(a),ri*Math.sin(a));
+      ctx.lineTo((Rp-1)*Math.cos(a),(Rp-1)*Math.sin(a));
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-9,0); ctx.lineTo(9,0);
+    ctx.moveTo(0,0); ctx.lineTo(0,-11); ctx.stroke();
+    ctx.restore();
+    if(markAng!=null){
+      ctx.save(); ctx.globalAlpha=op;
+      ctx.strokeStyle="#c0392b"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+(Rp-4)*Math.cos(markAng), cy+(Rp-4)*Math.sin(markAng));
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* ---- animators ---- */
+  function rollerFor(it,mode){
+    if(mode==="R") return true;
+    if(mode==="S") return false;
+    return (Math.abs(it.a[2]-it.a[0])<1.5)||(Math.abs(it.a[3]-it.a[1])<1.5);
+  }
+
+  async function animLine(s,items,k,it,myId,mode){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3],color=it.a[4],w=it.a[5];
+    const dash=it.a[6]||SOLID;
+    const len=Math.hypot(x2-x1,y2-y1);
+    const roll=rollerFor(it,mode);
+    const dur=Math.min(3800,Math.max(1500,len*3.8))*SPEED;
+    const T1=0.22, T2=0.34, T3=0.86;        // instrument in | pencil in | draw | pencil out
+    const a=Math.atan2(y2-y1,x2-x1);
+    const ux=Math.cos(a), uy=Math.sin(a);
+    let nx=-Math.sin(a), ny=Math.cos(a);
+    if(ny<-1e-4||(Math.abs(ny)<=1e-4&&nx<0)){ nx=-nx; ny=-ny; }
+    const ex=-nx, ey=-ny;
+    const inP ={x:x1-ux*40+ex*80, y:y1-uy*40+ey*80};
+    const outP={x:x2+ux*30+ex*92, y:y2+uy*30+ey*92};
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(dur,t=>{
+      if(animId!==myId) return false;
+      let q=0,pen=null,pa=1,off=0,ia=1;
+      if(t<T1){ const f=t/T1; off=(1-ez(f))*64; ia=Math.min(1,f*2.4); }
+      else if(t<T2){ const f=(t-T1)/(T2-T1), e=ez(f);
+        pen={x:inP.x+(x1-inP.x)*e, y:inP.y+(y1-inP.y)*e}; pa=Math.min(1,f*2.2); }
+      else if(t<T3){ q=(t-T2)/(T3-T2); pen={x:x1+(x2-x1)*q, y:y1+(y2-y1)*q}; }
+      else { const f=(t-T3)/(1-T3), e=ez(f); q=1;
+        pen={x:x2+(outP.x-x2)*e, y:y2+(outP.y-y2)*e}; pa=1-e*0.92; ia=1-e*0.5; }
+      frameDraw(s-1,items,k,()=>{
+        if(roll) drawRoller(x1,y1,x2,y2,off,-off*0.085,ia);
+        else drawScale(x1,y1,x2,y2,off,ia);
+        if(q>0){
+          ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(x1,y1);
+          ctx.lineTo(x1+(x2-x1)*q,y1+(y2-y1)*q); ctx.stroke(); ctx.setLineDash([]);
+        }
+        if(pen) drawPencilHand(pen.x,pen.y,pa);
+      });
+    });
+  }
+
+  /* keep the instrument in place while points on that same line are marked */
+  function onSegment(l,p){
+    const x1=l.a[0],y1=l.a[1],x2=l.a[2],y2=l.a[3],px=p.a[0],py=p.a[1];
+    const dx=x2-x1,dy=y2-y1,L2=dx*dx+dy*dy;
+    if(L2<1) return false;
+    const t=((px-x1)*dx+(py-y1)*dy)/L2;
+    if(t<-0.03||t>1.03) return false;
+    return Math.hypot(px-(x1+dx*t),py-(y1+dy*t))<3.5;
+  }
+  async function animHold(s,items,upto,l,roll,myId){
+    await animateFrames(650*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,upto,()=>{
+        if(roll) drawRoller(l.a[0],l.a[1],l.a[2],l.a[3],0,0);
+        else drawScale(l.a[0],l.a[1],l.a[2],l.a[3]);
+      });
+    });
+  }
+
+  /* protractor stepping round a circle / vertex, dropping a tick at each angle */
+  async function animMarkAngles(s,items,k,it,myId){
+    const cx=it.a[0],cy=it.a[1],r=it.a[2],labels=it.a[4];
+    const norm=a=>{ let x=a; while(x<=-Math.PI)x+=2*Math.PI; while(x>Math.PI)x-=2*Math.PI; return x; };
+    const list=(it.a[3]||[]).map(norm);
+    const many=list.length>6;
+    const swT=(many?250:430)*SPEED, hoT=(many?90:170)*SPEED;
+    const up=list.filter(a=>a<=0.0001).sort((p,q)=>q-p);
+    const dn=list.filter(a=>a>0.0001).sort((p,q)=>p-q);
+    const done=[];
+    const base=()=>{ if(done.length) markAngles(cx,cy,r,done,labels); };
+    for(const g of [{L:up,u:true},{L:dn,u:false}]){
+      if(!g.L.length) continue;
+      await animateFrames(300*SPEED,t=>{
+        if(animId!==myId) return false;
+        frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,t*0.95,0); });
+      });
+      if(animId!==myId) return;
+      let prev=0;
+      for(const target of g.L){
+        const from=prev;
+        await animateFrames(swT,t=>{
+          if(animId!==myId) return false;
+          frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,0.95,from+(target-from)*t); });
+        });
+        if(animId!==myId) return;
+        done.push(target); prev=target;
+        await animateFrames(hoT,t=>{
+          if(animId!==myId) return false;
+          frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,0.95,target); });
+        });
+        if(animId!==myId) return;
+      }
+      await animateFrames(250*SPEED,t=>{
+        if(animId!==myId) return false;
+        frameDraw(s-1,items,k,()=>{ base(); drawProtractor(cx,cy,g.u,(1-t)*0.95,prev); });
+      });
+      if(animId!==myId) return;
+    }
+  }
+
+  /* divider walking along a line, dropping equal divisions */
+  async function animStepOff(s,items,k,it,myId){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3],n=it.a[4];
+    const PT=i=>({x:x1+(x2-x1)*i/n, y:y1+(y2-y1)*i/n});
+    const dot=p=>{ ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(p.x,p.y,2.6,0,2*Math.PI); ctx.fill(); };
+    const done=[PT(0)];
+    for(let i=0;i<n;i++){
+      const A=PT(i), Bp=PT(i-1), Bn=PT(i+1);
+      const a0=Math.atan2(Bp.y-A.y,Bp.x-A.x);
+      const rad=Math.hypot(Bn.x-A.x,Bn.y-A.y);
+      await animateFrames(310*SPEED,t=>{
+        if(animId!==myId) return false;
+        const a=a0-Math.PI*t;
+        frameDraw(s-1,items,k,()=>{
+          done.forEach(dot);
+          drawDivider(A.x,A.y,A.x+rad*Math.cos(a),A.y+rad*Math.sin(a));
+        });
+      });
+      if(animId!==myId) return;
+      done.push(Bn);
+    }
+    await animateFrames(170*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ done.forEach(dot); });
+    });
+  }
+
+
+  // slide both compass legs from the last known pose to a new pose - the compass never disappears, it moves
+  async function compassTransit(s,items,k,myId,tax,tay,tbx,tby){
+    if(!compassPose) return true;
+    const {ax,ay,bx,by}=compassPose;
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(420*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{
+        drawCompass(ax+(tax-ax)*e, ay+(tay-ay)*e, bx+(tbx-bx)*e, by+(tby-by)*e);
+      });
+    });
+    return animId===myId;
+  }
+
+  async function animMeasure(s,items,k,it,myId){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3];
+    const ez=t=>t*t*(3-2*t);
+    if(!(await compassTransit(s,items,k,myId,x1,y1,x1,y1))) return;
+    await animateFrames(720*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(Math.min(1,t*1.3));
+      frameDraw(s-1,items,k,()=>{
+        ctx.strokeStyle=COL_DIM; ctx.lineWidth=LW_THIN; ctx.setLineDash([4,3]);
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1+(x2-x1)*e,y1+(y2-y1)*e); ctx.stroke(); ctx.setLineDash([]);
+        drawCompass(x1,y1,x1+(x2-x1)*e,y1+(y2-y1)*e);
+      });
+    });
+    if(animId!==myId) return;
+    compassPose={ax:x1,ay:y1,bx:x2,by:y2};
+    await sleep(140*SPEED);
+  }
+  async function animArc(s,items,k,it,myId){
+    const cx=it.a[0],cy=it.a[1],r=it.a[2],a1=it.a[3],a2=it.a[4],ccw=it.a[5],color=it.a[6];
+    let sweep=a2-a1;
+    if(ccw&&sweep>0) sweep-=2*Math.PI;
+    if(!ccw&&sweep<0) sweep+=2*Math.PI;
+    const sx=cx+r*Math.cos(a1), sy=cy+r*Math.sin(a1);
+    if(!(await compassTransit(s,items,k,myId,cx,cy,sx,sy))) return;
+    const dur=Math.min(2600,Math.max(520,Math.abs(sweep)*1150))*SPEED;
+    await animateFrames(dur,t=>{
+      if(animId!==myId) return false;
+      const cur=a1+sweep*t;
+      frameDraw(s-1,items,k,()=>{
+        ctx.strokeStyle=color; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(cx,cy,r,a1,cur,ccw); ctx.stroke();
+        drawCompass(cx,cy,cx+r*Math.cos(cur),cy+r*Math.sin(cur));
+      });
+    });
+    if(animId!==myId) return;
+    const ex=cx+r*Math.cos(a1+sweep), ey=cy+r*Math.sin(a1+sweep);
+    compassPose={ax:cx,ay:cy,bx:ex,by:ey};
+  }
+
+  async function animProtractor(s,items,k,it,myId){
+    const cx=it.a[0],cy=it.a[1],a1=it.a[4],a2=it.a[5];
+    const up=(a2<=a1);
+    await animateFrames(950*(0.6+0.4*SPEED),t=>{
+      if(animId!==myId) return false;
+      const op=Math.min(1,t*4)*0.95;
+      const mark=a1+(a2-a1)*Math.min(1,t*1.2);
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,op,mark));
+    });
+    if(animId!==myId) return;
+    await animateFrames(240*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,(1-t)*0.95,a2));
+    });
+  }
+
+  function instrOf(it){
+    if(it.f==="drawLine"||it.f==="drawRLine"||it.f==="drawSLine"){
+      if(Math.hypot(it.a[2]-it.a[0],it.a[3]-it.a[1])<30) return null;
+      const mode=(it.f==="drawRLine")?"R":(it.f==="drawSLine")?"S":null;
+      return rollerFor(it,mode)?"roller":"scale";
+    }
+    if(it.f==="markAngles"||it.f==="drawAngleDimOutward") return "protractor";
+    if(it.f==="stepOff") return "divider";
+    if(it.f==="rollSet") return "roller";
+    if(it.f==="lineSet") return "scale";
+    if(it.f==="scaleMarks") return "scale";
+    if(it.f==="measureSpan") return "compass";
+    if(it.f==="drawCut"||it.f==="drawArcPlain") return "compass";
+    if(it.f==="drawCircle"||it.f==="drawArcWithMidArrow") return "compass";
+    if(it.f==="drawArc"&&it.a[2]>=70) return "compass";
+    if(it.f==="drawCurve") return "freehand";
+    return null;
+  }
+
+  // one scale, carried (and pivoted) from line to line without lifting off the sheet
+  async function animLineSet(s,items,k,it,myId){
+    const arr=it.a[0], color=it.a[1], w=it.a[2], dash=it.a[3]||SOLID;
+    if(!arr.length) return;
+    const done=[];
+    const shown=()=>{ done.forEach(L=>{ ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+      ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(L[2],L[3]); ctx.stroke(); ctx.setLineDash([]); }); };
+    const ez=t=>t*t*(3-2*t);
+    const F=arr[0];
+    await animateFrames(520*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ shown(); drawScale(F[0],F[1],F[2],F[3],(1-ez(t))*56,Math.min(1,t*2.4)); });
+    });
+    for(let q=0;q<arr.length;q++){
+      if(animId!==myId) return;
+      const L=arr[q];
+      if(q>0){
+        const p=arr[q-1];
+        const gap=Math.max(Math.hypot(L[0]-p[0],L[1]-p[1]),Math.hypot(L[2]-p[2],L[3]-p[3]));
+        await animateFrames(Math.min(880,Math.max(300,gap*2.2))*SPEED,t=>{
+          if(animId!==myId) return false;
+          const e=ez(t);
+          frameDraw(s-1,items,k,()=>{ shown();
+            drawScale(p[0]+(L[0]-p[0])*e, p[1]+(L[1]-p[1])*e,
+                      p[2]+(L[2]-p[2])*e, p[3]+(L[3]-p[3])*e, 0, 1); });
+        });
+        if(animId!==myId) return;
+      }
+      const len=Math.hypot(L[2]-L[0],L[3]-L[1]);
+      await animateFrames(Math.min(1500,Math.max(460,len*2.0))*SPEED,t=>{
+        if(animId!==myId) return false;
+        const xt=L[0]+(L[2]-L[0])*t, yt=L[1]+(L[3]-L[1])*t;
+        frameDraw(s-1,items,k,()=>{
+          shown(); drawScale(L[0],L[1],L[2],L[3],0,1);
+          ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(xt,yt); ctx.stroke(); ctx.setLineDash([]);
+          drawPencilHand(xt,yt);
+        });
+      });
+      if(animId!==myId) return;
+      done.push(L);
+    }
+    const E=arr[arr.length-1];
+    await animateFrames(400*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ shown(); drawScale(E[0],E[1],E[2],E[3],e*56,1-e*0.92); });
+    });
+  }
+
+  // one roll-and-draw scale, rolled forward from line to line
+  async function animRollSet(s,items,k,it,myId){
+    const arr=it.a[0], color=it.a[1], w=it.a[2], dash=it.a[3]||SOLID;
+    if(!arr.length) return;
+    const done=[];
+    const shown=()=>{ done.forEach(L=>{ ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+      ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(L[2],L[3]); ctx.stroke(); ctx.setLineDash([]); }); };
+    const ez=t=>t*t*(3-2*t);
+    const F=arr[0];
+    await animateFrames(540*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=1-ez(t);
+      frameDraw(s-1,items,k,()=>{ shown(); drawRoller(F[0],F[1],F[2],F[3],e*56,-e*5.5,Math.min(1,t*2.4)); });
+    });
+    let spin=0;
+    for(let q=0;q<arr.length;q++){
+      if(animId!==myId) return;
+      const L=arr[q];
+      if(q>0){
+        const p=arr[q-1];
+        const gap=Math.hypot(L[0]-p[0],L[1]-p[1]);
+        const sp0=spin; spin-=gap/9.5;
+        await animateFrames(Math.min(900,Math.max(280,gap*2.4))*SPEED,t=>{
+          if(animId!==myId) return false;
+          const e=ez(t);
+          frameDraw(s-1,items,k,()=>{ shown();
+            drawRoller(p[0]+(L[0]-p[0])*e, p[1]+(L[1]-p[1])*e,
+                       p[2]+(L[2]-p[2])*e, p[3]+(L[3]-p[3])*e, 0, sp0+(spin-sp0)*e); });
+        });
+        if(animId!==myId) return;
+      }
+      const len=Math.hypot(L[2]-L[0],L[3]-L[1]);
+      await animateFrames(Math.min(1500,Math.max(480,len*2.1))*SPEED,t=>{
+        if(animId!==myId) return false;
+        const xt=L[0]+(L[2]-L[0])*t, yt=L[1]+(L[3]-L[1])*t;
+        frameDraw(s-1,items,k,()=>{
+          shown(); drawRoller(L[0],L[1],L[2],L[3],0,spin);
+          ctx.strokeStyle=color; ctx.lineWidth=w; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(xt,yt); ctx.stroke(); ctx.setLineDash([]);
+          drawPencilHand(xt,yt);
+        });
+      });
+      if(animId!==myId) return;
+      done.push(L);
+    }
+    const E=arr[arr.length-1];
+    await animateFrames(420*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ shown(); drawRoller(E[0],E[1],E[2],E[3],e*56,spin+e*5.5,1-e*0.92); });
+    });
+  }
+
+  // divisions stepped off against the scale
+  async function animScaleMarks(s,items,k,it,myId){
+    const x1=it.a[0],y1=it.a[1],x2=it.a[2],y2=it.a[3],n=it.a[4];
+    const PT=q=>({x:x1+(x2-x1)*q/n, y:y1+(y2-y1)*q/n});
+    const dot=p=>{ ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(p.x,p.y,2.6,0,2*Math.PI); ctx.fill(); };
+    const done=[PT(0)];
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(560*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ done.forEach(dot); drawScale(x1,y1,x2,y2,(1-ez(t))*58,Math.min(1,t*2.4)); });
+    });
+    for(let q=1;q<=n;q++){
+      if(animId!==myId) return;
+      const A=PT(q-1), B=PT(q);
+      await animateFrames(250*SPEED,t=>{
+        if(animId!==myId) return false;
+        const e=ez(t);
+        frameDraw(s-1,items,k,()=>{ done.forEach(dot); drawScale(x1,y1,x2,y2,0,1);
+          drawPencilHand(A.x+(B.x-A.x)*e, A.y+(B.y-A.y)*e); });
+      });
+      if(animId!==myId) return;
+      done.push(B);
+    }
+    await animateFrames(380*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ done.forEach(dot); drawScale(x1,y1,x2,y2,e*58,1-e*0.92); });
+    });
+  }
+
+  function restingCompassDraw(){
+    if(compassPose) drawCompass(compassPose.ax,compassPose.ay,compassPose.bx,compassPose.by);
+  }
+  async function runAnimation(s,items,myId){
+    let prev=null, compassResting=false;
+    for(let k=0;k<items.length;k++){
+      if(animId!==myId) return;
+      const it=items[k];
+      const ins=instrOf(it);
+      if(ins){
+        await sleep((prev&&prev!==ins?460:prev===ins?170:120)*SPEED);
+        if(animId!==myId) return;
+      }
+      const lineish=(it.f==="drawLine"||it.f==="drawRLine"||it.f==="drawSLine");
+      const isL=lineish&&Math.hypot(it.a[2]-it.a[0],it.a[3]-it.a[1])>=30;
+      if(isL){
+        const mode=(it.f==="drawRLine")?"R":(it.f==="drawSLine")?"S":null;
+        await animLine(s,items,k,it,myId,mode);
+        if(animId!==myId) return;
+        let ex=0;
+        while(items[k+1+ex]&&items[k+1+ex].f==="drawPoint"&&onSegment(it,items[k+1+ex])) ex++;
+        if(ex>0){
+          await animHold(s,items,k+1+ex,it,rollerFor(it,mode),myId);
+          if(animId!==myId) return;
+          k+=ex;
+        }
+      }
+      else if(it.f==="markAngles") await animMarkAngles(s,items,k,it,myId);
+      else if(it.f==="stepOff")    await animStepOff(s,items,k,it,myId);
+      else if(it.f==="rollSet")    await animRollSet(s,items,k,it,myId);
+      else if(it.f==="lineSet")    await animLineSet(s,items,k,it,myId);
+      else if(it.f==="scaleMarks") await animScaleMarks(s,items,k,it,myId);
+      else if(it.f==="measureSpan") await animMeasure(s,items,k,it,myId);
+      else if(it.f==="drawCircle") await animArc(s,items,k,
+                {a:[it.a[0],it.a[1],it.a[2],0,2*Math.PI,false,it.a[3]||COL_THIN]},myId);
+      else if(it.f==="drawCut") await animArc(s,items,k,
+                {a:[it.a[0],it.a[1],it.a[2],it.a[3]-Math.min(0.40,9/Math.max(it.a[2],1)),
+                    it.a[3]+Math.min(0.40,9/Math.max(it.a[2],1)),false,it.a[4]||COL_THIN]},myId);
+      else if(it.f==="drawArcPlain") await animArc(s,items,k,
+                {a:[it.a[0],it.a[1],it.a[2],it.a[3],it.a[4],it.a[5],it.a[6]||COL_THIN]},myId);
+      else if(it.f==="drawArcWithMidArrow") await animArc(s,items,k,it,myId);
+      else if(it.f==="drawArc"&&it.a[2]>=70) await animArc(s,items,k,it,myId);
+      else if(it.f==="drawAngleDimOutward") await animProtractor(s,items,k,it,myId);
+      else if(it.f==="drawCurve") await animCurve(s,items,k,it,myId);
+      else { frameDraw(s-1,items,k+1,compassResting?restingCompassDraw:null); await sleep(90*SPEED); continue; }
+      if(animId!==myId) return;
+      if(ins){ prev=ins; compassResting=(ins==="compass"); }
+      frameDraw(s-1,items,k+1,compassResting?restingCompassDraw:null);
+    }
+    if(animId!==myId) return;
+    const lastStep=(P&&s>=P.steps.length);
+    frameDraw(s,[],0,(compassResting&&!lastStep)?restingCompassDraw:null);
+  }
+
+
+  /* ================= topic shared helpers ================= */
+  function drawCurve(pts,color,width,dash){
+    if(REC){REC.push({f:"drawCurve",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color||COL_THICK; ctx.lineWidth=width||LW_THICK; ctx.setLineDash(dash||[]);
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  EXEC.drawCurve=drawCurve;
+
+  async function animCurve(s,items,k,it,myId){
+    const pts=it.a[0], color=it.a[1]||COL_THICK, width=it.a[2]||LW_THICK;
+    let LT=0; for(let i=1;i<pts.length;i++) LT+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+    const dur=Math.min(3000,Math.max(900,LT*2.1))*SPEED;
+    await animateFrames(dur,t=>{
+      if(animId!==myId) return false;
+      const target=LT*t;
+      frameDraw(s-1,items,k,()=>{
+        ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+        let acc=0,px=pts[0].x,py=pts[0].y,done=false;
+        for(let i=1;i<pts.length&&!done;i++){
+          const seg=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+          if(acc+seg<=target){ ctx.lineTo(pts[i].x,pts[i].y); acc+=seg; px=pts[i].x; py=pts[i].y; }
+          else{ const fr=seg?(target-acc)/seg:0;
+            px=pts[i-1].x+(pts[i].x-pts[i-1].x)*fr; py=pts[i-1].y+(pts[i].y-pts[i-1].y)*fr;
+            ctx.lineTo(px,py); done=true; }
+        }
+        ctx.stroke();
+        drawPencilHand(px,py);
+      });
+    });
+  }
+
+  function fitRect(wmm,hmm){
+    const sc=Math.min((CANVAS_W-250)/wmm,(CANVAS_H-130)/hmm,3.2);
+    SCALE_PXMM=sc;
+    return {sc, ox:(CANVAS_W-wmm*sc)/2-45, oy:(CANVAS_H-hmm*sc)/2};
+  }
+
+
+  function fitBox(pts,pad){
+    let a=1e9,b=-1e9,c=1e9,d=-1e9;
+    pts.forEach(p=>{a=Math.min(a,p.x);b=Math.max(b,p.x);c=Math.min(c,p.y);d=Math.max(d,p.y);});
+    const P=(pad===undefined?14:pad);
+    const fb=fitRect(b-a+2*P,d-c+2*P), s=fb.sc;
+    return {s,M:p=>({x:fb.ox+(p.x-a+P)*s, y:fb.oy+(d-p.y+P)*s})};
+  }
+  const circleFine=(cx,cy,R)=>{const o=[];for(let q=0;q<=360;q+=4)o.push({x:cx+R*Math.cos(q*Math.PI/180),y:cy+R*Math.sin(q*Math.PI/180)});return o;};
+  const upperHalf=[1,2,4,5].map(q=>-q*Math.PI/6);
+  const NTURN=v=>{ const n=Number(v); return (n===1.5)?1.5:Math.max(1,Math.min(2,Math.round(n))); };
+  const turnWords=(n,word)=>(n===1?("one "+word):n===1.5?("one and a half "+word+"s"):("two "+word+"s"));
+
+
+  /* =========================================================
+     models3d - parametric 3-D solids + wireframe renderer
+     Model = {verts:[{x,y,z}], faces:[{v:[i..],tag,curved}],
+              hard:[[i,j,tag]], dims:[{a,b,text,off,tag}], title}
+     Axes: x right, y up (axis of solid), z towards viewer.
+     Face vertices are listed anticlockwise seen from OUTSIDE.
+  ========================================================= */
+  const TAU=Math.PI*2;
+  const V=(x,y,z)=>({x:x,y:y,z:z});
+
+  function polyR(n,s){ return s/(2*Math.sin(Math.PI/n)); }        // side -> circumradius
+  function polyPts(n,R,ph){                                       // n corners on a circle
+    const o=[]; for(let i=0;i<n;i++){ const a=(ph||0)+TAU*i/n; o.push({x:R*Math.cos(a),z:R*Math.sin(a)}); }
+    return o;
+  }
+
+  /* ---- n-sided prism, base on y=0 ---- */
+  function m_prism(n,s,H,ph){
+    const R=polyR(n,s), P=polyPts(n,R,(ph===undefined?-Math.PI/2:ph));
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    P.forEach(p=>verts.push(V(p.x,H,p.z)));
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    const top=[]; for(let i=n-1;i>=0;i--) top.push(n+i);
+    faces.push({v:top,tag:"top"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"lat"+(i+1)});
+      hard.push([i,j,"base"],[n+i,n+j,"top"],[i,n+i,"edge"+(i+1)]);
+    }
+    return {verts,faces,hard,kind:"prism",n:n,R:R,H:H};
+  }
+
+  /* ---- n-sided pyramid, apex on the axis ---- */
+  function m_pyr(n,s,H,ph){
+    const R=polyR(n,s), P=polyPts(n,R,(ph===undefined?-Math.PI/2:ph));
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    verts.push(V(0,H,0));
+    const ap=n;
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,ap],tag:"lat"+(i+1)});
+      hard.push([i,j,"base"],[i,ap,"edge"+(i+1)]);
+    }
+    return {verts,faces,hard,kind:"pyr",n:n,R:R,H:H,apex:ap};
+  }
+
+  /* ---- cylinder (curved lateral faces -> only the silhouette is drawn) ---- */
+  function m_cyl(R,H,seg){
+    const n=seg||36, P=polyPts(n,R,0);
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    P.forEach(p=>verts.push(V(p.x,H,p.z)));
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    const top=[]; for(let i=n-1;i>=0;i--) top.push(n+i);
+    faces.push({v:top,tag:"top"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"lat",curved:true});
+      hard.push([i,j,"base"],[n+i,n+j,"top"]);
+    }
+    return {verts,faces,hard,kind:"cyl",n:n,R:R,H:H};
+  }
+
+  /* ---- cone ---- */
+  function m_cone(R,H,seg){
+    const n=seg||36, P=polyPts(n,R,0);
+    const verts=[], faces=[], hard=[];
+    P.forEach(p=>verts.push(V(p.x,0,p.z)));
+    verts.push(V(0,H,0));
+    const ap=n;
+    const bot=[]; for(let i=0;i<n;i++) bot.push(i);
+    faces.push({v:bot,tag:"base"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,ap],tag:"lat",curved:true});
+      hard.push([i,j,"base"]);
+    }
+    return {verts,faces,hard,kind:"cone",n:n,R:R,H:H,apex:ap};
+  }
+
+  /* ---- box from explicit corner + sizes: L(x) x H(y) x D(z) ---- */
+  function boxVF(x0,y0,z0,L,H,D,pre){
+    const p=pre||"b";
+    const v=[V(x0,y0,z0+D),V(x0+L,y0,z0+D),V(x0+L,y0,z0),V(x0,y0,z0),
+             V(x0,y0+H,z0+D),V(x0+L,y0+H,z0+D),V(x0+L,y0+H,z0),V(x0,y0+H,z0)];
+    const f=[{v:[0,1,5,4],tag:p+"front"},{v:[2,3,7,6],tag:p+"back"},
+             {v:[1,2,6,5],tag:p+"right"},{v:[3,0,4,7],tag:p+"left"},
+             {v:[4,5,6,7],tag:p+"top"},{v:[3,2,1,0],tag:p+"bottom"}];
+    const h=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]
+             .map(e=>[e[0],e[1],p+"edge"]);
+    return {verts:v,faces:f,hard:h};
+  }
+
+  /* =========================================================
+     dimensioning of a 3-D model
+     A dim entry is {p,q,off,text,tag}; p and q are the two points
+     being measured and off shifts the dimension line clear of the solid,
+     exactly as witness lines do on a drawing board.
+  ========================================================= */
+  function bboxM(m){
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+    m.verts.forEach(p=>{
+      if(p.x<x0)x0=p.x; if(p.x>x1)x1=p.x;
+      if(p.y<y0)y0=p.y; if(p.y>y1)y1=p.y;
+      if(p.z<z0)z0=p.z; if(p.z>z1)z1=p.z; });
+    return {x0,x1,y0,y1,z0,z1,L:x1-x0,H:y1-y0,B:z1-z0};
+  }
+
+  /* overall length / height / depth, taken straight from the bounding box */
+  function dimsBox(m,o){
+    o=o||{};
+    const b=bboxM(m), g=Math.max(b.L,b.H,b.B)*0.16+4, D=[];
+    const N=v=>{ const r=Math.round(v*10)/10; return (Math.abs(r-Math.round(r))<0.05)?String(Math.round(r)):r.toFixed(1); };
+    if(o.L!==false) D.push({p:{x:b.x0,y:b.y0,z:b.z1}, q:{x:b.x1,y:b.y0,z:b.z1},
+      off:{x:0,y:-g,z:g*0.55}, text:o.Ltext||N(b.L), tag:o.Ltag});
+    if(o.H!==false) D.push({p:{x:b.x0,y:b.y0,z:b.z1}, q:{x:b.x0,y:b.y1,z:b.z1},
+      off:{x:-g,y:0,z:g*0.55}, text:o.Htext||N(b.H), tag:o.Htag});
+    if(o.B!==false) D.push({p:{x:b.x1,y:b.y0,z:b.z1}, q:{x:b.x1,y:b.y0,z:b.z0},
+      off:{x:g*0.55,y:-g,z:0}, text:o.Btext||N(b.B), tag:o.Btag});
+    m.dims=(m.dims||[]).concat(D);
+    return m;
+  }
+
+  /* a single free dimension between two points */
+  function dimAdd(m,p,q,text,off,tag){
+    m.dims=(m.dims||[]).concat([{p:p,q:q,text:text,off:off||{x:0,y:0,z:0},tag:tag}]);
+    return m;
+  }
+
+  /* a diameter, measured across the circle on the level y, centred on (cx,cz) */
+  function dimDia(m,cx,cz,y,dia,text,off,tag){
+    const r=dia/2;
+    return dimAdd(m,{x:cx-r,y:y,z:cz},{x:cx+r,y:y,z:cz},
+                  text||("\u00d8 "+(Math.round(dia*10)/10)),off,tag);
+  }
+
+  /* ---- merge several part-models into one ---- */
+  function mergeM(){
+    const verts=[],faces=[],hard=[];
+    for(let k=0;k<arguments.length;k++){
+      const m=arguments[k]; if(!m) continue;
+      const o=verts.length;
+      m.verts.forEach(p=>verts.push(V(p.x,p.y,p.z)));
+      m.faces.forEach(f=>faces.push({v:f.v.map(i=>i+o),tag:f.tag,curved:f.curved}));
+      (m.hard||[]).forEach(e=>hard.push([e[0]+o,e[1]+o,e[2]]));
+    }
+    return {verts,faces,hard};
+  }
+
+  /* ---- solid of revolution / extrusion from a closed 2-D profile in the xy plane ---- */
+  function m_prismFromProfile(pts,D,pre){                // pts anticlockwise in xy, extruded along z
+    const n=pts.length, p=pre||"s";
+    const verts=[],faces=[],hard=[];
+    pts.forEach(q=>verts.push(V(q.x,q.y,D/2)));          // near face
+    pts.forEach(q=>verts.push(V(q.x,q.y,-D/2)));         // far face
+    const nf=[]; for(let i=0;i<n;i++) nf.push(i);
+    faces.push({v:nf,tag:p+"front"});
+    const ff=[]; for(let i=n-1;i>=0;i--) ff.push(n+i);
+    faces.push({v:ff,tag:p+"back"});
+    for(let i=0;i<n;i++){
+      const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:p+"side"+(i+1)});
+      hard.push([i,j,p+"front"],[n+i,n+j,p+"back"],[i,n+i,p+"edge"+(i+1)]);
+    }
+    return {verts,faces,hard};
+  }
+
+  /* ---- clip a model by the half-space  n.p <= d  (keeps the lower/inner part) ---- */
+  function clipModel(m,nx,ny,nz,d,capTag){
+    const EPS=1e-7;
+    const sd=p=>nx*p.x+ny*p.y+nz*p.z-d;
+    const verts=[], key={}, capPts=[];
+    const push=p=>{
+      const k=p.x.toFixed(4)+"|"+p.y.toFixed(4)+"|"+p.z.toFixed(4);
+      if(key[k]!==undefined) return key[k];
+      key[k]=verts.length; verts.push(V(p.x,p.y,p.z)); return key[k];
+    };
+    const faces=[], hard=[];
+    m.faces.forEach(f=>{
+      const P=f.v.map(i=>m.verts[i]), out=[];
+      for(let i=0;i<P.length;i++){
+        const A=P[i], B=P[(i+1)%P.length], da=sd(A), db=sd(B);
+        if(da<=EPS) out.push(A);
+        if((da<-EPS&&db>EPS)||(da>EPS&&db<-EPS)){
+          const t=da/(da-db);
+          const X=V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t);
+          out.push(X); capPts.push(X);
+        }
+      }
+      if(out.length>=3) faces.push({v:out.map(push),tag:f.tag,curved:f.curved});
+    });
+    /* order the cap points anticlockwise about the plane normal */
+    if(capPts.length>=3){
+      const c={x:0,y:0,z:0};
+      capPts.forEach(p=>{c.x+=p.x;c.y+=p.y;c.z+=p.z;});
+      c.x/=capPts.length; c.y/=capPts.length; c.z/=capPts.length;
+      let ux={x:capPts[0].x-c.x,y:capPts[0].y-c.y,z:capPts[0].z-c.z};
+      const ul=Math.hypot(ux.x,ux.y,ux.z)||1; ux={x:ux.x/ul,y:ux.y/ul,z:ux.z/ul};
+      const uy={x:ny*ux.z-nz*ux.y, y:nz*ux.x-nx*ux.z, z:nx*ux.y-ny*ux.x};
+      const seen={}, uniq=[];
+      capPts.forEach(p=>{
+        const k=p.x.toFixed(3)+"|"+p.y.toFixed(3)+"|"+p.z.toFixed(3);
+        if(seen[k]) return; seen[k]=1; uniq.push(p);
+      });
+      uniq.sort((p,q)=>{
+        const ap=Math.atan2((p.x-c.x)*uy.x+(p.y-c.y)*uy.y+(p.z-c.z)*uy.z,
+                            (p.x-c.x)*ux.x+(p.y-c.y)*ux.y+(p.z-c.z)*ux.z);
+        const aq=Math.atan2((q.x-c.x)*uy.x+(q.y-c.y)*uy.y+(q.z-c.z)*uy.z,
+                            (q.x-c.x)*ux.x+(q.y-c.y)*ux.y+(q.z-c.z)*ux.z);
+        return ap-aq;
+      });
+      const idx=uniq.map(push);
+      faces.push({v:idx,tag:capTag||"cut"});
+      for(let i=0;i<idx.length;i++) hard.push([idx[i],idx[(i+1)%idx.length],capTag||"cut"]);
+    }
+    /* keep original hard edges whose both ends survived */
+    (m.hard||[]).forEach(e=>{
+      const A=m.verts[e[0]], B=m.verts[e[1]];
+      const da=sd(A), db=sd(B);
+      if(da<=EPS&&db<=EPS){ hard.push([push(A),push(B),e[2]]); return; }
+      if(da<=EPS&&db>EPS){ const t=da/(da-db);
+        hard.push([push(A),push(V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t)),e[2]]); return; }
+      if(da>EPS&&db<=EPS){ const t=da/(da-db);
+        hard.push([push(V(A.x+(B.x-A.x)*t,A.y+(B.y-A.y)*t,A.z+(B.z-A.z)*t)),push(B),e[2]]); }
+    });
+    return {verts,faces,hard,kind:m.kind,n:m.n,R:m.R,H:m.H};
+  }
+
+  /* =========================================================
+     generic wireframe renderer with back-face culling
+     - hard edges : solid when any adjoining face is towards us,
+                    dashed when the edge is hidden
+     - soft edges (between two curved faces) : only the silhouette
+  ========================================================= */
+  function wireRender(cc,W,H,m,hl,rotY,rotX,zoom,panX,panY,opt){
+    const o=opt||{};
+    const HL=o.hlColor||"#e0561f", INK=o.ink||"#2b3a48", HID=o.hid||"#c3ccd6";
+    const cy=Math.cos(rotY),sy=Math.sin(rotY),cx=Math.cos(rotX),sx=Math.sin(rotX);
+    let c={x:0,y:0,z:0};
+    m.verts.forEach(p=>{c.x+=p.x;c.y+=p.y;c.z+=p.z;});
+    c.x/=m.verts.length; c.y/=m.verts.length; c.z/=m.verts.length;
+    let rad=1;
+    m.verts.forEach(p=>{rad=Math.max(rad,Math.hypot(p.x-c.x,p.y-c.y,p.z-c.z));});
+    const k=Math.min(W,H)*(o.fill||0.38)/rad*zoom;
+    const rot=p=>{ const dx=p.x-c.x,dy=p.y-c.y,dz=p.z-c.z;
+      const X=dx*cy-dz*sy, Z=dx*sy+dz*cy;
+      return {x:X,y:dy*cx-Z*sx,z:dy*sx+Z*cx}; };
+    const pr=p=>{ const r=rot(p); return {x:W/2+r.x*k+panX, y:H/2-r.y*k+panY, z:r.z}; };
+    const S=m.verts.map(pr);
+    const L=(a,b,col,w,dash)=>{ cc.strokeStyle=col; cc.lineWidth=w; cc.setLineDash(dash||[]);
+      cc.beginPath(); cc.moveTo(a.x,a.y); cc.lineTo(b.x,b.y); cc.stroke(); cc.setLineDash([]); };
+
+    const front={}, back={}, hot={}, curvedF={}, curvedB={};
+    m.faces.forEach(f=>{
+      const A=rot(m.verts[f.v[0]]), B=rot(m.verts[f.v[1]]), C=rot(m.verts[f.v[2]]);
+      const nz=(B.x-A.x)*(C.y-A.y)-(B.y-A.y)*(C.x-A.x);
+      f._front=(nz>0);
+      f._on=!!(f.tag&&hl&&hl.indexOf(f.tag)>=0);
+      for(let i=0;i<f.v.length;i++){
+        const a=f.v[i], b=f.v[(i+1)%f.v.length];
+        const key=Math.min(a,b)+"_"+Math.max(a,b);
+        if(f._front){ front[key]=1; if(f.curved) curvedF[key]=1; }
+        else        { back[key]=1;  if(f.curved) curvedB[key]=1; }
+        if(f._on&&f._front) hot[key]=1;
+      }
+    });
+
+
+    /* --- occlusion --------------------------------------------------------
+       Back-face culling alone marks an edge visible as soon as ANY adjoining
+       face is turned towards us. On a stepped or notched solid such an edge
+       can still lie behind another part of the same object, which is why
+       hidden edges were showing through. Each edge is therefore sampled and
+       every sample tested against the faces in front of it.              */
+    const occFaces=[];
+    if(o.noHidden){
+      m.faces.forEach(f=>{
+        if(!f._front) return;
+        const a=S[f.v[0]];
+        const e1={x:S[f.v[1]].x-a.x,y:S[f.v[1]].y-a.y};
+        const e2={x:S[f.v[2]].x-a.x,y:S[f.v[2]].y-a.y};
+        const det=e1.x*e2.y-e1.y*e2.x;
+        if(Math.abs(det)<1e-9) return;             // seen edge-on: hides nothing
+        occFaces.push({poly:f.v.map(i=>S[i]),a:a,e1:e1,e2:e2,det:det,
+                       dA:S[f.v[0]].z,dB:S[f.v[1]].z-S[f.v[0]].z,
+                       dC:S[f.v[2]].z-S[f.v[0]].z});
+      });
+    }
+    const inPoly=(poly,p)=>{ let inside=false;
+      for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+        const a=poly[i], b=poly[j];
+        if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) inside=!inside; }
+      return inside; };
+    const coverZ=(F,q)=>{ if(!inPoly(F.poly,q)) return null;
+      const rx=q.x-F.a.x, ry=q.y-F.a.y;
+      const u=( rx*F.e2.y-ry*F.e2.x)/F.det, w=(-rx*F.e1.y+ry*F.e1.x)/F.det;
+      return F.dA+u*F.dB+w*F.dC; };
+    let zSpan=1; S.forEach(p=>{zSpan=Math.max(zSpan,Math.abs(p.z));});
+    const zTol=zSpan*3e-3+1e-6;
+    /* draw only the parts of an edge that nothing covers */
+    const LV=(A,B,col,w,drop)=>{
+      if(!occFaces.length&&!drop){ L(A,B,col,w); return; }
+      const N=28, vis=[], at=t=>({x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t});
+      for(let i=0;i<=N;i++){
+        const t=(i+0.5)/(N+1), q=at(t), dz=A.z+(B.z-A.z)*t;
+        let hid=drop?drop(t):false;
+        for(let j=0;j<occFaces.length&&!hid;j++){
+          const dc=coverZ(occFaces[j],q); if(dc!==null&&dc>dz+zTol) hid=true; }
+        vis.push(!hid);
+      }
+      let s0=0;
+      for(let i=1;i<=N+1;i++){
+        if(i===N+1||vis[i]!==vis[s0]){
+          if(vis[s0]) L(at(s0/(N+1)),at(i/(N+1)),col,w);
+          s0=i;
+        }
+      }
+    };
+
+    /* --- edges that do not exist on the finished solid --------------------
+       These objects are built by merging boxes, so an edge belonging to one
+       part can fall in the middle of a flat face of another: the base box
+       ends where the upright box begins, but their side faces are flush, so
+       the surface there is smooth and no line belongs on it. An edge is
+       dropped when the surface simply continues flat across it.          */
+    const fNorm=f=>{
+      const A=m.verts[f.v[0]],B=m.verts[f.v[1]],C=m.verts[f.v[2]];
+      const u={x:B.x-A.x,y:B.y-A.y,z:B.z-A.z}, w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
+      const n={x:u.y*w.z-u.z*w.y,y:u.z*w.x-u.x*w.z,z:u.x*w.y-u.y*w.x};
+      const q=Math.hypot(n.x,n.y,n.z)||1;
+      return {x:n.x/q,y:n.y/q,z:n.z/q};
+    };
+    const FI=m.faces.map(f=>{ const n=fNorm(f), A=m.verts[f.v[0]];
+      return {f:f,n:n,d:n.x*A.x+n.y*A.y+n.z*A.z,
+              vs:f.v.reduce((o,i)=>{o[i]=1;return o;},{})}; });
+    const inFace=(F,p)=>{
+      const n=F.n, ax=Math.abs(n.x), ay=Math.abs(n.y), az=Math.abs(n.z);
+      const k=(ax>=ay&&ax>=az)?["y","z"]:((ay>=az)?["x","z"]:["x","y"]);
+      const poly=F.f.v.map(i=>({x:m.verts[i][k[0]],y:m.verts[i][k[1]]}));
+      const q={x:p[k[0]],y:p[k[1]]};
+      let inside=false;
+      for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+        const a=poly[i],b=poly[j];
+        if(((a.y>q.y)!==(b.y>q.y))&&(q.x<(b.x-a.x)*(q.y-a.y)/(b.y-a.y)+a.x)) inside=!inside;
+      }
+      return inside;
+    };
+    /* An edge may be flat over only PART of its length - the top edge of the
+       base box runs the whole length of the block, but only the stretch
+       behind the upright is buried in a smooth face. The test is therefore
+       made point by point, and only the stretches that are genuine creases
+       get drawn.                                                        */
+    const flatTest=(i0,i1)=>{
+      const P=m.verts[i0], Q=m.verts[i1];
+      const t={x:Q.x-P.x,y:Q.y-P.y,z:Q.z-P.z};
+      const tl=Math.hypot(t.x,t.y,t.z);
+      if(tl<1e-9) return null;
+      t.x/=tl; t.y/=tl; t.z/=tl;
+      const e=Math.min(tl*0.12,0.4)+1e-3;
+      const probes=[];
+      for(let a=0;a<FI.length;a++){
+        const F=FI[a];
+        if(!F.vs[i0]||!F.vs[i1]) continue;                 // edge not on this face
+        const b={x:F.n.y*t.z-F.n.z*t.y, y:F.n.z*t.x-F.n.x*t.z, z:F.n.x*t.y-F.n.y*t.x};
+        const co=[];
+        for(let g=0;g<FI.length;g++){
+          const G=FI[g]; if(G===F) continue;
+          if(G.n.x*F.n.x+G.n.y*F.n.y+G.n.z*F.n.z<0.999) continue;
+          if(Math.abs(G.d-F.d)>1e-4) continue;
+          co.push(G);
+        }
+        if(co.length) probes.push({F:F,b:b,co:co});
+      }
+      if(!probes.length) return null;
+      return u=>{
+        const p={x:P.x+(Q.x-P.x)*u, y:P.y+(Q.y-P.y)*u, z:P.z+(Q.z-P.z)*u};
+        for(let a=0;a<probes.length;a++){
+          const pr=probes[a], b=pr.b;
+          let s=1;
+          if(!inFace(pr.F,{x:p.x+b.x*e,y:p.y+b.y*e,z:p.z+b.z*e})) s=-1;
+          const out={x:p.x-b.x*e*s, y:p.y-b.y*e*s, z:p.z-b.z*e*s};
+          for(let g=0;g<pr.co.length;g++)
+            if(inFace(pr.co[g],out)) return true;          // the surface carries on
+        }
+        return false;
+      };
+    };
+    /* does this edge of the solid stand for the line the step is drawing? */
+    const SEG=o.seg||[];
+    const near=(u,w)=>Math.abs(u-w)<0.6;
+    const proj=(k,P)=>k==="fv"?[P.x,P.y]:k==="tv"?[P.x,P.z]:[P.z,P.y];
+    /* A step often draws only PART of an edge - the top of the base is one
+       edge 75 mm long, but the step draws the 40 mm of it to the right of
+       the upright. So an edge counts as the one being drawn when the line
+       lies along it and overlaps it, not only when the ends coincide.   */
+    const segHit=(i0,i1)=>{
+      if(!SEG.length) return false;
+      const A=m.verts[i0], B=m.verts[i1];
+      for(let i=0;i<SEG.length;i++){
+        const g=SEG[i], a=proj(g.k,A), b=proj(g.k,B);
+        const ex=b[0]-a[0], ey=b[1]-a[1];
+        const eL=Math.hypot(ex,ey); if(eL<1e-6) continue;
+        const ux=ex/eL, uy=ey/eL;
+        const off=q=>Math.abs(-(q[0]-a[0])*uy+(q[1]-a[1])*ux);   // distance off the edge
+        if(off(g.a)>0.6||off(g.b)>0.6) continue;                 // not along this edge
+        const t=q=>((q[0]-a[0])*ux+(q[1]-a[1])*uy)/eL;
+        let t0=t(g.a), t1=t(g.b); if(t0>t1){const w=t0;t0=t1;t1=w;}
+        if(Math.min(t1,1)-Math.max(t0,0)>0.02) return true;      // they overlap
+      }
+      return false;
+    };
+
+    /* shaded highlighted faces, painted back to front */
+    m.faces.filter(f=>f._front&&f._on).forEach(f=>{
+      cc.beginPath();
+      f.v.forEach((vi,i)=>{ const p=S[vi]; i?cc.lineTo(p.x,p.y):cc.moveTo(p.x,p.y); });
+      cc.closePath(); cc.fillStyle=o.hlFill||"rgba(224,86,31,0.20)"; cc.fill();
+    });
+
+    /* silhouette of curved surfaces */
+    Object.keys(curvedF).forEach(key=>{
+      if(!curvedB[key]) return;
+      const p=key.split("_");
+      LV(S[+p[0]],S[+p[1]],hot[key]?HL:INK,hot[key]?2.6:1.5);
+    });
+
+    /* hard edges */
+    const drawn={};
+    (m.hard||[]).forEach(e=>{
+      const key=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
+      if(drawn[key]) return; drawn[key]=1;
+      const on=hot[key]||(e[2]&&hl&&hl.indexOf(e[2])>=0&&front[key])||segHit(e[0],e[1]);
+      const rim=(e[2]==="holerim");          // a hole mouth is always a full ellipse
+      if(front[key]||rim)
+        LV(S[e[0]],S[e[1]],on?HL:INK,on?2.6:1.5,flatTest(e[0],e[1]));
+      else if(back[key]&&!o.noHidden) L(S[e[0]],S[e[1]],HID,1,[5,4]);
+    });
+
+    /* dimensions - d.a/d.b are vertex numbers, d.p/d.q are free points */
+    (m.dims||[]).forEach(d=>{
+      const on=!!(d.tag&&hl&&hl.indexOf(d.tag)>=0);
+      const va=d.p||m.verts[d.a], vb=d.q||m.verts[d.b], f=d.off||{x:0,y:0,z:0};
+      const A0=d.p?pr(d.p):S[d.a], B0=d.q?pr(d.q):S[d.b];
+      const A=pr({x:va.x+f.x,y:va.y+f.y,z:va.z+f.z});
+      const B=pr({x:vb.x+f.x,y:vb.y+f.y,z:vb.z+f.z});
+      /* projection/extension lines are thin CONTINUOUS lines */
+      L(A0,A,"#93a2b1",0.8); L(B0,B,"#93a2b1",0.8);
+      const ang=Math.atan2(B.y-A.y,B.x-A.x);
+      L(A,B,on?HL:"#93a2b1",on?1.7:1);
+      const ar=(x,y,a,col)=>{ cc.fillStyle=col; cc.beginPath(); cc.moveTo(x,y);
+        cc.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a+Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a+Math.PI/2));
+        cc.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a-Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a-Math.PI/2));
+        cc.closePath(); cc.fill(); };
+      ar(A.x,A.y,ang+Math.PI,on?HL:"#93a2b1"); ar(B.x,B.y,ang,on?HL:"#93a2b1");
+      const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-7;
+      cc.font="bold 11px Arial";
+      const w=cc.measureText(d.text).width+6;
+      cc.fillStyle="rgba(255,255,255,0.88)"; cc.fillRect(mx-w/2,my-7,w,14);
+      cc.fillStyle=on?HL:INK; cc.textAlign="center"; cc.textBaseline="middle";
+      cc.fillText(d.text,mx,my);
+    });
+    return {pr:pr,S:S,k:k};
+  }
+
+  /* =========================================================
+     ORTHOGRAPHIC PROJECTIONS  (FIRST ANGLE)
+     FV above X-Y, TV directly below it, side view (from the LEFT)
+     placed on the right and reached through a 45 degree mitre line.
+     View co-ordinates
+       FV : x = 0..L from the left,  y = 0..H from the base
+       TV : x = 0..L from the left,  d = 0..B from the REAR (X-Y) forwards
+       SV : d = 0..B from the rear,  y = 0..H from the base
+     Element forms
+       ["l",x1,y1,x2,y2,hid]   ["c",cx,cy,r,hid]
+       ["a",cx,cy,r,a1,a2,ccw,hid]     ["cl",x1,y1,x2,y2]
+  ========================================================= */
+  const PATTERN_HID=[7,4], PATTERN_CL=[16,3,3,3];
+  const COL_HID="#555";
+
+  /* ---- a drilled hole : walls wound inwards so the far wall is the one drawn ---- */
+  function m_holeY(cx,cz,r,y0,y1,seg){
+    const n=seg||24, verts=[],faces=[],hard=[];
+    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),y0,cz+r*Math.sin(a))); }
+    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),y1,cz+r*Math.sin(a))); }
+    for(let i=0;i<n;i++){ const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"hole",curved:true});
+      hard.push([i,j,"holerim"],[n+i,n+j,"holerim"]); }
+    return {verts,faces,hard};
+  }
+  function m_holeZ(cx,cy,r,z0,z1,seg){
+    const n=seg||24, verts=[],faces=[],hard=[];
+    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),cy+r*Math.sin(a),z0)); }
+    for(let i=0;i<n;i++){ const a=TAU*i/n; verts.push(V(cx+r*Math.cos(a),cy+r*Math.sin(a),z1)); }
+    for(let i=0;i<n;i++){ const j=(i+1)%n;
+      faces.push({v:[j,i,n+i,n+j],tag:"hole",curved:true});
+      hard.push([i,j,"holerim"],[n+i,n+j,"holerim"]); }
+    return {verts,faces,hard};
+  }
+
+  const COL_CONS="#9aa7b4";
+
+  /* generates 45-degree section-hatching lines filling the axis-aligned
+     rectangle (x0,y0)-(x1,y1) in the object's own mm coordinates, evenly
+     spaced by 'gap'. Used for sectional-view problems only.               */
+  function hatchRegion(x0,y0,x1,y1,gap){
+    const lines=[], w=x1-x0, h=y1-y0;
+    for(let d=-h; d<w; d+=gap){
+      let ax=x0+d, ay=y0, bx=x0+d+h, by=y1;
+      if(ax<x0){ ay+=(x0-ax); ax=x0; }
+      if(bx>x1){ by-=(bx-x1); bx=x1; }
+      if(ax<bx-0.01 && ay<by-0.01) lines.push([ax,ay,bx,by]);
+    }
+    return lines;
+  }
+
+    /* ===== the finished outline worked out from the solid =================
+     A line in a view is not necessarily solid or dashed for its whole
+     length: an edge can pass behind another part of the object partway
+     along, so it must change from one to the other in the middle. That
+     cannot be said with a single hidden/visible flag per line, so the
+     three finished views are generated from the 3-D model instead, each
+     edge being sampled and split where its visibility changes.
+       FV  looks along the depth : nearest is the largest z
+       TV  looks down            : nearest is the largest y
+       SV  looks from the left   : nearest is the smallest x            */
+  const VIEWDEF={
+    fv:{uv:p=>[p.x,p.y], dep:p=>p.z,  vd:{x:0,y:0,z:1}},
+    tv:{uv:p=>[p.x,p.z], dep:p=>p.y,  vd:{x:0,y:1,z:0}},
+    sv:{uv:p=>[p.z,p.y], dep:p=>-p.x, vd:{x:-1,y:0,z:0}}
+  };
+  function inPoly2(poly,q){
+    let inside=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+      const a=poly[i], b=poly[j];
+      if(((a[1]>q[1])!==(b[1]>q[1]))&&
+         (q[0]<(b[0]-a[0])*(q[1]-a[1])/(b[1]-a[1])+a[0])) inside=!inside;
+    }
+    return inside;
+  }
+  /* An edge can be buried for only PART of its length: the top edge of the
+     base runs the whole 75 mm, but the stretch behind the upright lies in
+     a smooth continuous face and is no edge at all. The test is therefore
+     made point by point, exactly as it is for the pictorial view.      */
+  function flatTester(m){
+    const nrm=f=>{ const A=m.verts[f.v[0]],B=m.verts[f.v[1]],C=m.verts[f.v[2]];
+      const u={x:B.x-A.x,y:B.y-A.y,z:B.z-A.z}, w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
+      const n={x:u.y*w.z-u.z*w.y,y:u.z*w.x-u.x*w.z,z:u.x*w.y-u.y*w.x};
+      const q=Math.hypot(n.x,n.y,n.z)||1; return {x:n.x/q,y:n.y/q,z:n.z/q}; };
+    const FI=m.faces.map(f=>{ const n=nrm(f), A=m.verts[f.v[0]];
+      return {f:f,n:n,d:n.x*A.x+n.y*A.y+n.z*A.z,
+              vs:f.v.reduce((o,i)=>{o[i]=1;return o;},{})}; });
+    const inF=(F,p)=>{ const n=F.n;
+      const ax=Math.abs(n.x),ay=Math.abs(n.y),az=Math.abs(n.z);
+      const k=(ax>=ay&&ax>=az)?["y","z"]:((ay>=az)?["x","z"]:["x","y"]);
+      return inPoly2(F.f.v.map(i=>[m.verts[i][k[0]],m.verts[i][k[1]]]),[p[k[0]],p[k[1]]]); };
+    return (i0,i1)=>{
+      const P=m.verts[i0], Q=m.verts[i1];
+      const t={x:Q.x-P.x,y:Q.y-P.y,z:Q.z-P.z};
+      const tl=Math.hypot(t.x,t.y,t.z); if(tl<1e-9) return null;
+      t.x/=tl;t.y/=tl;t.z/=tl;
+      const ep=Math.min(tl*0.12,0.4)+1e-3, probes=[];
+      for(let a=0;a<FI.length;a++){
+        const F=FI[a]; if(!F.vs[i0]||!F.vs[i1]) continue;
+        const b={x:F.n.y*t.z-F.n.z*t.y,y:F.n.z*t.x-F.n.x*t.z,z:F.n.x*t.y-F.n.y*t.x};
+        const co=[];
+        for(let g=0;g<FI.length;g++){
+          const G=FI[g]; if(G===F) continue;
+          if(G.n.x*F.n.x+G.n.y*F.n.y+G.n.z*F.n.z<0.999) continue;
+          if(Math.abs(G.d-F.d)>1e-4) continue;
+          co.push(G);
+        }
+        if(co.length) probes.push({F:F,b:b,co:co});
+      }
+      if(!probes.length) return null;
+      return u=>{
+        const q={x:P.x+(Q.x-P.x)*u,y:P.y+(Q.y-P.y)*u,z:P.z+(Q.z-P.z)*u};
+        for(let a=0;a<probes.length;a++){
+          const pr=probes[a], b=pr.b;
+          let sg=1;
+          if(!inF(pr.F,{x:q.x+b.x*ep,y:q.y+b.y*ep,z:q.z+b.z*ep})) sg=-1;
+          const out={x:q.x-b.x*ep*sg,y:q.y-b.y*ep*sg,z:q.z-b.z*ep*sg};
+          for(let g=0;g<pr.co.length;g++) if(inF(pr.co[g],out)) return true;
+        }
+        return false;
+      };
+    };
+  }
+  function viewOutline(m,view){
+    const V=VIEWDEF[view];
+    const S=m.verts.map(V.uv), D=m.verts.map(V.dep), F=[];
+    const cA={}, cB2={};
+    m.faces.forEach(f=>{
+      const a=S[f.v[0]];
+      const e1=[S[f.v[1]][0]-a[0],S[f.v[1]][1]-a[1]];
+      const e2=[S[f.v[2]][0]-a[0],S[f.v[2]][1]-a[1]];
+      const det=e1[0]*e2[1]-e1[1]*e2[0];
+      if(Math.abs(det)>1e-9)
+        F.push({poly:f.v.map(i=>S[i]),a:a,e1:e1,e2:e2,det:det,
+                dA:D[f.v[0]],dB:D[f.v[1]]-D[f.v[0]],dC:D[f.v[2]]-D[f.v[0]]});
+      if(f.curved){
+        const A=m.verts[f.v[0]],B=m.verts[f.v[1]],C=m.verts[f.v[2]];
+        const u={x:B.x-A.x,y:B.y-A.y,z:B.z-A.z}, w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
+        const nx=u.y*w.z-u.z*w.y, ny=u.z*w.x-u.x*w.z, nz=u.x*w.y-u.y*w.x;
+        const side=(nx*V.vd.x+ny*V.vd.y+nz*V.vd.z)>0?cA:cB2;
+        for(let i=0;i<f.v.length;i++){
+          const q1=f.v[i],q2=f.v[(i+1)%f.v.length];
+          side[Math.min(q1,q2)+"_"+Math.max(q1,q2)]=1; }
+      }
+    });
+    const cov=(f,q)=>{ if(!inPoly2(f.poly,q)) return null;
+      const rx=q[0]-f.a[0], ry=q[1]-f.a[1];
+      const u=( rx*f.e2[1]-ry*f.e2[0])/f.det, w=(-rx*f.e1[1]+ry*f.e1[0])/f.det;
+      return f.dA+u*f.dB+w*f.dC; };
+    let sp=1; D.forEach(d=>sp=Math.max(sp,Math.abs(d)));
+    const TOL=sp*4e-3+1e-6, N=30, out=[], seen={};
+    const FLAT=flatTester(m);
+    /* A curved surface is approximated by flat facets, but the joins
+       between those facets are not edges of the object - only the
+       silhouette is. Drawing them would rule a whole band of lines
+       across the curve, so an edge lying wholly between curved faces is
+       left out unless it is the silhouette.                          */
+    const nn=f=>{ const A=m.verts[f.v[0]],B=m.verts[f.v[1]],C=m.verts[f.v[2]];
+      const u={x:B.x-A.x,y:B.y-A.y,z:B.z-A.z}, w={x:C.x-A.x,y:C.y-A.y,z:C.z-A.z};
+      const n={x:u.y*w.z-u.z*w.y,y:u.z*w.x-u.x*w.z,z:u.x*w.y-u.y*w.x};
+      const q=Math.hypot(n.x,n.y,n.z)||1; return {x:n.x/q,y:n.y/q,z:n.z/q}; };
+    const adj={};
+    m.faces.forEach(f=>{ const n=nn(f);
+      for(let i=0;i<f.v.length;i++){
+        const q1=f.v[i], q2=f.v[(i+1)%f.v.length];
+        const k=Math.min(q1,q2)+"_"+Math.max(q1,q2);
+        (adj[k]=adj[k]||[]).push(n);
+      }});
+    /* A curve is approximated by flat facets. The joins between those
+       facets are not edges of the object - only the silhouette is - and
+       drawing them rules a band of lines right across the curve. They are
+       recognised by the two faces meeting almost tangentially, which needs
+       no special tagging in the model.                                  */
+    const COS=Math.cos(25*Math.PI/180), facet={};
+    Object.keys(adj).forEach(k=>{ const a=adj[k];
+      if(a.length!==2) return;
+      if(a[0].x*a[1].x+a[0].y*a[1].y+a[0].z*a[1].z>COS) facet[k]=1; });
+    const edges=(m.hard||[]).filter(e=>{
+      const k=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
+      return !facet[k] || (cA[k]&&cB2[k]);
+    }).map(e=>[e[0],e[1]]);
+    Object.keys(cA).forEach(k=>{ if(cB2[k]){ const q=k.split("_"); edges.push([+q[0],+q[1]]); } });
+    edges.forEach(e=>{
+      const k=Math.min(e[0],e[1])+"_"+Math.max(e[0],e[1]);
+      if(seen[k]) return; seen[k]=1;
+      const A=S[e[0]], B=S[e[1]], d0=D[e[0]], d1=D[e[1]];
+      if(Math.hypot(B[0]-A[0],B[1]-A[1])<1e-7) return;   // projects to a point
+      const at=t=>[A[0]+(B[0]-A[0])*t, A[1]+(B[1]-A[1])*t];
+      const ft=FLAT(e[0],e[1]);
+      const st=[];                        /* 0 solid, 1 hidden, 2 no edge here */
+      for(let i=0;i<=N;i++){
+        const t=(i+0.5)/(N+1), q=at(t), d=d0+(d1-d0)*t;
+        if(ft&&ft(t)){ st.push(2); continue; }
+        let hid=false;
+        for(let j=0;j<F.length&&!hid;j++){ const dc=cov(F[j],q); if(dc!==null&&dc>d+TOL) hid=true; }
+        st.push(hid?1:0);
+      }
+      let s0=0;
+      for(let i=1;i<=N+1;i++){
+        if(i===N+1||st[i]!==st[s0]){
+          if(st[s0]!==2){
+            const a=at(s0/(N+1)), b=at(i/(N+1));
+            out.push(["l",a[0],a[1],b[0],b[1],st[s0]]);
+          }
+          s0=i;
+        }
+      }
+    });
+    return out;
+  }
+
+  function buildOrtho(v,def){
+    const O=def(v);
+    const L=O.L, B=O.B, H=O.H;
+    const GAP=10;                                  // mm - standard clearance off every reference line
+    const totWmm=L+2*GAP+B, totHmm=H+2*GAP+B;
+    /* the band above the front view carries the locating dimensions and the
+       view title, so it is reserved before the drawing is scaled          */
+    const HEAD=58;
+    const sc=Math.min((CANVAS_W-170)/totWmm,(CANVAS_H-140-HEAD)/totHmm,3.4);
+    SCALE_PXMM=sc;
+    const gap=GAP*sc;
+    const OX=(CANVAS_W-totWmm*sc)/2+20;
+    const REF=(CANVAS_H-totHmm*sc-HEAD)/2+HEAD+(H+GAP)*sc-6;
+    const X1=OX+L*sc+gap;                          // the X1-Y1 vertical reference line
+    const SX=X1+gap;
+    const FVx=x=>OX+x*sc,  FVy=y=>REF-gap-y*sc;
+    const TVx=x=>OX+x*sc,  TVy=d=>REF+gap+d*sc;
+    const SVx=d=>SX+d*sc,  SVy=y=>REF-gap-y*sc;
+    const MAP={fv:[FVx,FVy,-1], tv:[TVx,TVy,1], sv:[SVx,SVy,-1]};
+
+    function paint(view,list,cons){
+      const M=MAP[view], X=M[0], Y=M[1], sg=M[2];
+      const col=cons?COL_CONS:COL_THICK, wid=cons?LW_THIN:LW_THICK;
+      const rollL=[], scaleL=[], hidL=[];
+      (list||[]).forEach(e=>{
+        if(e[0]!=="l") return;
+        const p=[X(e[1]),Y(e[2]),X(e[3]),Y(e[4])];
+        if(e[5]) hidL.push(p);
+        else if(Math.abs(p[1]-p[3])<0.6) rollL.push(p);
+        else scaleL.push(p);
+      });
+      /* hidden lines are laid down FIRST so that where a visible edge and a
+         hidden one fall on the same place - the front and back edges of a
+         plain block, for instance - the visible line covers the dashes  */
+      if(hidL.length)   lineSet(hidL,COL_HID,LW_THIN,PATTERN_HID);
+      if(rollL.length)  rollSet(rollL,col,wid);
+      if(scaleL.length) lineSet(scaleL,col,wid);
+      (list||[]).forEach(e=>{
+        if(e[0]==="c"){
+          if(e[4]) drawArcPlain(X(e[1]),Y(e[2]),e[3]*sc,0,TAU,false,COL_HID,LW_THIN);
+          else drawCircle(X(e[1]),Y(e[2]),e[3]*sc,col,wid);
+        } else if(e[0]==="a"){
+          drawArcPlain(X(e[1]),Y(e[2]),e[3]*sc,sg*e[4],sg*e[5],(sg<0)?!e[6]:e[6],
+                       e[7]?COL_HID:col,e[7]?LW_THIN:wid);
+        } else if(e[0]==="cl"){
+          drawLine(X(e[1]),Y(e[2]),X(e[3]),Y(e[4]),COL_LOCUS,LW_THIN,PATTERN_CL);
+        }
+      });
+    }
+    const paintAll=g=>{ paint("fv",g.fv); paint("tv",g.tv); paint("sv",g.sv); };
+
+    /* ---- locating a line before it is drawn -------------------------------
+       On the board you never put a line down and measure it afterwards: you
+       carry the projectors over from the view already drawn, mark off the
+       distance that fixes the line, and only then draw it. That preparation
+       is worked out from the group's own line co-ordinates, so it applies
+       to every problem without each one having to spell it out.        */
+    let locRow=0;
+    const locateOf=g=>{
+      const row=locRow++;                 // each group gets its own line
+      const OFF=k=>k+16*(row%2);
+      const proj=[], dims=[], seen={};
+      const addP=(a,b,c,d)=>{ const k=[a,b,c,d].map(Math.round).join(",");
+        if(!seen[k]){ seen[k]=1; proj.push([a,b,c,d]); } };
+      const addD=f=>dims.push(f);
+      (g.fv||[]).forEach(e=>{ if(e[0]!=="l") return;
+        if(Math.abs(e[1]-e[3])<0.6 && e[1]>0.6 && e[1]<L-0.6)          // vertical
+          addD(()=>drawHorizontalDim(FVy(H)-OFF(52),FVx(0),FVx(e[1]),R1(e[1])));
+        else if(Math.abs(e[2]-e[4])<0.6 && e[2]>0.6 && e[2]<H-0.6)     // horizontal
+          addD(()=>drawVerticalDim(FVx(L)+OFF(20),FVy(e[2]),FVy(0),R1(e[2])));
+      });
+      (g.tv||[]).forEach(e=>{ if(e[0]!=="l") return;
+        if(Math.abs(e[1]-e[3])<0.6){        // aligns with the same x in the front view
+          addP(FVx(e[1]),FVy(0),TVx(e[1]),TVy(B));
+          /* kept in the band between XY and the top view, clear of the
+             overall length dimension that runs below it */
+          if(e[1]>0.6&&e[1]<L-0.6) addD(()=>drawHorizontalDim(TVy(0)-OFF(14),TVx(0),TVx(e[1]),R1(e[1])));
+        } else if(Math.abs(e[2]-e[4])<0.6 && e[2]>0.6 && e[2]<B-0.6)
+          addD(()=>drawVerticalDim(TVx(L)+OFF(20),TVy(0),TVy(e[2]),R1(e[2])));
+      });
+      (g.sv||[]).forEach(e=>{ if(e[0]!=="l") return;
+        if(Math.abs(e[2]-e[4])<0.6){        // aligns with the same height in the front view
+          addP(FVx(L),FVy(e[2]),SVx(B),SVy(e[2]));
+          if(e[2]>0.6&&e[2]<H-0.6) addD(()=>drawVerticalDim(SVx(B)+OFF(20),SVy(e[2]),SVy(0),R1(e[2])));
+        } else if(Math.abs(e[1]-e[3])<0.6 && e[1]>0.6 && e[1]<B-0.6)
+          addD(()=>drawHorizontalDim(SVy(H)-OFF(52),SVx(0),SVx(e[1]),R1(e[1])));
+      });
+      if(!proj.length&&!dims.length) return null;
+      return {proj:proj,dims:dims};
+    };
+
+    const RC=(x1,y1,x2,y2)=>[["l",x1,y1,x2,y1],["l",x2,y1,x2,y2],
+                             ["l",x2,y2,x1,y2],["l",x1,y2,x1,y1]];
+    const FIN=O.fin||{};
+    const finFV=FIN.fv||RC(0,0,L,H), finTV=FIN.tv||RC(0,0,L,B), finSV=FIN.sv||RC(0,0,B,H);
+
+    const steps=[];
+    steps.push({text:"Draw the X\u2013Y reference line. The problem is worked in FIRST-ANGLE projection, so the front view goes above X\u2013Y, the top view directly below it, and the side view to the right.",
+      hl:[],
+      d:()=>{ drawLine(OX-52,REF,SX+B*sc+40,REF,COL_AXIS,LW_THIN);
+        drawText(OX-52,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(SX+B*sc+40,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+
+    steps.push({text:`Block in the FRONT VIEW lightly, kept clear of X\u2013Y by the standard ${R1(GAP)} mm gap. Draw the enclosing rectangle ${R1(L)} mm long and ${R1(H)} mm high in thin construction lines - these will be firmed in later.`,
+      hl:O.hlAll||[],
+      d:()=>{ paint("fv",RC(0,0,L,H),true);
+        drawVerticalDim(FVx(0)-22,FVy(H),FVy(0),R1(H)); }});
+
+    steps.push({text:`Drop projectors from the front view, straight through X\u2013Y, and block in the TOP VIEW ${R1(GAP)} mm clear on the other side: a rectangle ${R1(L)} mm \u00d7 ${R1(B)} mm.`,
+      hl:O.hlAll||[],
+      d:()=>{ lineSet([[FVx(0),FVy(0),TVx(0),TVy(B)],[FVx(L),FVy(0),TVx(L),TVy(B)]],COL_PROJ,LW_THIN);
+        paint("tv",RC(0,0,L,B),true);
+        drawVerticalDim(TVx(0)-22,TVy(0),TVy(B),R1(B));
+        drawHorizontalDim(TVy(B)+26,TVx(0),TVx(L),R1(L)); }});
+
+    steps.push({text:`Draw the X1\u2013Y1 line: a second reference line, vertical, ${R1(GAP)} mm clear of the top view.`,
+      hl:[],
+      d:()=>{ drawLine(X1,FVy(H)-24,X1,TVy(B)+24,COL_AXIS,LW_THIN);
+        drawText(X1,FVy(H)-30,"X1","#111",FONT_MAIN,"center","bottom");
+        drawText(X1,TVy(B)+30,"Y1","#111",FONT_MAIN,"center","top"); }});
+
+    steps.push({text:"Through the point where X\u2013Y meets X1\u2013Y1, draw a 45\u00b0 mitre line. Every depth measured in the top view is carried horizontally across to this line and then straight up into the side view - that is how the side view gets its width.",
+      hl:[],
+      d:()=>{ drawSLine(X1,REF,X1+B*sc+14,REF+B*sc+14,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(X1+B*sc+18,REF+B*sc+18,"45\u00b0 mitre line",COL_LOCUS,FONT_DIM,"left","middle"); }});
+
+    steps.push({text:`Block in the SIDE VIEW - the view looking from the LEFT, which in first angle is placed on the right, ${R1(GAP)} mm beyond X1\u2013Y1. Carry the two depths round the mitre line and bring the heights across from the front view: a rectangle ${R1(B)} mm \u00d7 ${R1(H)} mm.`,
+      hl:O.hlAll||[],
+      d:()=>{ lineSet([[TVx(L),TVy(0),SVx(0),TVy(0)],[TVx(L),TVy(B),SVx(B),TVy(B)],
+                       [SVx(0),TVy(0),SVx(0),SVy(H)],[SVx(B),TVy(B),SVx(B),SVy(H)]],
+                      COL_PROJ,LW_THIN);
+        paint("sv",RC(0,0,B,H),true); }});
+
+    /* A step draws one or two lines in a view; the EDGES of the solid those
+       lines stand for are worked out from the line's own view co-ordinates,
+       so the question figure can highlight exactly the edge being drawn
+       without every problem having to name its edges by hand.
+         FV : (x,y) of the model      TV : (x,z)      SV : (z,y)          */
+    const segsOf=g=>{
+      const out=[];
+      (g.fv||[]).forEach(e=>{ if(e[0]==="l") out.push({k:"fv",a:[e[1],e[2]],b:[e[3],e[4]]}); });
+      (g.tv||[]).forEach(e=>{ if(e[0]==="l") out.push({k:"tv",a:[e[1],e[2]],b:[e[3],e[4]]}); });
+      (g.sv||[]).forEach(e=>{ if(e[0]==="l") out.push({k:"sv",a:[e[1],e[2]],b:[e[3],e[4]]}); });
+      return out;
+    };
+    (O.groups||[]).forEach(g=>{
+      const loc=locateOf(g);
+      if(loc) steps.push({text:"First FIX THE POSITION of the line. Carry the thin projectors over from the view already drawn and mark off the distance that settles where the line goes. Only when its position is fixed is the line itself drawn, in the next step.",
+        hl:g.hl||[], hlSeg:segsOf(g),
+        d:()=>{ if(loc.proj.length) lineSet(loc.proj,COL_PROJ,LW_THIN);
+                loc.dims.forEach(f=>f()); }});
+      steps.push({text:g.text, hl:g.hl||[], hlSeg:segsOf(g), d:()=>paintAll(g)}); });
+
+    steps.push({text:"Line in the finished outline of all three views with the full dark line, leaving out any part of the construction rectangle that is not a real edge of the object. Hidden edges stay as dashed lines.",
+      hl:O.hlAll||[],
+      d:()=>{
+        /* the finished outline is taken from the solid itself, so a line
+           that runs behind another part partway along changes from solid
+           to dashed at the right place instead of being one or the other */
+        let done=false;
+        try{
+          const m3=O.model(v);
+          if(m3&&m3.faces&&m3.faces.length){
+            paint("fv",viewOutline(m3,"fv"));
+            paint("tv",viewOutline(m3,"tv"));
+            paint("sv",viewOutline(m3,"sv"));
+            done=true;
+          }
+        }catch(e){}
+        if(!done){ paint("fv",finFV); paint("tv",finTV); paint("sv",finSV); }
+      }});
+
+    steps.push({text:"Check the views against one another: front view and top view line up vertically, front view and side view line up horizontally, and every depth in the side view equals the same depth in the top view. The three orthographic views are now complete.",
+      hl:O.hlAll||[],
+      d:()=>{ drawText(FVx(L/2),FVy(H)-90,"FRONT VIEW",COL_DIM,"bold 12px Arial","center","middle");
+        drawText(TVx(L/2),TVy(B)+46,"TOP VIEW",COL_DIM,"bold 12px Arial","center","middle");
+        drawText(SVx(B/2),SVy(H)-90,"SIDE VIEW",COL_DIM,"bold 12px Arial","center","middle"); }});
+
+    const results=`<b>Overall sizes:</b>
+      <table>
+        <tr><td>Length L</td><td>${R1(L)} mm</td><td>Depth B</td><td>${R1(B)} mm</td><td>Height H</td><td>${R1(H)} mm</td></tr>
+        <tr><td>Front view</td><td>${R1(L)} \u00d7 ${R1(H)}</td><td>Top view</td><td>${R1(L)} \u00d7 ${R1(B)}</td><td>Side view</td><td>${R1(B)} \u00d7 ${R1(H)}</td></tr>
+      </table>`;
+
+    return {steps,results,
+      /* The solid is shown ONCE, as the dimensioned question figure beside the
+         given data.  It is not repeated at the end of the construction - the
+         finished three views are the answer there.                          */
+      given:{type:"3d",title:"Given object (pictorial view)",model:O.model,
+             box:O.box, dimExtra:O.dimExtra}};
+  }
+
+  /* ================= sectional-view problems =================
+     A parallel skeleton to buildOrtho, kept separate so the 13 existing
+     problems are never touched. Shares the same X-Y / mitre-line / block-in
+     steps, then adds: a cutting-plane line in the TOP VIEW, conversion of the
+     sectioned feature's hidden edges to visible ones in the FRONT VIEW, and
+     45-degree hatching of the material actually cut. Only the front view is
+     sectioned; the top and side views are unaffected, as is standard.       */
+  function buildOrthoSection(v,def){
+    const O=def(v);
+    const L=O.L, B=O.B, H=O.H;
+    const GAP=10;
+    const totWmm=L+2*GAP+B, totHmm=H+2*GAP+B;
+    /* the band above the front view carries the locating dimensions and the
+       view title, so it is reserved before the drawing is scaled          */
+    const HEAD=58;
+    const sc=Math.min((CANVAS_W-170)/totWmm,(CANVAS_H-140-HEAD)/totHmm,3.4);
+    SCALE_PXMM=sc;
+    const gap=GAP*sc;
+    const OX=(CANVAS_W-totWmm*sc)/2+20;
+    const REF=(CANVAS_H-totHmm*sc-HEAD)/2+HEAD+(H+GAP)*sc-6;
+    const X1=OX+L*sc+gap;
+    const SX=X1+gap;
+    const FVx=x=>OX+x*sc,  FVy=y=>REF-gap-y*sc;
+    const TVx=x=>OX+x*sc,  TVy=d=>REF+gap+d*sc;
+    const SVx=d=>SX+d*sc,  SVy=y=>REF-gap-y*sc;
+    const MAP={fv:[FVx,FVy,-1], tv:[TVx,TVy,1], sv:[SVx,SVy,-1]};
+
+    function paint(view,list,cons){
+      const M=MAP[view], X=M[0], Y=M[1], sg=M[2];
+      const col=cons?COL_CONS:COL_THICK, wid=cons?LW_THIN:LW_THICK;
+      const rollL=[], scaleL=[], hidL=[];
+      (list||[]).forEach(e=>{
+        if(e[0]!=="l") return;
+        const p=[X(e[1]),Y(e[2]),X(e[3]),Y(e[4])];
+        if(e[5]) hidL.push(p);
+        else if(Math.abs(p[1]-p[3])<0.6) rollL.push(p);
+        else scaleL.push(p);
+      });
+      /* hidden lines are laid down FIRST so that where a visible edge and a
+         hidden one fall on the same place - the front and back edges of a
+         plain block, for instance - the visible line covers the dashes  */
+      if(hidL.length)   lineSet(hidL,COL_HID,LW_THIN,PATTERN_HID);
+      if(rollL.length)  rollSet(rollL,col,wid);
+      if(scaleL.length) lineSet(scaleL,col,wid);
+      (list||[]).forEach(e=>{
+        if(e[0]==="c"){
+          if(e[4]) drawArcPlain(X(e[1]),Y(e[2]),e[3]*sc,0,TAU,false,COL_HID,LW_THIN);
+          else drawCircle(X(e[1]),Y(e[2]),e[3]*sc,col,wid);
+        } else if(e[0]==="a"){
+          drawArcPlain(X(e[1]),Y(e[2]),e[3]*sc,sg*e[4],sg*e[5],(sg<0)?!e[6]:e[6],
+                       e[7]?COL_HID:col,e[7]?LW_THIN:wid);
+        } else if(e[0]==="cl"){
+          drawLine(X(e[1]),Y(e[2]),X(e[3]),Y(e[4]),COL_LOCUS,LW_THIN,PATTERN_CL);
+        }
+      });
+    }
+    const paintAll=g=>{ paint("fv",g.fv); paint("tv",g.tv); paint("sv",g.sv); };
+
+    /* ---- locating a line before it is drawn -------------------------------
+       On the board you never put a line down and measure it afterwards: you
+       carry the projectors over from the view already drawn, mark off the
+       distance that fixes the line, and only then draw it. That preparation
+       is worked out from the group's own line co-ordinates, so it applies
+       to every problem without each one having to spell it out.        */
+    let locRow=0;
+    const locateOf=g=>{
+      const row=locRow++;                 // each group gets its own line
+      const OFF=k=>k+16*(row%2);
+      const proj=[], dims=[], seen={};
+      const addP=(a,b,c,d)=>{ const k=[a,b,c,d].map(Math.round).join(",");
+        if(!seen[k]){ seen[k]=1; proj.push([a,b,c,d]); } };
+      const addD=f=>dims.push(f);
+      (g.fv||[]).forEach(e=>{ if(e[0]!=="l") return;
+        if(Math.abs(e[1]-e[3])<0.6 && e[1]>0.6 && e[1]<L-0.6)          // vertical
+          addD(()=>drawHorizontalDim(FVy(H)-OFF(52),FVx(0),FVx(e[1]),R1(e[1])));
+        else if(Math.abs(e[2]-e[4])<0.6 && e[2]>0.6 && e[2]<H-0.6)     // horizontal
+          addD(()=>drawVerticalDim(FVx(L)+OFF(20),FVy(e[2]),FVy(0),R1(e[2])));
+      });
+      (g.tv||[]).forEach(e=>{ if(e[0]!=="l") return;
+        if(Math.abs(e[1]-e[3])<0.6){        // aligns with the same x in the front view
+          addP(FVx(e[1]),FVy(0),TVx(e[1]),TVy(B));
+          /* kept in the band between XY and the top view, clear of the
+             overall length dimension that runs below it */
+          if(e[1]>0.6&&e[1]<L-0.6) addD(()=>drawHorizontalDim(TVy(0)-OFF(14),TVx(0),TVx(e[1]),R1(e[1])));
+        } else if(Math.abs(e[2]-e[4])<0.6 && e[2]>0.6 && e[2]<B-0.6)
+          addD(()=>drawVerticalDim(TVx(L)+OFF(20),TVy(0),TVy(e[2]),R1(e[2])));
+      });
+      (g.sv||[]).forEach(e=>{ if(e[0]!=="l") return;
+        if(Math.abs(e[2]-e[4])<0.6){        // aligns with the same height in the front view
+          addP(FVx(L),FVy(e[2]),SVx(B),SVy(e[2]));
+          if(e[2]>0.6&&e[2]<H-0.6) addD(()=>drawVerticalDim(SVx(B)+OFF(20),SVy(e[2]),SVy(0),R1(e[2])));
+        } else if(Math.abs(e[1]-e[3])<0.6 && e[1]>0.6 && e[1]<B-0.6)
+          addD(()=>drawHorizontalDim(SVy(H)-OFF(52),SVx(0),SVx(e[1]),R1(e[1])));
+      });
+      if(!proj.length&&!dims.length) return null;
+      return {proj:proj,dims:dims};
+    };
+
+    const RC=(x1,y1,x2,y2)=>[["l",x1,y1,x2,y1],["l",x2,y1,x2,y2],
+                             ["l",x2,y2,x1,y2],["l",x1,y2,x1,y1]];
+    const finFV=O.finSection.fv, finTV=O.finSection.tv||RC(0,0,L,B), finSV=O.finSection.sv||RC(0,0,B,H);
+
+    const steps=[];
+    steps.push({text:"Draw the X\u2013Y reference line. The problem is worked in FIRST-ANGLE projection, so the front view goes above X\u2013Y, the top view directly below it, and the side view to the right.",
+      hl:[],
+      d:()=>{ drawLine(OX-52,REF,SX+B*sc+40,REF,COL_AXIS,LW_THIN);
+        drawText(OX-52,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(SX+B*sc+40,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+
+    steps.push({text:`Block in the FRONT VIEW lightly, kept clear of X\u2013Y by the standard ${R1(GAP)} mm gap. Draw the enclosing rectangle ${R1(L)} mm long and ${R1(H)} mm high in thin construction lines - these will be firmed in later.`,
+      hl:O.hlAll||[],
+      d:()=>{ paint("fv",RC(0,0,L,H),true);
+        drawVerticalDim(FVx(0)-22,FVy(H),FVy(0),R1(H)); }});
+
+    steps.push({text:`Drop projectors from the front view, straight through X\u2013Y, and block in the TOP VIEW ${R1(GAP)} mm clear on the other side: a rectangle ${R1(L)} mm \u00d7 ${R1(B)} mm.`,
+      hl:O.hlAll||[],
+      d:()=>{ lineSet([[FVx(0),FVy(0),TVx(0),TVy(B)],[FVx(L),FVy(0),TVx(L),TVy(B)]],COL_PROJ,LW_THIN);
+        paint("tv",RC(0,0,L,B),true);
+        drawVerticalDim(TVx(0)-22,TVy(0),TVy(B),R1(B));
+        drawHorizontalDim(TVy(B)+26,TVx(0),TVx(L),R1(L)); }});
+
+    steps.push({text:`Draw the X1\u2013Y1 line: a second reference line, vertical, ${R1(GAP)} mm clear of the top view.`,
+      hl:[],
+      d:()=>{ drawLine(X1,FVy(H)-24,X1,TVy(B)+24,COL_AXIS,LW_THIN);
+        drawText(X1,FVy(H)-30,"X1","#111",FONT_MAIN,"center","bottom");
+        drawText(X1,TVy(B)+30,"Y1","#111",FONT_MAIN,"center","top"); }});
+
+    steps.push({text:"Through the point where X\u2013Y meets X1\u2013Y1, draw a 45\u00b0 mitre line. Every depth measured in the top view is carried horizontally across to this line and then straight up into the side view.",
+      hl:[],
+      d:()=>{ drawSLine(X1,REF,X1+B*sc+14,REF+B*sc+14,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(X1+B*sc+18,REF+B*sc+18,"45\u00b0 mitre line",COL_LOCUS,FONT_DIM,"left","middle"); }});
+
+    steps.push({text:`Block in the SIDE VIEW - the view looking from the LEFT, placed ${R1(GAP)} mm beyond X1\u2013Y1. Carry the two depths round the mitre line and bring the heights across from the front view: a rectangle ${R1(B)} mm \u00d7 ${R1(H)} mm.`,
+      hl:O.hlAll||[],
+      d:()=>{ lineSet([[TVx(L),TVy(0),SVx(0),TVy(0)],[TVx(L),TVy(B),SVx(B),TVy(B)],
+                       [SVx(0),TVy(0),SVx(0),SVy(H)],[SVx(B),TVy(B),SVx(B),SVy(H)]],
+                      COL_PROJ,LW_THIN);
+        paint("sv",RC(0,0,B,H),true); }});
+
+    /* A step draws one or two lines in a view; the EDGES of the solid those
+       lines stand for are worked out from the line's own view co-ordinates,
+       so the question figure can highlight exactly the edge being drawn
+       without every problem having to name its edges by hand.
+         FV : (x,y) of the model      TV : (x,z)      SV : (z,y)          */
+    const segsOf=g=>{
+      const out=[];
+      (g.fv||[]).forEach(e=>{ if(e[0]==="l") out.push({k:"fv",a:[e[1],e[2]],b:[e[3],e[4]]}); });
+      (g.tv||[]).forEach(e=>{ if(e[0]==="l") out.push({k:"tv",a:[e[1],e[2]],b:[e[3],e[4]]}); });
+      (g.sv||[]).forEach(e=>{ if(e[0]==="l") out.push({k:"sv",a:[e[1],e[2]],b:[e[3],e[4]]}); });
+      return out;
+    };
+    (O.groups||[]).forEach(g=>{
+      const loc=locateOf(g);
+      if(loc) steps.push({text:"First FIX THE POSITION of the line. Carry the thin projectors over from the view already drawn and mark off the distance that settles where the line goes. Only when its position is fixed is the line itself drawn, in the next step.",
+        hl:g.hl||[], hlSeg:segsOf(g),
+        d:()=>{ if(loc.proj.length) lineSet(loc.proj,COL_PROJ,LW_THIN);
+                loc.dims.forEach(f=>f()); }});
+      steps.push({text:g.text, hl:g.hl||[], hlSeg:segsOf(g), d:()=>paintAll(g)}); });
+
+    steps.push({text:`Draw the cutting-plane line ${O.cutLabel}-${O.cutLabel} in the TOP VIEW, straight through the axis of the feature and parallel to the VP. It is a thin chain line, thickened at each turned-up end, with an arrow at each end showing the direction of sight for the sectional front view.`,
+      hl:O.hlAll||[],
+      d:()=>{ const y=TVy(O.cutY), x0=TVx(0)-14, x1=TVx(L)+14;
+        drawLine(x0+10,y,x1-10,y,COL_CUT,LW_THIN,PATTERN_CL);
+        drawLine(x0,y,x0+10,y,COL_CUT,LW_THICK);
+        drawLine(x1-10,y,x1,y,COL_CUT,LW_THICK);
+        drawArrowhead(x0,y,-Math.PI/2,COL_CUT);
+        drawArrowhead(x1,y,-Math.PI/2,COL_CUT);
+        drawText(x0,y-16,O.cutLabel,COL_CUT,FONT_MAIN,"center","bottom");
+        drawText(x1,y-16,O.cutLabel,COL_CUT,FONT_MAIN,"center","bottom"); }});
+
+    steps.push({text:O.hiddenToVisibleText||"The cutting plane passes right through this feature, so its boundary - so far a hidden dashed line - is now a real edge of the cut surface. Draw it dark in the FRONT VIEW.",
+      hl:O.hlAll||[],
+      d:()=>{ paint("fv",(O.visibleFeature&&O.visibleFeature.fv)||[],false); }});
+
+    steps.push({text:"Line in the finished outline of all three views with the full dark line. The FRONT VIEW is now a section, so nothing in it stays hidden; the top view and side view are unchanged.",
+      hl:O.hlAll||[],
+      d:()=>{
+        /* the finished outline is taken from the solid itself, so a line
+           that runs behind another part partway along changes from solid
+           to dashed at the right place instead of being one or the other */
+        /* A SECTIONAL view is a convention, not a plain projection: the near
+           half is imagined cut away and the cut face hatched, so it cannot be
+           generated from the solid. The declared lines stand.            */
+        paint("fv",finFV); paint("tv",finTV); paint("sv",finSV);
+      }});
+
+    steps.push({text:"Hatch the material the cutting plane has actually cut through: thin parallel lines at 45\u00b0, evenly spaced, sloping the same way throughout this part. Leave the feature itself blank - it is empty space, not material.",
+      hl:O.hlAll||[],
+      d:()=>{ ((O.hatchLines&&O.hatchLines())||[]).forEach(seg=>{
+          drawLine(FVx(seg[0]),FVy(seg[1]),FVx(seg[2]),FVy(seg[3]),COL_THIN,LW_THIN); }); }});
+
+    steps.push({text:`Check the views against one another: front view and top view line up vertically, front view and side view line up horizontally. Label the sectioned view SECTIONAL FRONT VIEW ON ${O.cutLabel}-${O.cutLabel}.`,
+      hl:O.hlAll||[],
+      d:()=>{ drawText(FVx(L/2),FVy(H)-30,"SECTIONAL FRONT VIEW ON "+O.cutLabel+"-"+O.cutLabel,COL_DIM,"bold 12px Arial","center","middle");
+        drawText(TVx(L/2),TVy(B)+46,"TOP VIEW",COL_DIM,"bold 12px Arial","center","middle");
+        drawText(SVx(B/2),SVy(H)-90,"SIDE VIEW",COL_DIM,"bold 12px Arial","center","middle"); }});
+
+    const results=`<b>Overall sizes:</b>
+      <table>
+        <tr><td>Length L</td><td>${R1(L)} mm</td><td>Depth B</td><td>${R1(B)} mm</td><td>Height H</td><td>${R1(H)} mm</td></tr>
+        <tr><td>Front view</td><td>${R1(L)} \u00d7 ${R1(H)}</td><td>Top view</td><td>${R1(L)} \u00d7 ${R1(B)}</td><td>Side view</td><td>${R1(B)} \u00d7 ${R1(H)}</td></tr>
+      </table>`;
+
+    return {steps,results,
+      given:{type:"3d",title:"Given object (pictorial view)",model:O.model,
+             box:O.box, dimExtra:O.dimExtra}};
+  }
+
+  /* ================= the objects ================= */
+  const OB={};
+
+  OB.block=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>boxVF(0,0,0,v.L,v.H,v.B,"m"),
+    hlAll:["mfront","mtop","mleft"],
+    groups:[{text:"This object is a plain rectangular block, so no extra lines are needed. Each view is a single rectangle: the front view gives length and height, the top view length and depth, the side view depth and height.",
+      hl:["mfront","mtop","mleft"], fv:[],tv:[],sv:[]}]});
+
+  OB.step=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
+                     boxVF(0,v.h1,0,v.l2,v.H-v.h1,v.B,"b")),
+    hlAll:["afront","btop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:b.x0,y:b.y1,z:b.z1},{x:v.l2,y:b.y1,z:b.z1},R1(v.l2),{x:0,y:g,z:g*0.55});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.h1],["l",v.L,v.h1,v.l2,v.h1],
+            ["l",v.l2,v.h1,v.l2,v.H],["l",v.l2,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Draw the step in the FRONT VIEW. The base is ${R1(v.h1)} mm thick and the upper block is ${R1(v.l2)} mm long, so draw the vertical face of the step at ${R1(v.l2)} mm from the left and the top of the base to the right of it.`,
+       hl:["bright","atop"],
+       fv:[["l",v.l2,v.H,v.l2,v.h1],["l",v.l2,v.h1,v.L,v.h1]],tv:[],sv:[]},
+      {text:"Project the step down into the TOP VIEW. The vertical face of the step appears as a line running the full depth, and it is VISIBLE because you look straight down on to it.",
+       hl:["bright"],
+       fv:[],tv:[["l",v.l2,0,v.l2,v.B]],sv:[]},
+      {text:"Now the SIDE VIEW. Looking from the left, the tall part of the block stands in front of the top face of the base, so that top face is drawn as a HIDDEN dashed line right across the side view.",
+       hl:["atop"],
+       fv:[],tv:[],sv:[["l",0,v.h1,v.B,v.h1,1]]}]});
+
+  OB.tee=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
+                     boxVF((v.L-v.w)/2,v.h1,0,v.w,v.H-v.h1,v.B,"b")),
+    hlAll:["afront","btop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.h1],["l",v.L,v.h1,(v.L+v.w)/2,v.h1],
+            ["l",(v.L+v.w)/2,v.h1,(v.L+v.w)/2,v.H],["l",(v.L+v.w)/2,v.H,(v.L-v.w)/2,v.H],
+            ["l",(v.L-v.w)/2,v.H,(v.L-v.w)/2,v.h1],["l",(v.L-v.w)/2,v.h1,0,v.h1],["l",0,v.h1,0,0]]},
+    groups:[
+      {text:`Draw the upstand in the FRONT VIEW. It is ${R1(v.w)} mm wide, set centrally, and rises from the top of the ${R1(v.h1)} mm base to the full height, so the front view becomes a T.`,
+       hl:["bleft","bright","btop"],
+       fv:[["l",(v.L-v.w)/2,v.H,(v.L-v.w)/2,v.h1],["l",(v.L+v.w)/2,v.H,(v.L+v.w)/2,v.h1],
+           ["l",0,v.h1,(v.L-v.w)/2,v.h1],["l",(v.L+v.w)/2,v.h1,v.L,v.h1],
+           ["cl",v.L/2,-6,v.L/2,v.H+6]],tv:[],sv:[]},
+      {text:"Project the two faces of the upstand down into the TOP VIEW. They run the full depth and are visible from above.",
+       hl:["bleft","bright"],
+       fv:[],tv:[["l",(v.L-v.w)/2,0,(v.L-v.w)/2,v.B],["l",(v.L+v.w)/2,0,(v.L+v.w)/2,v.B],
+                 ["cl",v.L/2,-6,v.L/2,v.B+6]],sv:[]},
+      {text:"In the SIDE VIEW the top of the base is seen directly - on the left-hand end nothing stands in front of it - so here it is a VISIBLE line, not a dashed one. Compare this carefully with the stepped block.",
+       hl:["atop"],
+       fv:[],tv:[],sv:[["l",0,v.h1,v.B,v.h1]]}]});
+
+  OB.groove=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.H-v.g,v.B,"a"),
+                     boxVF(0,v.H-v.g,0,(v.L-v.w)/2,v.g,v.B,"b"),
+                     boxVF((v.L+v.w)/2,v.H-v.g,0,(v.L-v.w)/2,v.g,v.B,"c")),
+    hlAll:["afront","btop","ctop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y1-v.g,z:b.z1},{x:b.x1,y:b.y1,z:b.z1},R1(v.g),{x:g,y:0,z:g*0.55});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.H],["l",v.L,v.H,(v.L+v.w)/2,v.H],
+            ["l",(v.L+v.w)/2,v.H,(v.L+v.w)/2,v.H-v.g],
+            ["l",(v.L+v.w)/2,v.H-v.g,(v.L-v.w)/2,v.H-v.g],
+            ["l",(v.L-v.w)/2,v.H-v.g,(v.L-v.w)/2,v.H],
+            ["l",(v.L-v.w)/2,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Cut the groove in the FRONT VIEW: ${R1(v.w)} mm wide and ${R1(v.g)} mm deep, placed centrally and running right through from front to back. Break the top line and draw the two sides and the bottom of the groove.`,
+       hl:["bright","cleft"],
+       fv:[["l",(v.L-v.w)/2,v.H,(v.L-v.w)/2,v.H-v.g],
+           ["l",(v.L-v.w)/2,v.H-v.g,(v.L+v.w)/2,v.H-v.g],
+           ["l",(v.L+v.w)/2,v.H-v.g,(v.L+v.w)/2,v.H],
+           ["cl",v.L/2,-6,v.L/2,v.H+6]],tv:[],sv:[]},
+      {text:"Project the groove down into the TOP VIEW. Its two edges run the full depth and are VISIBLE, because looking down you see straight into the groove.",
+       hl:["bright","cleft"],
+       fv:[],tv:[["l",(v.L-v.w)/2,0,(v.L-v.w)/2,v.B],["l",(v.L+v.w)/2,0,(v.L+v.w)/2,v.B],
+                 ["cl",v.L/2,-6,v.L/2,v.B+6]],sv:[]},
+      {text:"In the SIDE VIEW the solid left-hand end of the block stands in front of the groove, so the bottom of the groove is a HIDDEN line, drawn dashed across the full depth.",
+       hl:["atop"],
+       fv:[],tv:[],sv:[["l",0,v.H-v.g,v.B,v.H-v.g,1]]}]});
+
+  OB.vnotch=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>{ const w=v.w,g=v.g,L=v.L,H=v.H;
+      const prof=[{x:0,y:0},{x:L,y:0},{x:L,y:H},{x:(L+w)/2,y:H},{x:L/2,y:H-g},{x:(L-w)/2,y:H},{x:0,y:H}];
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; });
+      return m; },
+    hlAll:["sfront","sside4","sside5"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y1-v.g,z:b.z1},{x:b.x1,y:b.y1,z:b.z1},R1(v.g),{x:g,y:0,z:g*0.55});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.H],["l",v.L,v.H,(v.L+v.w)/2,v.H],
+            ["l",(v.L+v.w)/2,v.H,v.L/2,v.H-v.g],["l",v.L/2,v.H-v.g,(v.L-v.w)/2,v.H],
+            ["l",(v.L-v.w)/2,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Cut the V-notch in the FRONT VIEW: ${R1(v.w)} mm wide at the top and ${R1(v.g)} mm deep, with its apex on the centre line. Draw the two sloping faces of the notch.`,
+       hl:["sside4","sside5"],
+       fv:[["l",(v.L-v.w)/2,v.H,v.L/2,v.H-v.g],["l",v.L/2,v.H-v.g,(v.L+v.w)/2,v.H],
+           ["cl",v.L/2,-6,v.L/2,v.H+6]],tv:[],sv:[]},
+      {text:"Project the notch into the TOP VIEW. Both top edges of the V and the line of the apex run the full depth, and all three are seen from above, so all three are visible lines.",
+       hl:["sside4","sside5"],
+       fv:[],tv:[["l",(v.L-v.w)/2,0,(v.L-v.w)/2,v.B],["l",v.L/2,0,v.L/2,v.B],
+                 ["l",(v.L+v.w)/2,0,(v.L+v.w)/2,v.B],["cl",v.L/2,-6,v.L/2,v.B+6]],sv:[]},
+      {text:"In the SIDE VIEW only the apex line of the V is seen, and it lies behind the solid left-hand end of the block, so it is drawn dashed at the depth of the notch.",
+       hl:["sside4"],
+       fv:[],tv:[],sv:[["l",0,v.H-v.g,v.B,v.H-v.g,1]]}]});
+
+  OB.hole=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.H,v.B,"m"),
+                     m_holeY(v.L/2,v.B/2,v.D/2,0,v.H)),
+    hlAll:["mfront","hole"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:v.L/2-v.D/2,y:b.y1,z:v.B/2},{x:v.L/2+v.D/2,y:b.y1,z:v.B/2},"\u00d8 "+R1(v.D),{x:0,y:g*0.4,z:0});
+    },
+    groups:[
+      {text:`Mark the centre of the hole. It is central, ${R1(v.L/2)} mm from the left and ${R1(v.B/2)} mm from the back, so draw the two centre lines crossing at that point in the top view and the vertical centre line in the other two views.`,
+       hl:["hole"],
+       fv:[["cl",v.L/2,-6,v.L/2,v.H+6]],
+       tv:[["cl",v.L/2,-6,v.L/2,v.B+6],["cl",-6,v.B/2,v.L+6,v.B/2]],
+       sv:[["cl",v.B/2,-6,v.B/2,v.H+6]]},
+      {text:`With the compass draw the circle of the hole, Ø ${R1(v.D)} mm, in the TOP VIEW. The hole appears as a true circle here because its axis is vertical - perpendicular to the HP.`,
+       hl:["hole"],
+       fv:[],tv:[["c",v.L/2,v.B/2,v.D/2]],sv:[]},
+      {text:"The hole passes right through the block. In the FRONT VIEW and the SIDE VIEW it lies inside the material, so it is shown by two HIDDEN dashed lines running the full height.",
+       hl:["hole"],
+       fv:[["l",(v.L-v.D)/2,0,(v.L-v.D)/2,v.H,1],["l",(v.L+v.D)/2,0,(v.L+v.D)/2,v.H,1]],
+       tv:[],
+       sv:[["l",(v.B-v.D)/2,0,(v.B-v.D)/2,v.H,1],["l",(v.B+v.D)/2,0,(v.B+v.D)/2,v.H,1]]}]});
+
+  /* Same block-with-a-hole, but built for buildOrthoSection: the FRONT VIEW
+     hole boundary is left for the dedicated section/hatch steps to draw
+     (never as hidden lines), while the SIDE VIEW keeps its normal hidden
+     lines, since only the front view is sectioned.                        */
+  OB.holeSection=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.H,v.B,"m"),
+                     m_holeY(v.L/2,v.B/2,v.D/2,0,v.H)),
+    hlAll:["mfront","hole"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:v.L/2-v.D/2,y:b.y1,z:v.B/2},{x:v.L/2+v.D/2,y:b.y1,z:v.B/2},"\u00d8 "+R1(v.D),{x:0,y:g*0.4,z:0});
+    },
+    groups:[
+      {text:`Mark the centre of the hole. It is central, ${R1(v.L/2)} mm from the left and ${R1(v.B/2)} mm from the back, so draw the two centre lines crossing at that point in the top view and the vertical centre line in the other two views.`,
+       hl:["hole"],
+       fv:[["cl",v.L/2,-6,v.L/2,v.H+6]],
+       tv:[["cl",v.L/2,-6,v.L/2,v.B+6],["cl",-6,v.B/2,v.L+6,v.B/2]],
+       sv:[["cl",v.B/2,-6,v.B/2,v.H+6]]},
+      {text:`With the compass draw the circle of the hole, Ø ${R1(v.D)} mm, in the TOP VIEW. The hole appears as a true circle here because its axis is vertical - perpendicular to the HP.`,
+       hl:["hole"],
+       fv:[],tv:[["c",v.L/2,v.B/2,v.D/2]],sv:[]},
+      {text:"The hole passes right through the block. Looked at in the ordinary way, the SIDE VIEW is not being sectioned, so its two hidden dashed lines are drawn exactly as before.",
+       hl:["hole"],
+       fv:[],tv:[],
+       sv:[["l",(v.B-v.D)/2,0,(v.B-v.D)/2,v.H,1],["l",(v.B+v.D)/2,0,(v.B+v.D)/2,v.H,1]]}],
+    cutY:v.B/2, cutLabel:"A",
+    hiddenToVisibleText:`The cutting plane A-A runs straight through the axis of the hole, parallel to the VP. So in the SECTIONAL FRONT VIEW its two walls - which stayed hidden in an ordinary view - become real, VISIBLE edges of the cut surface. Draw them dark.`,
+    visibleFeature:{fv:[["l",(v.L-v.D)/2,0,(v.L-v.D)/2,v.H],["l",(v.L+v.D)/2,0,(v.L+v.D)/2,v.H]]},
+    finSection:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.H],["l",v.L,v.H,0,v.H],["l",0,v.H,0,0],
+                    ["l",(v.L-v.D)/2,0,(v.L-v.D)/2,v.H],["l",(v.L+v.D)/2,0,(v.L+v.D)/2,v.H]]},
+    hatchLines:()=>{ const g=Math.max(6,v.D*0.22);
+      return [...hatchRegion(0,0,(v.L-v.D)/2,v.H,g), ...hatchRegion((v.L+v.D)/2,0,v.L,v.H,g)]; }});
+
+  OB.arch=v=>({L:v.L,B:v.B,H:v.h1+v.L/2,
+    box:{H:false},
+    model:()=>{ const R=v.L/2, prof=[{x:0,y:0},{x:v.L,y:0},{x:v.L,y:v.h1}];
+      for(let i=0;i<=24;i++){ const a=i*Math.PI/24; prof.push({x:R+R*Math.cos(a),y:v.h1+R*Math.sin(a)}); }
+      prof.push({x:0,y:v.h1});
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; });
+      return mergeM(m,m_holeZ(R,v.h1,v.D/2,0,v.B)); },
+    hlAll:["sfront","hole"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.3});
+      dimAdd(mm,{x:v.L/2,y:v.h1-v.D/2,z:b.z1},{x:v.L/2,y:v.h1+v.D/2,z:b.z1},"\u00d8 "+R1(v.D),{x:g*0.4,y:0,z:0});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.h1],["l",0,v.h1,0,0],
+            ["a",v.L/2,v.h1,v.L/2,0,Math.PI,false],["c",v.L/2,v.h1,v.D/2]]},
+    groups:[
+      {text:`Draw the semicircular top in the FRONT VIEW. Mark the centre on the vertical centre line ${R1(v.h1)} mm above the base and, with the compass set to ${R1(v.L/2)} mm, draw the semicircle. The straight top line between the two ends is then not required.`,
+       hl:["sfront"],
+       fv:[["cl",v.L/2,-6,v.L/2,v.h1+v.L/2+8],["cl",-6,v.h1,v.L+6,v.h1],
+           ["a",v.L/2,v.h1,v.L/2,0,Math.PI,false]],tv:[],sv:[]},
+      {text:`Draw the hole, Ø ${R1(v.D)} mm, about the same centre. Its axis runs from front to back, at right angles to the VP, so the FRONT VIEW shows it as a true circle.`,
+       hl:["hole"],
+       fv:[["c",v.L/2,v.h1,v.D/2]],tv:[],sv:[]},
+      {text:"In the TOP VIEW and the SIDE VIEW the hole is buried in the material, so in each it appears as two HIDDEN dashed lines set one diameter apart, running the full depth of the plate.",
+       hl:["hole"],
+       fv:[],
+       tv:[["l",(v.L-v.D)/2,0,(v.L-v.D)/2,v.B,1],["l",(v.L+v.D)/2,0,(v.L+v.D)/2,v.B,1],
+           ["cl",v.L/2,-6,v.L/2,v.B+6]],
+       sv:[["l",0,v.h1-v.D/2,v.B,v.h1-v.D/2,1],["l",0,v.h1+v.D/2,v.B,v.h1+v.D/2,1],
+           ["cl",-6,v.h1,v.B+6,v.h1]]}]});
+
+  OB.wedge=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>{ const prof=[{x:0,y:0},{x:v.L,y:0},{x:v.L,y:v.h1},{x:0,y:v.H}];
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; });
+      return m; },
+    hlAll:["sfront","sside3"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.h1],["l",v.L,v.h1,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Draw the sloping top face in the FRONT VIEW. The block is ${R1(v.H)} mm high at the left and only ${R1(v.h1)} mm high at the right, so join those two points with a straight line; the rest of the enclosing rectangle is then not required.`,
+       hl:["sside3"],
+       fv:[["l",0,v.H,v.L,v.h1],["l",v.L,v.h1,v.L,0]],tv:[],sv:[]},
+      {text:"The TOP VIEW needs no new lines. The sloping face is inclined to the HP, so its top view covers the whole rectangle - a foreshortened picture of the slope, never its true shape.",
+       hl:["sside3"], fv:[],tv:[],sv:[]},
+      {text:`In the SIDE VIEW the low right-hand edge is hidden behind the tall left-hand face, so it is drawn dashed ${R1(v.h1)} mm above the base. The sloping face itself is seen edgewise from the left, so it does not show as an area.`,
+       hl:["sside3"],
+       fv:[],tv:[],sv:[["l",0,v.h1,v.B,v.h1,1]]}]});
+
+  OB.dovetail=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>{ const L=v.L,H=v.H,g=v.g,w1=v.w,w2=v.w2;
+      const prof=[{x:0,y:0},{x:L,y:0},{x:L,y:H},{x:(L+w1)/2,y:H},{x:(L+w2)/2,y:H-g},
+                  {x:(L-w2)/2,y:H-g},{x:(L-w1)/2,y:H},{x:0,y:H}];
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; });
+      return m; },
+    hlAll:["sfront","sside5"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:(v.L-v.w2)/2,y:b.y1-v.g,z:b.z1},{x:(v.L+v.w2)/2,y:b.y1-v.g,z:b.z1},R1(v.w2),{x:0,y:g*1.9,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y1-v.g,z:b.z1},{x:b.x1,y:b.y1,z:b.z1},R1(v.g),{x:g,y:0,z:g*0.55});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.H],["l",v.L,v.H,(v.L+v.w)/2,v.H],
+            ["l",(v.L+v.w)/2,v.H,(v.L+v.w2)/2,v.H-v.g],
+            ["l",(v.L+v.w2)/2,v.H-v.g,(v.L-v.w2)/2,v.H-v.g],
+            ["l",(v.L-v.w2)/2,v.H-v.g,(v.L-v.w)/2,v.H],
+            ["l",(v.L-v.w)/2,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Cut the dovetail slot in the FRONT VIEW: ${R1(v.w)} mm wide at the top, opening out to ${R1(v.w2)} mm at the bottom, and ${R1(v.g)} mm deep. Draw the two sloping sides and the flat bottom.`,
+       hl:["sside4","sside5","sside6"],
+       fv:[["l",(v.L-v.w)/2,v.H,(v.L-v.w2)/2,v.H-v.g],
+           ["l",(v.L-v.w2)/2,v.H-v.g,(v.L+v.w2)/2,v.H-v.g],
+           ["l",(v.L+v.w2)/2,v.H-v.g,(v.L+v.w)/2,v.H],
+           ["cl",v.L/2,-6,v.L/2,v.H+6]],tv:[],sv:[]},
+      {text:"Project the slot into the TOP VIEW. Looking down you can see BOTH the narrow opening at the top and the wider bottom, so four visible lines are drawn, each running the full depth.",
+       hl:["sside4","sside5","sside6"],
+       fv:[],
+       tv:[["l",(v.L-v.w)/2,0,(v.L-v.w)/2,v.B],["l",(v.L+v.w)/2,0,(v.L+v.w)/2,v.B],
+           ["l",(v.L-v.w2)/2,0,(v.L-v.w2)/2,v.B],["l",(v.L+v.w2)/2,0,(v.L+v.w2)/2,v.B],
+           ["cl",v.L/2,-6,v.L/2,v.B+6]],sv:[]},
+      {text:"In the SIDE VIEW the solid end of the block hides the slot completely, so only its depth shows - as a single hidden dashed line across the full depth.",
+       hl:["sside5"],
+       fv:[],tv:[],sv:[["l",0,v.H-v.g,v.B,v.H-v.g,1]]}]});
+
+  OB.rgroove=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>{ const R=v.r, L=v.L, H=v.H;
+      const prof=[{x:0,y:0},{x:L,y:0},{x:L,y:H},{x:L/2+R,y:H}];
+      for(let i=0;i<=24;i++){ const a=i*Math.PI/24; prof.push({x:L/2+R*Math.cos(a),y:H-R*Math.sin(a)}); }
+      prof.push({x:0,y:H});
+      const m=m_prismFromProfile(prof,v.B,"s");
+      m.verts.forEach(p=>{ p.z+=v.B/2; });
+      return m; },
+    hlAll:["sfront"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:v.L/2,y:b.y1,z:b.z1},{x:v.L/2,y:b.y1-v.r,z:b.z1},"R "+R1(v.r),{x:g*0.5,y:0,z:0});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.H],["l",v.L,v.H,v.L/2+v.r,v.H],
+            ["a",v.L/2,v.H,v.r,Math.PI,TAU,false],
+            ["l",v.L/2-v.r,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Cut the semicircular groove in the FRONT VIEW. Mark the centre on the top face at the middle of the block and, with the compass set to ${R1(v.r)} mm, draw the semicircle below the top line.`,
+       hl:["sfront"],
+       fv:[["cl",v.L/2,-6,v.L/2,v.H+8],["a",v.L/2,v.H,v.r,Math.PI,TAU,false]],tv:[],sv:[]},
+      {text:"Project the groove into the TOP VIEW. Only the two top edges of the groove are real edges of the solid, so draw two visible lines running the full depth, one on each side of the centre line.",
+       hl:["sfront"],
+       fv:[],tv:[["l",v.L/2-v.r,0,v.L/2-v.r,v.B],["l",v.L/2+v.r,0,v.L/2+v.r,v.B],
+                 ["cl",v.L/2,-6,v.L/2,v.B+6]],sv:[]},
+      {text:"In the SIDE VIEW the deepest line of the groove lies behind the solid end of the block, so it is shown as a hidden dashed line one radius below the top face.",
+       hl:["sfront"],
+       fv:[],tv:[],sv:[["l",0,v.H-v.r,v.B,v.H-v.r,1]]}]});
+
+  OB.lhole=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),
+                     boxVF(0,v.h1,0,v.w,v.H-v.h1,v.B,"b"),
+                     m_holeY(v.xh,v.B/2,v.D/2,0,v.h1)),
+    hlAll:["afront","btop","hole"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x0,y:b.y1,z:b.z1},{x:v.w,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:v.xh-v.D/2,y:v.h1,z:v.B/2},{x:v.xh+v.D/2,y:v.h1,z:v.B/2},"\u00d8 "+R1(v.D),{x:0,y:g*0.4,z:0});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.h1],["l",v.L,v.h1,v.w,v.h1],
+            ["l",v.w,v.h1,v.w,v.H],["l",v.w,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Draw the vertical limb in the FRONT VIEW. It is ${R1(v.w)} mm wide at the left and rises to the full height of ${R1(v.H)} mm, while the horizontal limb is ${R1(v.h1)} mm thick - so the front view is an L.`,
+       hl:["bright","atop"],
+       fv:[["l",v.w,v.H,v.w,v.h1],["l",v.w,v.h1,v.L,v.h1]],tv:[],sv:[]},
+      {text:"Project the vertical limb down into the TOP VIEW, where its face appears as a visible line running the full depth.",
+       hl:["bright"],
+       fv:[],tv:[["l",v.w,0,v.w,v.B]],sv:[]},
+      {text:`Draw the Ø ${R1(v.D)} mm hole through the horizontal limb. Its centre is ${R1(v.xh)} mm from the left and central in the depth, and its axis is vertical, so it is a true circle in the TOP VIEW.`,
+       hl:["hole"],
+       fv:[["cl",v.xh,-6,v.xh,v.h1+8]],
+       tv:[["cl",v.xh,-6,v.xh,v.B+6],["cl",-6,v.B/2,v.L+6,v.B/2],["c",v.xh,v.B/2,v.D/2]],
+       sv:[]},
+      {text:"Complete the hidden detail. In the front view the hole gives two dashed lines through the thickness of the horizontal limb; in the SIDE VIEW the whole horizontal limb - its top face and the hole - is hidden behind the tall vertical limb.",
+       hl:["hole","atop"],
+       fv:[["l",v.xh-v.D/2,0,v.xh-v.D/2,v.h1,1],["l",v.xh+v.D/2,0,v.xh+v.D/2,v.h1,1]],
+       tv:[],
+       sv:[["l",0,v.h1,v.B,v.h1,1],
+           ["l",(v.B-v.D)/2,0,(v.B-v.D)/2,v.h1,1],["l",(v.B+v.D)/2,0,(v.B+v.D)/2,v.h1,1]]}]});
+
+  OB.slot=v=>({L:v.L,B:v.B,H:v.H,
+    model:()=>{ const w=v.w,g=v.g,L=v.L,H=v.H,B=v.B, d0=(B-v.sd)/2;
+      return mergeM(boxVF(0,0,0,L,H,d0,"a"),
+                    boxVF(0,0,d0+v.sd,L,H,d0,"c"),
+                    boxVF(0,0,d0,(L-w)/2,H,v.sd,"d"),
+                    boxVF((L+w)/2,0,d0,(L-w)/2,H,v.sd,"e"),
+                    boxVF((L-w)/2,0,d0,w,H-g,v.sd,"f")); },
+    hlAll:["afront","dtop","etop"],
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:(v.L-v.w)/2,y:b.y1,z:b.z1},{x:(v.L+v.w)/2,y:b.y1,z:b.z1},R1(v.w),{x:0,y:g,z:g*0.55});
+      dimAdd(mm,{x:b.x1,y:b.y1-v.g,z:b.z1},{x:b.x1,y:b.y1,z:b.z1},R1(v.g),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:v.L/2,y:b.y1,z:(v.B-v.sd)/2},{x:v.L/2,y:b.y1,z:(v.B+v.sd)/2},R1(v.sd),{x:0,y:g*1.9,z:0});
+    },
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.H],["l",v.L,v.H,(v.L+v.w)/2,v.H],
+            ["l",(v.L+v.w)/2,v.H,(v.L+v.w)/2,v.H-v.g],
+            ["l",(v.L+v.w)/2,v.H-v.g,(v.L-v.w)/2,v.H-v.g],
+            ["l",(v.L-v.w)/2,v.H-v.g,(v.L-v.w)/2,v.H],
+            ["l",(v.L-v.w)/2,v.H,0,v.H],["l",0,v.H,0,0]]},
+    groups:[
+      {text:`Cut the blind slot in the FRONT VIEW: ${R1(v.w)} mm wide and ${R1(v.g)} mm deep on the centre line. Note that it does NOT run right through - it is only ${R1(v.sd)} mm long from front to back, cut centrally in the depth.`,
+       hl:["dright","eleft"],
+       fv:[["l",(v.L-v.w)/2,v.H,(v.L-v.w)/2,v.H-v.g],
+           ["l",(v.L-v.w)/2,v.H-v.g,(v.L+v.w)/2,v.H-v.g],
+           ["l",(v.L+v.w)/2,v.H-v.g,(v.L+v.w)/2,v.H],
+           ["cl",v.L/2,-6,v.L/2,v.H+6]],tv:[],sv:[]},
+      {text:`In the TOP VIEW the slot is an open rectangle ${R1(v.w)} mm × ${R1(v.sd)} mm placed centrally. All four of its edges are seen from above, so all four are visible lines.`,
+       hl:["dright","eleft","ftop"],
+       fv:[],
+       tv:[["l",(v.L-v.w)/2,(v.B-v.sd)/2,(v.L-v.w)/2,(v.B+v.sd)/2],
+           ["l",(v.L+v.w)/2,(v.B-v.sd)/2,(v.L+v.w)/2,(v.B+v.sd)/2],
+           ["l",(v.L-v.w)/2,(v.B-v.sd)/2,(v.L+v.w)/2,(v.B-v.sd)/2],
+           ["l",(v.L-v.w)/2,(v.B+v.sd)/2,(v.L+v.w)/2,(v.B+v.sd)/2],
+           ["cl",v.L/2,-6,v.L/2,v.B+6]],sv:[]},
+      {text:"In the SIDE VIEW the slot is completely buried, so its bottom and its two ends are ALL drawn as hidden dashed lines. Compare this with a slot that runs right through, where the dashed bottom line would stretch across the whole depth.",
+       hl:["ftop"],
+       fv:[],tv:[],
+       sv:[["l",(v.B-v.sd)/2,v.H-v.g,(v.B+v.sd)/2,v.H-v.g,1],
+           ["l",(v.B-v.sd)/2,v.H-v.g,(v.B-v.sd)/2,v.H,1],
+           ["l",(v.B+v.sd)/2,v.H-v.g,(v.B+v.sd)/2,v.H,1]]}]});
+
+  OB.cylOnPlate=v=>({L:v.L,B:v.B,H:v.h1+v.h2,
+    box:{H:false},
+    dimExtra:mm=>{ const b=bboxM(mm), g=Math.max(b.L,b.H,b.B)*0.16+4;
+      dimAdd(mm,{x:b.x1,y:b.y0,z:b.z1},{x:b.x1,y:v.h1,z:b.z1},R1(v.h1),{x:g,y:0,z:g*0.55});
+      dimAdd(mm,{x:b.x0,y:v.h1,z:b.z1},{x:b.x0,y:v.h1+v.h2,z:b.z1},R1(v.h2),{x:-g,y:0,z:g*0.55});
+      dimAdd(mm,{x:v.L/2-v.D/2,y:v.h1,z:v.B/2},{x:v.L/2+v.D/2,y:v.h1,z:v.B/2},"\u00d8 "+R1(v.D),{x:0,y:g*0.3,z:0});
+      dimAdd(mm,{x:v.L/2-v.d/2,y:v.h1+v.h2,z:v.B/2},{x:v.L/2+v.d/2,y:v.h1+v.h2,z:v.B/2},"\u00d8 "+R1(v.d),{x:0,y:g*0.3,z:0});
+    },
+    model:()=>{ const cyl=m_cyl(v.D/2,v.h2,36);
+      cyl.verts.forEach(p=>{ p.x+=v.L/2; p.y+=v.h1; p.z+=v.B/2; });
+      return mergeM(boxVF(0,0,0,v.L,v.h1,v.B,"a"),cyl,
+                    m_holeY(v.L/2,v.B/2,v.d/2,0,v.h1+v.h2)); },
+    hlAll:["afront","lat","hole"],
+    fin:{fv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.h1],["l",v.L,v.h1,(v.L+v.D)/2,v.h1],
+            ["l",(v.L+v.D)/2,v.h1,(v.L+v.D)/2,v.h1+v.h2],
+            ["l",(v.L+v.D)/2,v.h1+v.h2,(v.L-v.D)/2,v.h1+v.h2],
+            ["l",(v.L-v.D)/2,v.h1+v.h2,(v.L-v.D)/2,v.h1],
+            ["l",(v.L-v.D)/2,v.h1,0,v.h1],["l",0,v.h1,0,0]],
+         sv:[["l",0,0,v.B,0],["l",v.B,0,v.B,v.h1],["l",v.B,v.h1,(v.B+v.D)/2,v.h1],
+             ["l",(v.B+v.D)/2,v.h1,(v.B+v.D)/2,v.h1+v.h2],
+             ["l",(v.B+v.D)/2,v.h1+v.h2,(v.B-v.D)/2,v.h1+v.h2],
+             ["l",(v.B-v.D)/2,v.h1+v.h2,(v.B-v.D)/2,v.h1],
+             ["l",(v.B-v.D)/2,v.h1,0,v.h1],["l",0,v.h1,0,0]],
+         tv:[["l",0,0,v.L,0],["l",v.L,0,v.L,v.B],["l",v.L,v.B,0,v.B],["l",0,v.B,0,0],
+             ["c",v.L/2,v.B/2,v.D/2],["c",v.L/2,v.B/2,v.d/2]]},
+    groups:[
+      {text:`Draw the centre lines through the middle of every view, then draw the cylinder in the TOP VIEW as a true circle of Ø ${R1(v.D)} mm - its axis is vertical, so the top view shows it true.`,
+       hl:["lat"],
+       fv:[["cl",v.L/2,-6,v.L/2,v.h1+v.h2+8]],
+       tv:[["cl",v.L/2,-6,v.L/2,v.B+6],["cl",-6,v.B/2,v.L+6,v.B/2],["c",v.L/2,v.B/2,v.D/2]],
+       sv:[["cl",v.B/2,-6,v.B/2,v.h1+v.h2+8]]},
+      {text:`Project the cylinder up into the FRONT VIEW and across into the SIDE VIEW. In both of these it is seen from the side, so it appears as a rectangle ${R1(v.D)} mm wide and ${R1(v.h2)} mm high standing on the ${R1(v.h1)} mm plate.`,
+       hl:["lat","atop"],
+       fv:[["l",0,v.h1,v.L,v.h1],["l",(v.L-v.D)/2,v.h1,(v.L-v.D)/2,v.h1+v.h2],
+           ["l",(v.L-v.D)/2,v.h1+v.h2,(v.L+v.D)/2,v.h1+v.h2],
+           ["l",(v.L+v.D)/2,v.h1+v.h2,(v.L+v.D)/2,v.h1]],
+       tv:[],
+       sv:[["l",0,v.h1,v.B,v.h1],["l",(v.B-v.D)/2,v.h1,(v.B-v.D)/2,v.h1+v.h2],
+           ["l",(v.B-v.D)/2,v.h1+v.h2,(v.B+v.D)/2,v.h1+v.h2],
+           ["l",(v.B+v.D)/2,v.h1+v.h2,(v.B+v.D)/2,v.h1]]},
+      {text:`Finally the Ø ${R1(v.d)} mm hole, drilled right through the cylinder and the plate. It is a true circle in the TOP VIEW and a pair of hidden dashed lines in the other two views.`,
+       hl:["hole"],
+       fv:[["l",(v.L-v.d)/2,0,(v.L-v.d)/2,v.h1+v.h2,1],["l",(v.L+v.d)/2,0,(v.L+v.d)/2,v.h1+v.h2,1]],
+       tv:[["c",v.L/2,v.B/2,v.d/2]],
+       sv:[["l",(v.B-v.d)/2,0,(v.B-v.d)/2,v.h1+v.h2,1],["l",(v.B+v.d)/2,0,(v.B+v.d)/2,v.h1+v.h2,1]]}]});
+
+  /* ================= problem list ================= */
+  const OL={id:"L",label:"Length L",unit:"mm"},
+        ODP={id:"B",label:"Depth B",unit:"mm"},
+        OHT={id:"H",label:"Height H",unit:"mm"};
+  const vBase=v=>(v.L<=0||v.B<=0||v.H<=0)?"Length, depth and height must all be positive.":null;
+
+  const PROBLEMS=[
+    { title:"Problem 1 - Rectangular block",
+      fields:[OL,ODP,OHT], defaults:{L:70,B:45,H:40},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm rests on the HP on its base with its rear face touching the VP. Draw its front view, top view and side view in first-angle projection.`,
+      validate:vBase, build:v=>buildOrtho(v,OB.block) },
+
+    { title:"Problem 2 - Stepped block",
+      fields:[OL,ODP,OHT,{id:"l2",label:"Length of the step",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
+      defaults:{L:75,B:45,H:50,l2:35,h1:22},
+      statement:v=>`A stepped block is ${R1(v.L)} mm long, ${R1(v.B)} mm deep and ${R1(v.H)} mm high overall. The base is ${R1(v.h1)} mm thick and the upper block, ${R1(v.l2)} mm long, stands on it at the left-hand end for the full depth. Draw the three views in first angle.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.l2>=v.L) return "The step must be shorter than the block.";
+        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
+      build:v=>buildOrtho(v,OB.step) },
+
+    { title:"Problem 3 - T-shaped block",
+      fields:[OL,ODP,OHT,{id:"w",label:"Width of the upstand",unit:"mm"},{id:"h1",label:"Height of the base",unit:"mm"}],
+      defaults:{L:75,B:45,H:52,w:28,h1:20},
+      statement:v=>`A T-shaped block has a base ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick, with a central upstand ${R1(v.w)} mm wide running the full depth and rising to a total height of ${R1(v.H)} mm. Draw the front view, top view and side view.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.w>=v.L) return "The upstand must be narrower than the block.";
+        if(v.h1>=v.H) return "The base must be lower than the overall height."; return null; },
+      build:v=>buildOrtho(v,OB.tee) },
+
+    { title:"Problem 4 - L-shaped block with a hole",
+      fields:[OL,ODP,OHT,{id:"w",label:"Width of the vertical limb",unit:"mm"},
+              {id:"h1",label:"Thickness of the base limb",unit:"mm"},
+              {id:"D",label:"Hole diameter",unit:"mm"},{id:"xh",label:"Hole centre from the left",unit:"mm"}],
+      defaults:{L:78,B:45,H:52,w:22,h1:18,D:18,xh:55},
+      statement:v=>`An L-shaped block has a horizontal limb ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick, with a vertical limb ${R1(v.w)} mm wide at the left rising to ${R1(v.H)} mm. A Ø ${R1(v.D)} mm hole is drilled through the horizontal limb, its centre ${R1(v.xh)} mm from the left and central in the depth. Draw the three views.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.w>=v.L) return "The vertical limb must be narrower than the block.";
+        if(v.h1>=v.H) return "The base limb must be thinner than the overall height.";
+        if(v.xh-v.D/2<=v.w) return "The hole must clear the vertical limb.";
+        if(v.xh+v.D/2>=v.L) return "The hole must lie inside the block.";
+        if(v.D>=v.B) return "The hole must be smaller than the depth."; return null; },
+      build:v=>buildOrtho(v,OB.lhole) },
+
+    { title:"Problem 5 - Block with a rectangular through groove",
+      fields:[OL,ODP,OHT,{id:"w",label:"Width of the groove",unit:"mm"},{id:"g",label:"Depth of the groove",unit:"mm"}],
+      defaults:{L:75,B:45,H:45,w:26,g:18},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a central groove ${R1(v.w)} mm wide and ${R1(v.g)} mm deep cut in its top face, running right through from front to back. Draw the front view, top view and side view in first angle.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.w>=v.L) return "The groove must be narrower than the block.";
+        if(v.g>=v.H) return "The groove must be shallower than the height."; return null; },
+      build:v=>buildOrtho(v,OB.groove) },
+
+    { title:"Problem 6 - Block with a V-notch",
+      fields:[OL,ODP,OHT,{id:"w",label:"Width of the notch at the top",unit:"mm"},{id:"g",label:"Depth of the notch",unit:"mm"}],
+      defaults:{L:75,B:45,H:45,w:34,g:20},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a V-shaped notch cut centrally in its top face, ${R1(v.w)} mm wide at the top and ${R1(v.g)} mm deep, running through the full depth. Draw its three views.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.w>=v.L) return "The notch must be narrower than the block.";
+        if(v.g>=v.H) return "The notch must be shallower than the height."; return null; },
+      build:v=>buildOrtho(v,OB.vnotch) },
+
+    { title:"Problem 7 - Block with a dovetail slot",
+      fields:[OL,ODP,OHT,{id:"w",label:"Slot width at the top",unit:"mm"},
+              {id:"w2",label:"Slot width at the bottom",unit:"mm"},{id:"g",label:"Depth of the slot",unit:"mm"}],
+      defaults:{L:80,B:45,H:45,w:24,w2:40,g:18},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a dovetail slot cut centrally in its top face - ${R1(v.w)} mm wide at the top, ${R1(v.w2)} mm wide at the bottom and ${R1(v.g)} mm deep - running through the full depth. Draw the three views.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.w2<=v.w) return "A dovetail slot must be WIDER at the bottom than at the top.";
+        if(v.w2>=v.L) return "The slot must be narrower than the block.";
+        if(v.g>=v.H) return "The slot must be shallower than the height."; return null; },
+      build:v=>buildOrtho(v,OB.dovetail) },
+
+    { title:"Problem 8 - Block with a semicircular groove",
+      fields:[OL,ODP,OHT,{id:"r",label:"Radius of the groove",unit:"mm"}],
+      defaults:{L:75,B:45,H:45,r:16},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a semicircular groove of radius ${R1(v.r)} mm cut centrally along its top face, running from front to back. Draw the front view, top view and side view.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(2*v.r>=v.L) return "The groove must be narrower than the block.";
+        if(v.r>=v.H) return "The groove must be shallower than the height."; return null; },
+      build:v=>buildOrtho(v,OB.rgroove) },
+
+    { title:"Problem 9 - Block with a through circular hole",
+      fields:[OL,ODP,OHT,{id:"D",label:"Hole diameter",unit:"mm"}],
+      defaults:{L:70,B:50,H:40,D:26},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a Ø ${R1(v.D)} mm hole drilled vertically right through it, the axis passing through the centre of the block. Draw its three views in first angle.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.D>=Math.min(v.L,v.B)) return "The hole must be smaller than the block."; return null; },
+      build:v=>buildOrtho(v,OB.hole) },
+
+    { title:"Problem 10 - Block with a blind rectangular slot",
+      fields:[OL,ODP,OHT,{id:"w",label:"Width of the slot",unit:"mm"},
+              {id:"g",label:"Depth of the slot",unit:"mm"},{id:"sd",label:"Slot length front-to-back",unit:"mm"}],
+      defaults:{L:76,B:50,H:45,w:26,g:18,sd:24},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a slot ${R1(v.w)} mm wide and ${R1(v.g)} mm deep cut in the middle of its top face. The slot is only ${R1(v.sd)} mm long from front to back and is placed centrally, so it does NOT run right through. Draw the three views.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.w>=v.L) return "The slot must be narrower than the block.";
+        if(v.g>=v.H) return "The slot must be shallower than the height.";
+        if(v.sd>=v.B) return "A blind slot must be shorter than the depth of the block."; return null; },
+      build:v=>buildOrtho(v,OB.slot) },
+
+    { title:"Problem 11 - Block with an inclined top face",
+      fields:[OL,ODP,OHT,{id:"h1",label:"Height at the right-hand end",unit:"mm"}],
+      defaults:{L:75,B:45,H:48,h1:18},
+      statement:v=>`A block ${R1(v.L)} mm long and ${R1(v.B)} mm deep is ${R1(v.H)} mm high at its left-hand end and ${R1(v.h1)} mm high at its right-hand end, the top face being a plane inclined to the HP. Draw its front view, top view and side view.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.h1<=0) return "The right-hand height must be positive.";
+        if(v.h1>=v.H) return "The right-hand end must be lower than the left-hand end."; return null; },
+      build:v=>buildOrtho(v,OB.wedge) },
+
+    { title:"Problem 12 - Semicircular-ended plate with a hole",
+      fields:[OL,ODP,{id:"h1",label:"Height to the centre",unit:"mm"},{id:"D",label:"Hole diameter",unit:"mm"}],
+      defaults:{L:60,B:22,h1:34,D:24},
+      statement:v=>`A plate ${R1(v.L)} mm wide and ${R1(v.B)} mm thick stands on the HP. Its top is a semicircle of radius equal to half the width, with its centre ${R1(v.h1)} mm above the base, and a Ø ${R1(v.D)} mm hole is drilled through the plate at that same centre. Draw the front view, top view and side view.`,
+      validate:v=>{ if(v.L<=0||v.B<=0||v.h1<=0) return "All sizes must be positive.";
+        if(v.D>=v.L) return "The hole must be smaller than the width of the plate."; return null; },
+      build:v=>buildOrtho(v,OB.arch) },
+
+    { title:"Problem 13 - Cylinder on a rectangular base plate",
+      fields:[OL,ODP,{id:"h1",label:"Thickness of the plate",unit:"mm"},
+              {id:"D",label:"Cylinder diameter",unit:"mm"},{id:"h2",label:"Height of the cylinder",unit:"mm"},
+              {id:"d",label:"Hole diameter",unit:"mm"}],
+      defaults:{L:70,B:50,h1:14,D:38,h2:34,d:18},
+      statement:v=>`A base plate ${R1(v.L)} mm × ${R1(v.B)} mm and ${R1(v.h1)} mm thick carries a cylinder of Ø ${R1(v.D)} mm and ${R1(v.h2)} mm high standing centrally on it. A Ø ${R1(v.d)} mm hole is drilled right through the cylinder and the plate. Draw the three views in first angle.`,
+      validate:v=>{ if(v.L<=0||v.B<=0||v.h1<=0||v.h2<=0) return "All sizes must be positive.";
+        if(v.D>=Math.min(v.L,v.B)) return "The cylinder must sit inside the plate.";
+        if(v.d>=v.D) return "The hole must be smaller than the cylinder."; return null; },
+      build:v=>buildOrtho(v,OB.cylOnPlate) },
+
+    { title:"Problem 14 - Sectional front view of a block with a hole",
+      fields:[OL,ODP,OHT,{id:"D",label:"Hole diameter",unit:"mm"}],
+      defaults:{L:70,B:50,H:40,D:26},
+      statement:v=>`A rectangular block ${R1(v.L)} mm × ${R1(v.B)} mm × ${R1(v.H)} mm has a Ø ${R1(v.D)} mm hole drilled vertically right through it, the axis passing through the centre of the block. Draw the SECTIONAL front view on A-A (a plane through the axis of the hole, parallel to the VP), the top view and the side view, in first angle.`,
+      validate:v=>{ const e=vBase(v); if(e) return e;
+        if(v.D>=Math.min(v.L,v.B)) return "The hole must be smaller than the block."; return null; },
+      build:v=>buildOrthoSection(v,OB.holeSection) }
+  ];
+
+  /* ---------------- engine / UI ---------------- */
+
+  /* ---------------- given-figure panel (question) ---------------- */
+  const GW=330, GH=290;
+  const gCanvas=document.getElementById("givenCanvas");
+  /* the isometric figure is part of the QUESTION, so the same drawing is
+     wanted twice: full size on the solve screen and small on each card  */
+  let gctx=gCanvas.getContext("2d");
+  const HLC="#e0561f", GINK="#2b3a48", GSOFT="#93a2b1";
+  /* The question figure is an ISOMETRIC view, so it is pinned to the true
+     isometric attitude rather than an arbitrary one: turned 45° about the
+     vertical and tilted by asin(tan 30°) = 35°16'. In that position the
+     three axes come out 120° apart on the paper and all three are equally
+     foreshortened, which is what makes it a proper isometric view.      */
+  const ISO_ROT_Y=Math.PI/4, ISO_ROT_X=0.6154797;
+  let gGiven=null, gHL=[], gSeg=[], gRotY=ISO_ROT_Y, gRotX=ISO_ROT_X, gZoom=1, gPanX=0, gPanY=0;
+
+  function gLine(x1,y1,x2,y2,color,w,dash){
+    gctx.strokeStyle=color||GINK; gctx.lineWidth=w||1.2; gctx.setLineDash(dash||[]);
+    gctx.beginPath(); gctx.moveTo(x1,y1); gctx.lineTo(x2,y2); gctx.stroke(); gctx.setLineDash([]);
+  }
+  function gText(x,y,t,color,font,al,bl){
+    gctx.font=font||"11px Arial"; gctx.fillStyle=color||GINK;
+    gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
+  }
+  function gLabel(x,y,t,color){
+    gctx.font="bold 11px Arial";
+    const w=gctx.measureText(t).width+6;
+    gctx.fillStyle="rgba(255,255,255,0.88)";
+    gctx.fillRect(x-w/2,y-7,w,14);
+    gText(x,y,t,color||GINK,"bold 11px Arial");
+  }
+  function gArrow(x,y,a,color){
+    gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
+    gctx.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a+Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a+Math.PI/2));
+    gctx.lineTo(x-7*Math.cos(a)+2.4*Math.cos(a-Math.PI/2), y-7*Math.sin(a)+2.4*Math.sin(a-Math.PI/2));
+    gctx.closePath(); gctx.fill();
+  }
+  function gDimH(y,x1,x2,text,on){
+    const c=on?HLC:GSOFT, w=on?1.7:1;
+    gLine(x1,y,x2,y,c,w); gArrow(x1,y,Math.PI,c); gArrow(x2,y,0,c);
+    gLabel((x1+x2)/2,y-8,text,on?HLC:GINK);
+  }
+  function gDimV(x,y1,y2,text,on){
+    const c=on?HLC:GSOFT, w=on?1.7:1;
+    gLine(x,y1,x,y2,c,w); gArrow(x,y1,-Math.PI/2,c); gArrow(x,y2,Math.PI/2,c);
+    gctx.save(); gctx.translate(x-9,(y1+y2)/2); gctx.rotate(-Math.PI/2);
+    gLabel(0,0,text,on?HLC:GINK); gctx.restore();
+  }
+  function gFit(wmm,hmm){
+    const s=Math.min((GW-56)/wmm,(GH-42)/hmm);
+    return {s, ox:(GW-wmm*s)/2+8, oy:(GH-hmm*s)/2};
+  }
+
+  function gClear(){
+    gctx.setTransform(1,0,0,1,0,0);
+    gctx.fillStyle="#fff"; gctx.fillRect(0,0,GW,GH);
+  }
+
+  /* -------- how the question figure is presented --------------------
+     This panel is the drawing the student is HANDED, so it behaves like a
+     printed question figure: it carries its sizes, it hides nothing behind
+     dotted lines, and it does not turn.  The rotatable, zoomable view of the
+     same solid belongs at the end of the construction, not here.
+     Flip these three switches to change that.                          */
+  const GIVEN_DIMS=true, GIVEN_HIDDEN=false, GIVEN_STATIC=true;
+
+  /* the sizes written on the question figure - overall box first, then any
+     feature dimension the problem adds for itself through given.dimExtra   */
+  function dimsGiven(m){
+    if(!m||m._dimd) return m; m._dimd=1;
+    try{
+      if(gGiven&&gGiven.dims===false) return m;
+      if(!gGiven||gGiven.box!==false) dimsBox(m,(gGiven&&gGiven.box)||{});
+      if(gGiven&&typeof gGiven.dimExtra==="function") gGiven.dimExtra(m,values);
+    }catch(e){}
+    return m;
+  }
+
+  /* ---- wireframe 3-D renderer (shared with the big 3-D panel) ---- */
+  function render3D(m,hl){
+    if(GIVEN_DIMS) dimsGiven(m);
+    wireRender(gctx,GW,GH,m,hl,gRotY,gRotX,gZoom,gPanX,gPanY,
+               {fill:GIVEN_DIMS?0.30:0.38, noHidden:!GIVEN_HIDDEN, seg:gSeg});
+  }
+
+  /* true while the question figure is pinned to its isometric attitude */
+  function gLocked(){ return GIVEN_STATIC&&gGiven&&gGiven.type==="3d"; }
+
+  function renderGiven(hl,seg){
+    if(hl) gHL=hl;
+    if(seg!==undefined) gSeg=seg;
+    if(!gGiven) return;
+    gClear();
+    try{
+      if(gGiven.type==="3d"){ render3D(gGiven.model(values),gHL); }
+      else{
+        gctx.save();
+        gctx.translate(GW/2+gPanX,GH/2+gPanY); gctx.scale(gZoom,gZoom); gctx.translate(-GW/2,-GH/2);
+        gGiven.draw(values,gHL);
+        gctx.restore();
+      }
+    }catch(e){ /* invalid data - leave blank */ }
+  }
+
+  function setupGiven(reset){
+    gGiven=(P&&P.given)||PROBLEMS[probIndex].given||null;
+    const box=document.getElementById("given-fig");
+    if(!gGiven){ box.style.display="none"; return; }
+    box.style.display="block";
+    document.getElementById("given-fig-title").innerText=gGiven.title||"Given figure";
+    document.getElementById("given-hint").innerText=(gGiven.type==="3d"&&!gLocked())
+      ? "Drag to rotate · Scroll to zoom · Double-click to reset"
+      : "Drag to pan · Scroll to zoom · Double-click to reset";
+    if(reset){ gRotY=ISO_ROT_Y; gRotX=ISO_ROT_X; gZoom=1; gPanX=0; gPanY=0; gHL=[]; }
+    renderGiven(reset?[]:gHL);
+  }
+
+  (function(){
+    let gd=false, glx=0, gly=0;
+    function pos(e){
+      const r=gCanvas.getBoundingClientRect();
+      const t=(e.touches&&e.touches[0])||e;
+      return {x:(t.clientX-r.left)*(GW/r.width), y:(t.clientY-r.top)*(GH/r.height)};
+    }
+    gCanvas.addEventListener("mousedown",e=>{ gd=true; const p=pos(e); glx=p.x; gly=p.y; gCanvas.classList.add("dragging"); });
+    window.addEventListener("mousemove",e=>{
+      if(!gd||!gGiven) return;
+      const p=pos(e), dx=p.x-glx, dy=p.y-gly; glx=p.x; gly=p.y;
+      if(gGiven.type==="3d"&&!gLocked()){ gRotY+=dx*0.012; gRotX+=dy*0.012;
+        gRotX=Math.max(-1.35,Math.min(1.35,gRotX)); }
+      else { gPanX+=dx; gPanY+=dy; }
+      renderGiven();
+    });
+    window.addEventListener("mouseup",()=>{ gd=false; gCanvas.classList.remove("dragging"); });
+    gCanvas.addEventListener("wheel",e=>{
+      if(!gGiven) return;
+      e.preventDefault();
+      gZoom=Math.max(0.5,Math.min(4,gZoom*(e.deltaY<0?1.12:1/1.12)));
+      renderGiven();
+    },{passive:false});
+    gCanvas.addEventListener("dblclick",()=>{
+      gRotY=ISO_ROT_Y; gRotX=ISO_ROT_X; gZoom=1; gPanX=0; gPanY=0; renderGiven();
+    });
+    gCanvas.addEventListener("touchstart",e=>{ if(e.touches.length===1){ gd=true; const p=pos(e); glx=p.x; gly=p.y; } },{passive:true});
+    gCanvas.addEventListener("touchmove",e=>{
+      if(!gd||!gGiven||e.touches.length!==1) return;
+      e.preventDefault();
+      const p=pos(e), dx=p.x-glx, dy=p.y-gly; glx=p.x; gly=p.y;
+      if(gGiven.type==="3d"&&!gLocked()){ gRotY+=dx*0.012; gRotX=Math.max(-1.35,Math.min(1.35,gRotX+dy*0.012)); }
+      else { gPanX+=dx; gPanY+=dy; }
+      renderGiven();
+    },{passive:false});
+    gCanvas.addEventListener("touchend",()=>{ gd=false; },{passive:true});
+  })();
+
+
+  let probIndex=0, values={}, P=null, currentStep=1, started=false;
+  let viewZoom=1, viewPanX=0, viewPanY=0;
+  const ZOOM_MIN=0.4, ZOOM_MAX=6;
+
+  function renderList(){
+    const el=document.getElementById("screen-list");
+    el.innerHTML="";
+    PROBLEMS.forEach((p,i)=>{
+      const card=document.createElement("div");
+      card.className="prob-card";
+      card.innerHTML=`<h3>${p.title}</h3><p>${p.statement(p.defaults)}</p>`;
+      try{
+        const g=p.given||(p.build&&p.build(p.defaults).given);
+        if(g&&g.type==="3d"&&g.model){
+          const wrap=document.createElement("div");
+          wrap.className="card-fig";
+          const cv=document.createElement("canvas");
+          cv.width=GW; cv.height=GH; wrap.appendChild(cv);
+          const cap=document.createElement("div");
+          cap.className="card-fig-cap";
+          cap.innerText=g.title||"Given: isometric view";
+          wrap.appendChild(cap); card.appendChild(wrap);
+          const c2=cv.getContext("2d");
+          c2.fillStyle="#fff"; c2.fillRect(0,0,GW,GH);
+          const mm=g.model(p.defaults);
+          if(GIVEN_DIMS) dimsGiven(mm);
+          wireRender(c2,GW,GH,mm,[],ISO_ROT_Y,ISO_ROT_X,1,0,0,
+                     {fill:GIVEN_DIMS?0.30:0.38, noHidden:!GIVEN_HIDDEN});
+        }
+      }catch(e){ /* a figure that cannot be built is simply not shown */ }
+      const btn=document.createElement("button");
+      btn.innerText="Solve this problem ▶";
+      btn.onclick=()=>openProblem(i);
+      card.appendChild(btn);
+      el.appendChild(card);
+    });
+  }
+
+  function openProblem(i){
+    probIndex=i;
+    values=Object.assign({},PROBLEMS[i].defaults);
+    document.getElementById("screen-list").style.display="none";
+    document.getElementById("screen-solve").style.display="block";
+    renderGivenInputs();
+    rebuild(true);
+  }
+
+  function showList(){
+    document.getElementById("screen-solve").style.display="none";
+    document.getElementById("screen-list").style.display="block";
+  }
+
+  function renderGivenInputs(){
+    const grid=document.getElementById("given-grid");
+    grid.innerHTML="";
+    PROBLEMS[probIndex].fields.forEach(fld=>{
+      const lab=document.createElement("label"); lab.innerText=fld.label;
+      let inp;
+      if(fld.choices){
+        inp=document.createElement("select");
+        fld.choices.forEach(c=>{
+          const o=document.createElement("option");
+          o.value=c.v; o.text=c.t;
+          if(+values[fld.id]===+c.v) o.selected=true;
+          inp.appendChild(o);
+        });
+        inp.onchange=()=>{ values[fld.id]=parseFloat(inp.value); rebuild(true); };
+      } else {
+        inp=document.createElement("input"); inp.type="number";
+        if(fld.fixed!==undefined){ inp.value=fld.fixed; inp.disabled=true; }
+        else{
+          inp.value=values[fld.id];
+          inp.onchange=()=>{ values[fld.id]=parseFloat(inp.value)||0; rebuild(false); };
+        }
+      }
+      const unit=document.createElement("span"); unit.className="unit"; unit.innerText=fld.unit;
+      grid.appendChild(lab); grid.appendChild(inp); grid.appendChild(unit);
+    });
+  }
+
+  function syncStartUI(){
+    const r=document.getElementById("start-row");
+    if(r) r.style.display=started?"none":"flex";
+  }
+  function startDrawing(){
+    if(!P) return;
+    started=true; currentStep=1; lastSpoken=-1; compassPose=null; syncStartUI(); drawStep(1,true);
+  }
+
+  function rebuild(resetStep){
+    const prob=PROBLEMS[probIndex];
+    document.getElementById("statement").innerHTML="<b>"+prob.title+"</b><br>"+prob.statement(values)
+      ;
+    const err=prob.validate(values);
+    const vEl=document.getElementById("validation");
+    if(err){
+      vEl.innerText="⚠ "+err;
+      P=null; gGiven=null;
+      document.getElementById("given-fig").style.display="none";
+      clearCanvasWhite();
+      document.getElementById("stepList").innerHTML="";
+      document.getElementById("results").innerHTML="";
+      document.getElementById("stepCounter").innerText="";
+      return;
+    }
+    vEl.innerText="";
+    P=prob.build(values);
+    setupGiven(!!resetStep);
+    if(resetStep){ currentStep=1; started=false; compassPose=null; sRotY=S_HOME.ry; sRotX=S_HOME.rx; sZoom=1; }
+    syncStartUI();
+    currentStep=Math.min(currentStep,P.steps.length);
+    lastSpoken=-1;
+    renderStepList();
+    resetView();
+  }
+
+  const STEP_ITEM_H=128;
+  function renderStepList(){
+    const ol=document.getElementById("stepList");
+    ol.innerHTML="";
+    P.steps.forEach((st,i)=>{
+      const li=document.createElement("li");
+      li.innerHTML='<span class="step-num">'+(i+1)+'</span><span>'+st.text+'</span>';
+      ol.appendChild(li);
+    });
+    ol.style.transform="translateY(-"+((currentStep-1)*STEP_ITEM_H)+"px)";
+  }
+
+
+  /* ---------------- big rotatable 3-D view of the solid ---------------- */
+  const SW=820, SH=430;
+  const sCanvas=document.getElementById("spaceCanvas");
+  const sctx=sCanvas.getContext("2d");
+  const S_HOME={ry:-0.62, rx:0.42};
+  let sRotY=S_HOME.ry, sRotX=S_HOME.rx, sZoom=1;
+
+  function renderSpace(){
+    if(!P||!P.space) return;
+    sctx.setTransform(1,0,0,1,0,0);
+    sctx.fillStyle="#fff"; sctx.fillRect(0,0,SW,SH);
+    let m=null;
+    try{ m=(typeof P.space.model==="function")?P.space.model(values):P.space.model; }catch(e){ return; }
+    if(!m) return;
+    wireRender(sctx,SW,SH,m,P.space.hl||[],sRotY,sRotX,sZoom,0,0,{fill:0.40});
+    if(P.space.note){
+      sctx.font="12px Arial"; sctx.fillStyle="#44576b";
+      sctx.textAlign="left"; sctx.textBaseline="middle";
+      sctx.fillText(P.space.note,14,18);
+    }
+    document.getElementById("space-title").innerText=P.space.title||"3-D view of the solid";
+  }
+
+
+  function syncSpace(show){
+    const wp=document.getElementById("space-wrap");
+    wp.style.display=show?"block":"none";
+    if(show) renderSpace();
+  }
+
+  (function(){
+    let dr=false,lx=0,ly=0;
+    function pos(e){const r=sCanvas.getBoundingClientRect();const t=(e.touches&&e.touches[0])||e;
+      return {x:(t.clientX-r.left)*(SW/r.width),y:(t.clientY-r.top)*(SH/r.height)};}
+    function turn(p){ sRotY+=(p.x-lx)*0.011; sRotX=Math.max(-1.4,Math.min(1.4,sRotX+(p.y-ly)*0.011));
+      lx=p.x;ly=p.y; renderSpace(); }
+    sCanvas.addEventListener("mousedown",e=>{dr=true;const p=pos(e);lx=p.x;ly=p.y;sCanvas.classList.add("dragging");});
+    window.addEventListener("mousemove",e=>{if(dr)turn(pos(e));});
+    window.addEventListener("mouseup",()=>{dr=false;sCanvas.classList.remove("dragging");});
+    sCanvas.addEventListener("wheel",e=>{e.preventDefault();
+      sZoom=Math.max(0.5,Math.min(4,sZoom*(e.deltaY<0?1.12:1/1.12)));renderSpace();},{passive:false});
+    sCanvas.addEventListener("dblclick",()=>{sRotY=S_HOME.ry;sRotX=S_HOME.rx;sZoom=1;renderSpace();});
+    sCanvas.addEventListener("touchstart",e=>{if(e.touches.length===1){dr=true;const p=pos(e);lx=p.x;ly=p.y;}},{passive:true});
+    sCanvas.addEventListener("touchmove",e=>{if(!dr||e.touches.length!==1)return;e.preventDefault();turn(pos(e));},{passive:false});
+    sCanvas.addEventListener("touchend",()=>{dr=false;},{passive:true});
+  })();
+
+  function drawStep(s,animate=false){
+    if(!P) return;
+    animId++;                      // cancel any running animation
+    const myId=animId;
+
+    const N=P.steps.length;
+    document.getElementById("stepCounter").innerText=started?("Step "+s+" of "+N):("Ready - "+N+" steps");
+    document.getElementById("prevButton").disabled=(!started||s<=1);
+    document.getElementById("nextButton").disabled=(started&&s>=N);
+    document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
+    syncSpace(started&&s>=N&&!!P.space);
+    document.getElementById("stepList").style.transform="translateY(-"+((s-1)*STEP_ITEM_H)+"px)";
+    if(!started){
+      renderGiven([]);
+      clearCanvasWhite();
+      return;
+    }
+    speakCurrent();                 // narration and drawing run together
+    renderGiven(P.steps[s-1].hl||[],P.steps[s-1].hlSeg||[]);
+
+    if(!animate){ frameDraw(s,[],0,null); return; }
+    REC=[]; P.steps[s-1].d(); const items=REC; REC=null;   // capture, don't draw
+    runAnimation(s,items,myId);
+  }
+
+  function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
+    if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
+  function prevStep(){ if(P&&started&&currentStep>1){currentStep--; compassPose=null; drawStep(currentStep);} }
+  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
+  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
+
+  /* ---------------- voice narration ---------------- */
+  let voiceOn=false, lastSpoken=-1;
+  const voiceSupported=("speechSynthesis" in window);
+
+  function toggleVoice(){
+    if(!voiceSupported){ alert("Voice is not supported in this browser."); return; }
+    voiceOn=!voiceOn;
+    const b=document.getElementById("voiceBtn");
+    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
+    b.classList.toggle("on",voiceOn);
+    if(voiceOn){ lastSpoken=-1; speakCurrent(); }
+    else speechSynthesis.cancel();
+  }
+
+  const LETTER={a:"ay",b:"bee",c:"see",d:"dee",m:"em",n:"en",o:"oh",p:"pee",q:"cue",v:"vee"};
+  function sayTok(tok){
+    const out=[];
+    tok.replace(/([a-z])([0-9]?)(′?)/g,(m,L,d,pr)=>{
+      out.push((LETTER[L]||L)+(d?" "+d:"")+(pr?" dash":"")); return m; });
+    return out.join(" ");
+  }
+  function speechText(t){
+    t=t.replace(/\b([a-z][0-9]?′?)[-–—]([a-z][0-9]?′?)(?![a-zA-Z])/g,(m,p,q)=>sayTok(p)+" "+sayTok(q)+" ");
+    t=t.replace(/\b([a-z][0-9]?′)([a-z][0-9]?′?)/g,(m,p,q)=>sayTok(p)+" "+sayTok(q)+" ");
+    t=t.replace(/\b([ab]′?)\s+([ab][12]′?)\b/g,(m,p,q)=>sayTok(p)+" "+sayTok(q)+" ");
+    t=t.replace(/\b([a-z][0-9]?′)/g,(m,p)=>sayTok(p)+" ");
+    t=t.replace(/\b([ab][0-9])\b/g,(m,p)=>sayTok(p)+" ");
+    t=t.replace(/\bab\b/g,"ay bee");
+    t=t.replace(/\b(Mark|mark|Centre|centre|center|radius|through|get|swing|Join|join|Project|project|From|from|At|at|Verify|verify)\s+([abmn])\b/g,
+                (m,w,L)=>w+" "+LETTER[L]);
+    t=t.replace(/\blocus of ([ab])\b/g,(m,L)=>"locus of "+LETTER[L]);
+    t=t.replace(/\b([abmn])\s+is\b/g,(m,L)=>LETTER[L]+" is");
+    t=t.replace(/\b([abmn])(?=\s*[.,;:)(]|\s+[0-9])/g,(m,L)=>LETTER[L]);
+    return t
+      .replace(/′/g," dash")
+      .replace(/θ/g,"theta").replace(/φ/g,"phi")
+      .replace(/α/g,"alpha").replace(/β/g,"beta")
+      .replace(/°/g," degrees")
+      .replace(/[–—]/g," ")
+      .replace(/⟂/g," perpendicular to ")
+      .replace(/\bmm\b/g,"millimeters")
+      .replace(/\bTL\b/g,"true length")
+      .replace(/\bEL\b/g,"elevation length").replace(/\bPL\b/g,"plan length")
+      .replace(/\bFV\b/g,"front view").replace(/\bTV\b/g,"top view")
+      .replace(/\bHP\b/g,"H P").replace(/\bVP\b/g,"V P")
+      .replace(/\s+([.,;:])/g,"$1")
+      .replace(/\s{2,}/g," ");
+  }
+
+  // Pick the most natural-sounding English voice available on this machine.
+  // Priority: neural "Natural" voices (Edge) > Google voices (Chrome) > Indian English > any English.
+  let cachedVoice=null;
+  function pickVoice(){
+    const vs=speechSynthesis.getVoices();
+    if(!vs.length) return null;
+    const en=vs.filter(v=>v.lang&&v.lang.toLowerCase().indexOf("en")===0);
+    return en.find(v=>/natural/i.test(v.name)&&v.lang==="en-IN")
+        || en.find(v=>/natural/i.test(v.name))
+        || en.find(v=>/google/i.test(v.name)&&v.lang==="en-IN")
+        || en.find(v=>/google/i.test(v.name))
+        || en.find(v=>v.lang==="en-IN")
+        || en[0] || null;
+  }
+  if(voiceSupported){
+    speechSynthesis.getVoices();                       // trigger async voice-list load
+    speechSynthesis.onvoiceschanged=()=>{ cachedVoice=pickVoice(); };
+  }
+
+  function speakStep(force){
+    if(!P||!voiceSupported) return;
+    if(!force){
+      if(!voiceOn) return;
+      if(currentStep===lastSpoken) return;   // don't re-speak on zoom/pan redraws
+    }
+    lastSpoken=currentStep;
+    speechSynthesis.cancel();
+    const pre=(currentStep===1)?"First step. ":"Next step. ";
+    const u=new SpeechSynthesisUtterance(pre+speechText(P.steps[currentStep-1].text));
+    u.rate=0.95;
+    u.pitch=1;
+    if(!cachedVoice) cachedVoice=pickVoice();
+    if(cachedVoice) u.voice=cachedVoice;
+    // speak on the next tick: Chrome drops an utterance queued in the same frame as cancel()
+    setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} },30);
+  }
+  function speakCurrent(){ speakStep(false); }
+
+  // Tap / click the step card to hear it read aloud (works even when auto-voice is off)
+  document.getElementById("step-viewport").addEventListener("click",()=>speakStep(true));
+
+  /* ---------------- zoom / pan ---------------- */
+  function updateZoomDisplay(){ document.getElementById("zoom-level").innerText=Math.round(viewZoom*100)+"%"; }
+  function redraw(){ drawStep(currentStep); updateZoomDisplay(); }
+  function zoomAt(cx,cy,f){
+    const nz=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,viewZoom*f));
+    const wx=(cx-viewPanX)/viewZoom, wy=(cy-viewPanY)/viewZoom;
+    viewZoom=nz; viewPanX=cx-wx*nz; viewPanY=cy-wy*nz;
+    redraw();
+  }
+  function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
+  function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
+  function canvasPos(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:(e.clientX-r.left)*(canvas.width/r.width), y:(e.clientY-r.top)*(canvas.height/r.height)};
+  }
+  canvas.addEventListener("wheel",e=>{
+    if(!e.ctrlKey) return;            // plain scroll = page scrolls; Ctrl+scroll = zoom
+    e.preventDefault();
+    const p=canvasPos(e);
+    zoomAt(p.x,p.y,e.deltaY<0?1.15:1/1.15);
+  },{passive:false});
+  let drag=false,lx=0,ly=0;
+  canvas.addEventListener("mousedown",e=>{ drag=true; const p=canvasPos(e); lx=p.x; ly=p.y; canvas.classList.add("dragging"); });
+  window.addEventListener("mousemove",e=>{ if(!drag)return; const p=canvasPos(e); viewPanX+=p.x-lx; viewPanY+=p.y-ly; lx=p.x; ly=p.y; redraw(); });
+  window.addEventListener("mouseup",()=>{ drag=false; canvas.classList.remove("dragging"); });
+  // One-finger touch is left free so the page can be scrolled up/down during simulation.
+  // Two-finger pinch on the canvas zooms and pans the drawing.
+  let lastDist=null, lastMid=null;
+  function touchMid(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:((e.touches[0].clientX+e.touches[1].clientX)/2-r.left)*(canvas.width/r.width),
+            y:((e.touches[0].clientY+e.touches[1].clientY)/2-r.top)*(canvas.height/r.height)};
+  }
+  canvas.addEventListener("touchstart",e=>{
+    if(e.touches.length===2){
+      lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      lastMid=touchMid(e);
+    }
+  },{passive:true});
+  canvas.addEventListener("touchmove",e=>{
+    if(e.touches.length===2&&lastDist){
+      e.preventDefault();
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      const mid=touchMid(e);
+      const nz=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,viewZoom*(d/lastDist)));
+      const wx=(lastMid.x-viewPanX)/viewZoom, wy=(lastMid.y-viewPanY)/viewZoom;
+      viewZoom=nz;
+      viewPanX=mid.x-wx*nz;   // pinch point stays under the fingers,
+      viewPanY=mid.y-wy*nz;   // moving both fingers together pans
+      lastDist=d; lastMid=mid;
+      redraw();
+    }
+  },{passive:false});
+  canvas.addEventListener("touchend",e=>{ if(e.touches.length<2){ lastDist=null; lastMid=null; } });
+
+  renderList();
+
+
+  /* ---- full-screen sketch mode, for a phone ---------------------------
+     The drawing fills the screen and the step is changed by tapping: the
+     right of the screen goes on, the left goes back. The step wording sits
+     in a bar along the bottom so nothing covers the sheet.              */
+  function fsSync(){
+    if(!document.body.classList.contains("fs")) return;
+    const t=document.getElementById("fsText"), c=document.getElementById("fsCount");
+    if(!P){ if(t) t.innerText=""; return; }
+    const n=P.steps.length;
+    const i=Math.max(1,Math.min(currentStep||1,n));
+    if(c) c.innerText="Step "+(started?i:0)+" of "+n;
+    if(t) t.innerText=started&&P.steps[i-1]?P.steps[i-1].text:"Tap the right-hand side to start drawing.";
+  }
+  function fsNext(){ nextStep(); setTimeout(fsSync,60); }
+  function fsPrev(){ prevStep(); setTimeout(fsSync,60); }
+  function fsOn(){
+    document.body.classList.add("fs");
+    /* full screen is asked for on the PAGE, not on the sketch: in native
+       full screen the browser paints only the chosen element and its
+       children, which would hide the tap bar and the exit button      */
+    const el=document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    if(screen.orientation&&screen.orientation.lock) screen.orientation.lock("landscape").catch(()=>{});
+    fsSync();
+  }
+  function fsOff(){
+    document.body.classList.remove("fs");
+    if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  }
+  function fsToggle(){ document.body.classList.contains("fs")?fsOff():fsOn(); }
+  document.addEventListener("fullscreenchange",()=>{
+    if(!document.fullscreenElement) document.body.classList.remove("fs"); });
+  document.addEventListener("keydown",e=>{
+    if(!document.body.classList.contains("fs")) return;
+    if(e.key==="ArrowRight"||e.key===" ") { e.preventDefault(); fsNext(); }
+    else if(e.key==="ArrowLeft") { e.preventDefault(); fsPrev(); }
+    else if(e.key==="Escape") fsOff();
+  });
+</script>
+
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M Jadhav</a></footer>
+
+<div id="fsTapL" onclick="fsPrev()"></div>
+<div id="fsTapR" onclick="fsNext()"></div>
+<button id="fsExit" onclick="fsOff()">Exit full screen</button>
+<div id="fsBar"><b><span id="fsCount"></span> &nbsp;·&nbsp; tap right to go on, left to go back</b><span id="fsText"></span></div>
+</body>
+</html>

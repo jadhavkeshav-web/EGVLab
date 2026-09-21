@@ -1,17 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Engineering Curves - Problems with Stepwise Solutions</title>
   <style>
     :root{
-      --ink:#3b2a5a; --ink-2:#5b4590; --accent:#c96a2b;
-      --line:#dfe5ec; --paper:#f2eff8; --card:#ffffff; --muted:#6b7686;
-      --tint:#ece7f4;
+      --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
+      --line:#dfe5ec; --paper:#f4f6f9; --card:#ffffff; --muted:#6b7686;
     }
     *{box-sizing:border-box;}
-    body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px 14px;background:linear-gradient(180deg,var(--tint) 0%,var(--paper) 340px,var(--paper) 100%);background-attachment:fixed;color:#16202b;}
+    body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px 14px;background:var(--paper);color:#16202b;}
     h1{font-size:1.3rem;margin:0 auto 6px;text-align:center;color:var(--ink);letter-spacing:.3px;font-weight:700;}
     .h-rule{width:72px;height:3px;background:var(--ink-2);margin:0 auto 12px;border-radius:2px;}
 
@@ -28,9 +25,6 @@
     #topbar{display:flex;gap:14px;align-items:flex-start;max-width:1330px;margin:0 auto 16px;}
     #backBtn{flex:0 0 auto;padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #backBtn:hover{background:#eef2f7;}
-    .dim-note{margin-top:8px;padding:5px 10px;display:inline-block;
-      background:#eef4fb;border:1px solid #cfe0f0;border-left:3px solid var(--ink-2);
-      border-radius:6px;font-size:.82rem;font-weight:600;color:var(--ink);letter-spacing:.2px;}
     #statement{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ink-2);border-radius:10px;font-size:.95rem;line-height:1.5rem;box-shadow:0 1px 3px rgba(22,52,79,.06);}
 
     #solve-container{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;}
@@ -92,45 +86,7 @@
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
-  
-    /* ---- mobile: the sketch on its own, full screen ---------------------- */
-    #fsBtn{margin-left:auto;}
-    /* the sketch sits inside a flex container; hide its siblings, not the
-       container itself, or the canvas goes with it                       */
-    body.fs #solve-container > *:not(#canvas-wrapper){display:none !important;}
-    body.fs #screen-solve > *:not(#solve-container){display:none !important;}
-    body.fs #solve-container{display:block !important;}
-    body.fs #canvas-wrapper{position:fixed;inset:0;z-index:9000;margin:0;padding:0;
-      border:0;border-radius:0;box-shadow:none;background:#fff;
-      display:flex;align-items:center;justify-content:center;}
-    body.fs #zoom-toolbar{position:fixed;top:6px;left:6px;right:6px;z-index:9002;
-      background:rgba(255,255,255,.92);border-radius:8px;padding:4px 6px;}
-    body.fs #zoom-hint,body.fs #fsBtn{display:none;}
-    body.fs #zoom-toolbar{width:auto;right:auto;}
-    /* a flex item will not shrink below its own size unless min-width is
-       cleared, which is why the sketch overflowed a narrow screen      */
-    body.fs #projectionCanvas{max-width:100vw;max-height:calc(100vh - 56px);
-      width:auto;height:auto;min-width:0;min-height:0;flex:0 1 auto;
-      border:0;border-radius:0;}
-    body.fs header,body.fs footer,body.fs h1,body.fs .h-rule{display:none !important;}
-    #fsTapL,#fsTapR{position:fixed;top:0;bottom:0;width:34vw;z-index:9001;display:none;}
-    #fsTapL{left:0;} #fsTapR{right:0;}
-    body.fs #fsTapL,body.fs #fsTapR{display:block;}
-    #fsBar{position:fixed;left:0;right:0;bottom:0;z-index:9003;display:none;
-      background:#ffffff;border-top:1px solid #cfd7e0;box-shadow:0 -2px 8px rgba(0,0,0,.08);
-      padding:8px 10px calc(8px + env(safe-area-inset-bottom));font-size:.9rem;color:#16202b;}
-    body.fs #fsBar{display:block;}
-    #fsBar b{display:block;font-size:.78rem;color:var(--muted);margin-bottom:2px;}
-    #fsExit{position:fixed;top:8px;right:8px;z-index:9004;display:none;
-      background:var(--ink);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:.9rem;}
-    body.fs #fsExit{display:block;}
-    @media (max-width:820px){
-      #screen-solve{display:block;}
-      #canvas-wrapper{margin-top:12px;}
-      .btn-group{flex-wrap:wrap;}
-      button{min-height:40px;}
-    }
-</style>
+  </style>
 </head>
 <body>
 
@@ -194,7 +150,6 @@
         <span id="zoom-level">100%</span>
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
-        <button id="fsBtn" onclick="fsToggle()" title="Full screen sketch">⛶ Full screen</button>
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
@@ -314,61 +269,21 @@
   let animId=0;      // token to cancel a running animation
   let compassPose=null;   // {ax,ay,bx,by} - where the compass legs last were, so it can move (not vanish) to its next job
 
-  /* ---- calculation box -------------------------------------------------
-     Calculations are NOT drawn over the views. They are collected and printed
-     together in the lower-right corner of the sheet, black and white only.  */
-  let SHEET_CALCS=[];
-  function calcBox(title,lines){
-    if(REC){ REC.push({f:"calcBox",a:[title,lines]}); return; }
-    SHEET_CALCS.push({title:title,lines:lines});
-  }
-
-  function drawSheetCorner(){
-    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    const pad=8, lh=14, mR=14, mB=12;
-    const tf="bold 11px Arial", bf="11px Arial", nf="bold 11.5px Arial";
-    const note="NOTE: All dimensions are in mm.";
-    const blocks=SHEET_CALCS.map(c=>{
-      ctx.font=tf; let w=ctx.measureText(c.title).width;
-      ctx.font=bf; c.lines.forEach(t=>{ w=Math.max(w,ctx.measureText(t).width); });
-      return {c:c, w:w+pad*2, h:pad*2+lh*(c.lines.length+1)};
-    });
-    ctx.font=nf;
-    const nw=ctx.measureText(note).width+pad*2, nh=pad*1.6+lh;
-    let y=CANVAS_H-mB-nh;
-    ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=1.1;
-    ctx.beginPath(); ctx.rect(CANVAS_W-mR-nw,y,nw,nh); ctx.fill(); ctx.stroke();
-    ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
-    ctx.font=nf; ctx.fillText(note,CANVAS_W-mR-nw+pad,y+nh/2);
-    for(let i=blocks.length-1;i>=0;i--){
-      const b=blocks[i]; y-=b.h+8;
-      ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=0.9;
-      ctx.beginPath(); ctx.rect(CANVAS_W-mR-b.w,y,b.w,b.h); ctx.fill(); ctx.stroke();
-      ctx.fillStyle="#111"; ctx.textAlign="left"; ctx.textBaseline="middle";
-      ctx.font=tf; ctx.fillText(b.c.title,CANVAS_W-mR-b.w+pad,y+pad+lh/2);
-      ctx.font=bf;
-      b.c.lines.forEach((t,j)=>ctx.fillText(t,CANVAS_W-mR-b.w+pad,y+pad+lh*(j+1)+lh/2));
-    }
-    ctx.restore();
-  }
-
   const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
               drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
               drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
-              drawCut,drawArcPlain,lineSet,calcBox};
+              drawCut,drawArcPlain,lineSet};
   function execItem(it){ EXEC[it.f].apply(null,it.a); }
 
   // draw: full steps 0..baseCount-1, then items[0..k-1], then an optional partial element
   function frameDraw(baseCount,items,k,partial){
     clearCanvasWhite();
-    SHEET_CALCS=[];
     ctx.save();
     ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
     for(let i=0;i<baseCount;i++) P.steps[i].d();
     for(let i=0;i<k;i++) execItem(items[i]);
     if(partial) partial();
     ctx.restore();
-    drawSheetCorner();          // calculations + units note, clear of the views
   }
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1370,19 +1285,16 @@
      {text:`This first quadrant already gives enough points to sketch a smooth arc from C to A - a preview of one quarter of the final curve.`,
       d:()=>{ drawCurve(arcPts(90,180),COL_THIN,1.6); }},
     ];
-    const Ld=q=>"P"+(4*n-3-q);   // quadrant D-O-A (mirror of Pq about the major axis)
-    const Lc=q=>"P"+(2*n-1-q);   // quadrant C-O-B (mirror of Pq about the minor axis)
-    const Lb=q=>"P"+(2*n-2+q);   // quadrant B-O-D (mirror of Pq' about the minor axis)
     idx.forEach(q=>{
       const p=EP(q/n);
       const up=M({x:p.x,y:p.y}), dn=M({x:p.x,y:-p.y}), ax=M({x:p.x,y:0});
       steps.push(
        {text:`P${q} is to be mirrored below the major axis. With the roll-and-draw scale, project a line through P${q} parallel to the minor axis, cutting the major axis.`,
         d:()=>{ drawRLine(up.x,up.y,dn.x,dn.y,COL_PROJ,LW_THIN); }},
-       {text:`Set the compass to the distance from the axis up to P${q}, and step the same distance below the axis on that same line to fix ${Ld(q)}, the mirror of P${q} - continuing the numbering clockwise round the curve.`,
+       {text:`Set the compass to the distance from the axis up to P${q}, and step the same distance below the axis on that same line to fix P${q}′, the mirror of P${q}.`,
         d:()=>{ measureSpan(ax.x,ax.y,up.x,up.y);
           drawCut(ax.x,ax.y,Math.hypot(up.x-ax.x,up.y-ax.y),Math.PI/2,COL_THIN);
-          drawPoint(dn.x,dn.y,Ld(q),radOff(O.x,O.y,dn.x,dn.y,13)); }});
+          drawPoint(dn.x,dn.y,"P"+q+"′",radOff(O.x,O.y,dn.x,dn.y,13)); }});
     });
     steps.push(
      {text:`The whole left half of the curve, from C down through A to D, is now complete.`,
@@ -1393,16 +1305,16 @@
       steps.push(
        {text:`To mirror P${q} about the minor axis: with the roll-and-draw scale, project a horizontal line through P${q} (parallel to the major axis) across to the right of CD.`,
         d:()=>{ drawRLine(up.x,up.y,upL.x,upL.y,COL_PROJ,LW_THIN); }},
-       {text:`Set the compass to the distance from CD out to P${q}, and step the same distance to the right of CD on that projector to fix ${Lc(q)}, continuing the numbering clockwise from C towards B.`,
+       {text:`Set the compass to the distance from CD out to P${q}, and step the same distance to the right of CD on that projector to fix P${q}″.`,
         d:()=>{ measureSpan(Cc.x,up.y,up.x,up.y);
           drawCut(Cc.x,up.y,Math.abs(up.x-Cc.x),0,COL_THIN);
-          drawPoint(upL.x,upL.y,Lc(q),radOff(O.x,O.y,upL.x,upL.y,13)); }},
-       {text:`Do the same for ${Ld(q)}: project it horizontally to the right of CD with the roll-and-draw scale.`,
+          drawPoint(upL.x,upL.y,"P"+q+"″",radOff(O.x,O.y,upL.x,upL.y,13)); }},
+       {text:`Do the same for P${q}′: project it horizontally to the right of CD with the roll-and-draw scale.`,
         d:()=>{ drawRLine(dn.x,dn.y,dnL.x,dnL.y,COL_PROJ,LW_THIN); }},
-       {text:`Set the compass to the distance from CD out to ${Ld(q)}, and step the same distance to the right of CD to fix ${Lb(q)}, continuing the numbering clockwise from B towards D.`,
+       {text:`Set the compass to the distance from CD out to P${q}′, and step the same distance to the right of CD to fix P${q}‴.`,
         d:()=>{ measureSpan(Cc.x,dn.y,dn.x,dn.y);
           drawCut(Cc.x,dn.y,Math.abs(dn.x-Cc.x),0,COL_THIN);
-          drawPoint(dnL.x,dnL.y,Lb(q),radOff(O.x,O.y,dnL.x,dnL.y,13)); }});
+          drawPoint(dnL.x,dnL.y,"P"+q+"‴",radOff(O.x,O.y,dnL.x,dnL.y,13)); }});
     });
     steps.push(
      {text:`Draw a smooth curve through A, P1, P2 ... C ... B ... D and back to A - the required ELLIPSE.`,
@@ -1996,13 +1908,13 @@
     const NAME={3:"TRIANGLE",4:"SQUARE",5:"PENTAGON",6:"HEXAGON"}[n];
     const R=a/(2*Math.sin(Math.PI/n));
     const ext=2*Math.PI/n, inter=Math.PI-ext;
-    // side V1-V2 horizontal (V1 left, V2 right), polygon sitting above it, vertices counterclockwise
+    // side V1-V2 horizontal (V1 left, V2 right), polygon sitting above it, vertices clockwise (V1 on the right, V2 on the left)
     const V=[]; for(let k=0;k<n;k++){ const ph=-Math.PI/2-Math.PI/n+k*2*Math.PI/n;
-      V.push({x:R*Math.cos(ph), y:R*Math.sin(ph)}); }
+      V.push({x:-R*Math.cos(ph), y:R*Math.sin(ph)}); }
     const arcs=[]; let Pp=V[0];
     for(let k=1;k<=n;k++){
       const c=V[k%n], rad=k*a;
-      const t0=Math.atan2(Pp.y-c.y,Pp.x-c.x), t1=t0+ext;
+      const t0=Math.atan2(Pp.y-c.y,Pp.x-c.x), t1=t0-ext;
       arcs.push({c:c,r:rad,t0:t0,t1:t1,from:Pp});
       Pp={x:c.x+rad*Math.cos(t1), y:c.y+rad*Math.sin(t1)};
       arcs[k-1].to=Pp;
@@ -2010,30 +1922,35 @@
     const box=V.slice();
     arcs.forEach(A=>{ for(let q=0;q<=12;q++){ const t=A.t0+(A.t1-A.t0)*q/12;
       box.push({x:A.c.x+A.r*Math.cos(t), y:A.c.y+A.r*Math.sin(t)}); } });
+    // curve label sits on the middle of the outermost arc (not at either end of the curve)
+    const LA=arcs[arcs.length-1], tm=(LA.t0+LA.t1)/2;
+    const anchor={x:LA.c.x+LA.r*Math.cos(tm), y:LA.c.y+LA.r*Math.sin(tm)};
+    const F00=fitBox(box,15);
+    box.push({x:anchor.x+Math.cos(tm)*38/F00.s+Math.sign(Math.cos(tm)||1)*330/F00.s, y:anchor.y+Math.sin(tm)*38/F00.s});
     const F0=fitBox(box,15), s=F0.s, M=F0.M;
     const cA=t=>-t;
+    const STR=n*a;
     const steps=[
-     {text:`Draw the first side V1-V2 = ${R1(a)} mm with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${R1(inter*180/Math.PI)}°.`,
-      d:()=>{ const p=M(V[0]), q=M(V[1]);
+     {text:`Mark the length of the first side = ${R1(a)} mm, then draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${R1(inter*180/Math.PI)}°. The length of string equals the perimeter = ${n} × ${R1(a)} = ${R1(STR)} mm.`,
+      d:()=>{ const p=M(V[0]), q=M(V[1]), yb=p.y+26;
+        drawLine(p.x,p.y+3,p.x,yb+5,COL_DIM,LW_THIN);
+        drawLine(q.x,q.y+3,q.x,yb+5,COL_DIM,LW_THIN);
+        drawHorizontalDim(yb,q.x,p.x,R1(a)+" mm");
         drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK);
-        drawPoint(p.x,p.y,"V1",{x:-22,y:12});
-        drawPoint(q.x,q.y,"V2",{x:8,y:12}); }},
+        drawPoint(p.x,p.y); drawPoint(q.x,q.y); }},
      {text:`At V2 set out the interior angle of ${R1(inter*180/Math.PI)}° with the protractor, measuring from V2-V1, and draw the next side V2-V3 = ${R1(a)} mm.`+(n===6?" (For a hexagon there is a quicker way: draw a circle of radius equal to the side and step the same radius round it six times with the compass.)":""),
       d:()=>{ const c=M(V[1]), p=M(V[0]), q=M(V[2]);
         const a1=Math.atan2(p.y-c.y,p.x-c.x), a2=Math.atan2(q.y-c.y,q.x-c.x);
         let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
-        drawAngleDimOutward(c.x,c.y,34,R1(inter*180/Math.PI)+"°",a1,a1+d,d<0,Math.sin(a1+d/2)<0);
+        drawAngleDimOutward(c.x,c.y,22,R1(inter*180/Math.PI)+"°",a1,a1+d,d<0,Math.sin(a1+d/2)<0);
         drawSLine(c.x,c.y,q.x,q.y,COL_THICK,LW_THICK);
-        drawPoint(q.x,q.y,"V3",{x:8,y:-10}); }},
-     {text:`Repeat at every vertex until the polygon closes. Number the vertices V1, V2 ... V${n}.`,
+        drawPoint(q.x,q.y); }},
+     {text:`Repeat at every vertex until the polygon closes.`,
       d:()=>{ for(let k=2;k<n;k++){
-          const c=M(V[k]), p=M(V[k-1]), q=M(V[(k+1)%n]);
-          const a1=Math.atan2(p.y-c.y,p.x-c.x), a2=Math.atan2(q.y-c.y,q.x-c.x);
-          let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
-          drawAngleDimOutward(c.x,c.y,30,"",a1,a1+d,d<0,Math.sin(a1+d/2)<0);
+          const c=M(V[k]), q=M(V[(k+1)%n]);
           drawSLine(c.x,c.y,q.x,q.y,COL_THICK,LW_THICK); }
         for(let k=2;k<n;k++){ const p=M(V[k]);
-          drawPoint(p.x,p.y,"V"+(k+1),{x:8,y:-10}); } }}
+          drawPoint(p.x,p.y); } }}
     ];
     arcs.forEach((A,k)=>{
       const cV="V"+(((k+1)%n)+1);
@@ -2041,18 +1958,21 @@
       steps.push(
        {text:`Produce the next side beyond ${cV} to a length of ${k+1===1?"one side":(k+1)+" sides"} = ${R1(A.r)} mm. The unwound string will come to rest along this line, so it fixes where the arc must stop.`,
         d:()=>{ const c=M(A.c), t=M(A.to);
-          drawSLine(c.x,c.y,t.x,t.y,COL_PROJ,LW_THIN); }},
+          drawSLine(c.x,c.y,t.x,t.y,COL_PROJ,LW_THIN);
+          if(k===arcs.length-1) drawAlignedLabel(c.x,c.y,t.x,t.y,"String = "+R1(STR)+" mm",-6,0.8); }},
        {text:`With centre ${cV} and radius ${cV}-${prevP} = ${R1(A.r)} mm, swing an arc from ${prevP} through the exterior angle of ${R1(ext*180/Math.PI)}° until it meets that line. Mark P${k+1}.`,
         d:()=>{ const c=M(A.c), t=M(A.to);
-          drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),true,COL_THICK,LW_THICK);
+          drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),false,COL_THICK,LW_THICK);
           drawPoint(t.x,t.y,"P"+(k+1),radOff(c.x,c.y,t.x,t.y,14));
-          if(k===arcs.length-1) drawCurveLabel(t.x,t.y,t.x+34,t.y+34,"INVOLUTE OF "+NAME); }});
+          if(k===arcs.length-1){ const ap=M(anchor), dx=Math.cos(-tm), dy=Math.sin(-tm);
+            drawCurveLabel(ap.x,ap.y,ap.x+38*dx,ap.y+38*dy,"INVOLUTE OF "+NAME); } }});
     });
     const total=Math.PI*a*(n+1);
     const results=`<b>Final Results:</b><table>
       <tr><td>Polygon</td><td>${NAME.toLowerCase()} (${n} sides)</td><td>Side</td><td>${R1(a)}</td></tr>
       <tr><td>Interior angle</td><td>${R1(inter*180/Math.PI)}°</td><td>Arc (exterior) angle</td><td>${R1(ext*180/Math.PI)}°</td></tr>
-      <tr><td>Radii used</td><td>${R1(a)} ... ${R1(n*a)}</td><td>Length of involute</td><td>${R1(total)}</td></tr></table>`;
+      <tr><td>Radii used</td><td>${R1(a)} ... ${R1(n*a)}</td><td>Length of involute</td><td>${R1(total)}</td></tr>
+      <tr><td>Length of string</td><td colspan="3">${n} × ${R1(a)} = ${R1(STR)} mm</td></tr></table>`;
     return {steps,results};
   }
 
@@ -2427,8 +2347,7 @@
 
   function rebuild(resetStep){
     const prob=PROBLEMS[probIndex];
-    document.getElementById("statement").innerHTML="<b>"+prob.title+"</b><br>"+prob.statement(values)
-      ;
+    document.getElementById("statement").innerHTML="<b>"+prob.title+"</b><br>"+prob.statement(values);
     const err=prob.validate(values);
     const vEl=document.getElementById("validation");
     if(err){
@@ -2740,52 +2659,8 @@
   canvas.addEventListener("touchend",e=>{ if(e.touches.length<2){ lastDist=null; lastMid=null; } });
 
   renderList();
-
-  /* ---- full-screen sketch mode, for a phone ---------------------------
-     The drawing fills the screen and the step is changed by tapping: the
-     right of the screen goes on, the left goes back. The step wording sits
-     in a bar along the bottom so nothing covers the sheet.              */
-  function fsSync(){
-    if(!document.body.classList.contains("fs")) return;
-    const t=document.getElementById("fsText"), c=document.getElementById("fsCount");
-    if(!P){ if(t) t.innerText=""; return; }
-    const n=P.steps.length;
-    const i=Math.max(1,Math.min(currentStep||1,n));
-    if(c) c.innerText="Step "+(started?i:0)+" of "+n;
-    if(t) t.innerText=started&&P.steps[i-1]?P.steps[i-1].text:"Tap the right-hand side to start drawing.";
-  }
-  function fsNext(){ nextStep(); setTimeout(fsSync,60); }
-  function fsPrev(){ prevStep(); setTimeout(fsSync,60); }
-  function fsOn(){
-    document.body.classList.add("fs");
-    /* full screen is asked for on the PAGE, not on the sketch: in native
-       full screen the browser paints only the chosen element and its
-       children, which would hide the tap bar and the exit button      */
-    const el=document.documentElement;
-    if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
-    if(screen.orientation&&screen.orientation.lock) screen.orientation.lock("landscape").catch(()=>{});
-    fsSync();
-  }
-  function fsOff(){
-    document.body.classList.remove("fs");
-    if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-  }
-  function fsToggle(){ document.body.classList.contains("fs")?fsOff():fsOn(); }
-  document.addEventListener("fullscreenchange",()=>{
-    if(!document.fullscreenElement) document.body.classList.remove("fs"); });
-  document.addEventListener("keydown",e=>{
-    if(!document.body.classList.contains("fs")) return;
-    if(e.key==="ArrowRight"||e.key===" ") { e.preventDefault(); fsNext(); }
-    else if(e.key==="ArrowLeft") { e.preventDefault(); fsPrev(); }
-    else if(e.key==="Escape") fsOff();
-  });
 </script>
 
 <footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M Jadhav</a></footer>
-
-<div id="fsTapL" onclick="fsPrev()"></div>
-<div id="fsTapR" onclick="fsNext()"></div>
-<button id="fsExit" onclick="fsOff()">Exit full screen</button>
-<div id="fsBar"><b><span id="fsCount"></span> &nbsp;·&nbsp; tap right to go on, left to go back</b><span id="fsText"></span></div>
 </body>
 </html>

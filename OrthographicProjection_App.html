@@ -85,10 +85,16 @@
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    #canvas-wrapper:fullscreen{overflow:auto;display:flex;flex-direction:column;align-items:center;border-radius:0;padding:12px;}
-    #canvas-wrapper:fullscreen #zoom-toolbar{width:100%;}
-    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:min(calc(100vw - 28px),calc((100vh - 70px)*820/540));}
+    .fs-only{display:none;}
+    .mm-note{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:right;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    #fs-caption{font-size:.95rem;color:var(--ink);margin-top:6px;max-height:84px;overflow:auto;}
+    #canvas-wrapper:fullscreen{background:#fff;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px;border-radius:0;border:0;}
+    #canvas-wrapper:fullscreen #zoom-toolbar{flex-wrap:wrap;margin-bottom:6px;}
+    #canvas-wrapper:fullscreen .fs-nav{display:flex;gap:8px;}
+    #canvas-wrapper:fullscreen #fs-caption{display:block;}
+    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:calc(100vw - 24px);height:calc(100vh - 190px);border-radius:0;}
+    #canvas-wrapper:fullscreen #space-wrap{display:none !important;}
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
   </style>
 
@@ -133,7 +139,7 @@
       <div class="btn-group">
         <button onclick="restartSteps()">Restart</button>
         <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" onclick="toggleVoice()">🔊 Voice off</button>
+        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
       </div>
       <div class="btn-group speed-row">
         <label for="speedSel">Drawing speed</label>
@@ -156,9 +162,17 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
+        <span class="fs-only fs-nav">
+          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
+          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
+          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
+        </span>
+
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
+      <div id="fs-caption" class="fs-only"></div>
+      <div class="mm-note">Note: All dimensions are in mm</div>
 
       <div id="space-wrap" style="display:none;">
         <div id="space-head">
@@ -173,7 +187,7 @@
 
 
 <script>
-  const CANVAS_W=820, CANVAS_H=540;
+  let CANVAS_W=820, CANVAS_H=540;
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
   const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
@@ -2191,6 +2205,7 @@
 
     const N=P.steps.length;
     document.getElementById("stepCounter").innerText=started?("Step "+s+" of "+N):("Ready - "+N+" steps");
+    syncFsUI(s,N);
     document.getElementById("prevButton").disabled=(!started||s<=1);
     document.getElementById("nextButton").disabled=(started&&s>=N);
     document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
@@ -2216,15 +2231,22 @@
   function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
-  let voiceOn=false, lastSpoken=-1;
   const voiceSupported=("speechSynthesis" in window);
+  let voiceOn=voiceSupported, lastSpoken=-1;   // sound is ON by default
+
+  function syncVoiceUI(){
+    const b=document.getElementById("voiceBtn");
+    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
+    b.classList.toggle("on",voiceOn);
+    const fb=document.getElementById("fsVoice");
+    if(fb) fb.innerText=voiceOn?"🔊 Sound on":"🔇 Sound off";
+  }
+  syncVoiceUI();
 
   function toggleVoice(){
     if(!voiceSupported){ alert("Voice is not supported in this browser."); return; }
     voiceOn=!voiceOn;
-    const b=document.getElementById("voiceBtn");
-    b.innerText=voiceOn?"🔊 Voice on":"🔊 Voice off";
-    b.classList.toggle("on",voiceOn);
+    syncVoiceUI();
     if(voiceOn){ lastSpoken=-1; speakCurrent(); }
     else speechSynthesis.cancel();
   }
@@ -2315,16 +2337,40 @@
     redraw();
   }
   function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
+  /* ---------------- full screen ---------------- */
+  function syncFsUI(s,N){
+    const c=document.getElementById("fs-caption"); if(!c) return;
+    c.innerHTML=started?("<b>Step "+s+" of "+N+":</b> "+P.steps[s-1].text):("Ready - "+N+" steps. Press Next to begin.");
+    document.getElementById("fsPrev").disabled=(!started||s<=1);
+    document.getElementById("fsNext").disabled=(started&&s>=N);
+  }
   function toggleFullscreen(){
     const w=document.getElementById("canvas-wrapper");
-    if(document.fullscreenElement){ document.exitFullscreen(); }
-    else if(w.requestFullscreen){ w.requestFullscreen().catch(()=>{}); }
-    else if(w.webkitRequestFullscreen){ w.webkitRequestFullscreen(); }
+    if(document.fullscreenElement||document.webkitFullscreenElement){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    } else {
+      const req=w.requestFullscreen||w.webkitRequestFullscreen;
+      if(req){ const r=req.call(w); if(r&&r.catch) r.catch(()=>{}); }
+    }
   }
-  document.addEventListener("fullscreenchange",()=>{
-    const b=document.getElementById("fsBtn");
-    if(b) b.textContent=document.fullscreenElement?"✕ Exit full screen":"⛶ Full screen";
-  });
+  // In full screen the canvas takes the whole screen: its drawing area is resized to the
+  // screen and the current problem is laid out again to fill it.
+  function sizeCanvasFor(fs){
+    const w=fs?Math.max(480,window.innerWidth-24):820, h=fs?Math.max(300,window.innerHeight-190):540;
+    if(w===CANVAS_W&&h===CANVAS_H) return;
+    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h;
+    compassPose=null;
+    if(P&&document.getElementById("screen-solve").style.display!=="none") rebuild(false); else clearCanvasWhite();
+  }
+  function onFsChange(){
+    const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+    document.getElementById("fsBtn").textContent=on?"✕ Exit full screen":"⛶ Full screen";
+    sizeCanvasFor(on);
+    if(on) setTimeout(()=>sizeCanvasFor(true),120);
+  }
+  document.addEventListener("fullscreenchange",onFsChange);
+  document.addEventListener("webkitfullscreenchange",onFsChange);
+  window.addEventListener("resize",()=>{ if(document.fullscreenElement||document.webkitFullscreenElement) sizeCanvasFor(true); });
   function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
   function canvasPos(e){
     const r=canvas.getBoundingClientRect();

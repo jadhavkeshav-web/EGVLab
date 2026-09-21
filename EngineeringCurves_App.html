@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Engineering Curves - Problems with Stepwise Solutions</title>
   <style>
     :root{
@@ -86,15 +88,29 @@
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
     .fs-only{display:none;}
-    .mm-note{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:right;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
-    #fs-caption{font-size:.95rem;color:var(--ink);margin-top:6px;max-height:84px;overflow:auto;}
-    #canvas-wrapper:fullscreen{background:#fff;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px;border-radius:0;border:0;}
-    #canvas-wrapper:fullscreen #zoom-toolbar{flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper:fullscreen .fs-nav{display:flex;gap:8px;}
-    #canvas-wrapper:fullscreen #fs-caption{display:block;}
-    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:calc(100vw - 24px);height:calc(100vh - 190px);border-radius:0;}
-    #canvas-wrapper:fullscreen #space-wrap{display:none !important;}
+    /* full screen (real or, where the browser has none, a page-filling overlay) */
+    #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
+    #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
+    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
+    #canvas-wrapper.fs-on #space-wrap{display:none !important;}
+    /* phones and small tablets */
+    @media (max-width:820px){
+      body{padding:8px;}
+      h1{font-size:1.1rem;}
+      #topbar{flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+      #statement{flex:1 1 100%;padding:10px 12px;font-size:.9rem;line-height:1.4rem;}
+      #solve-container{gap:12px;}
+      #left-panel{width:100%;padding:12px;}
+      #canvas-wrapper{width:100%;padding:8px;order:-1;}
+      #zoom-toolbar{flex-wrap:wrap;}
+      #zoom-hint{display:none;}
+      #zoom-toolbar .fs-btn,#zoom-toolbar .fit-btn{padding:8px 12px;}
+      #zoom-toolbar button{min-height:36px;}
+      .btn-group button{padding:11px 8px;}
+      #screen-list .prob-card{padding:14px;}
+    }
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
   </style>
 </head>
@@ -170,8 +186,6 @@
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
-      <div id="fs-caption" class="fs-only"></div>
-      <div class="mm-note">Note: All dimensions are in mm</div>
 
       <div id="space-wrap" style="display:none;">
         <div id="space-head">
@@ -186,6 +200,7 @@
 
 <script>
   let CANVAS_W=820, CANVAS_H=540;
+  const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
   const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
@@ -202,7 +217,10 @@
   /* ---------------- drawing helpers ---------------- */
   function clearCanvasWhite(){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); ctx.restore();
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    ctx.font="11px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+    ctx.fillText("Note: All dimensions are in mm",CANVAS_W-8,CANVAS_H-6);
+    ctx.restore();
   }
   function drawArrowhead(x,y,a,color="#000",hw=ARROW_HALF_W,len=ARROW_LEN){
     ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(x,y);
@@ -240,8 +258,15 @@
     const m=(a1+a2)/2, t=m+(ccw?-Math.PI/2:Math.PI/2);
     drawArrowhead(cx+r*Math.cos(m),cy+r*Math.sin(m),t,color);
   }
-  function drawAngleDimOutward(cx,cy,r,text,a1,a2,ccw,above){
+  // oriented: the animated protractor is held with its base line along the first arm (a1).
+  // tickOnly: the angle is only set out (short tick on the new line), no dimension is left on the drawing.
+  function drawAngleDimOutward(cx,cy,r,text,a1,a2,ccw,above,oriented,tickOnly){
     if(REC){REC.push({f:"drawAngleDimOutward",a:Array.from(arguments)});return;}
+    if(tickOnly){
+      ctx.strokeStyle=COL_DIM; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(cx+(r+8)*Math.cos(a2),cy+(r+8)*Math.sin(a2)); ctx.lineTo(cx+(r+20)*Math.cos(a2),cy+(r+20)*Math.sin(a2)); ctx.stroke();
+      return;
+    }
     drawArc(cx,cy,r,a1,a2,ccw,COL_DIM);
     const st=a1+(ccw?-Math.PI/2:Math.PI/2), et=a2+(ccw?-Math.PI/2:Math.PI/2);
     drawArrowhead(cx+r*Math.cos(a1),cy+r*Math.sin(a1),st+Math.PI,COL_DIM);
@@ -272,7 +297,7 @@
     ctx.restore();
   }
   function frame(topH,botH,maxW){
-    const sc=Math.min((CANVAS_H-140)/(topH+botH),(CANVAS_W-330)/(maxW+40),3.2);
+    const sc=Math.min((CANVAS_H-PY(140))/(topH+botH),(CANVAS_W-PX(330))/(maxW+40),3.2);
     const AX=(CANVAS_W-maxW*sc)/2-70;
     const REF=(CANVAS_H-(topH+botH)*sc)/2+topH*sc;
     SCALE_PXMM=sc;
@@ -299,7 +324,11 @@
     clearCanvasWhite();
     ctx.save();
     ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
-    for(let i=0;i<baseCount;i++) P.steps[i].d();
+    for(let i=0;i<baseCount;i++){
+      const st=P.steps[i];
+      if(st.demo && !(items.length===0 && i===baseCount-1)) continue;   // concept animation: not part of the drawing itself
+      st.d();
+    }
     for(let i=0;i<k;i++) execItem(items[i]);
     if(partial) partial();
     ctx.restore();
@@ -580,11 +609,12 @@
   }
 
   /* ---- protractor at a vertex; dome up or down; red marker at markAng ---- */
-  function drawProtractor(cx,cy,up,op,markAng){
+  function drawProtractor(cx,cy,up,op,markAng,rot){
     const Rp=88;
     ctx.save();
     ctx.globalAlpha=op;
     ctx.translate(cx,cy);
+    if(rot) ctx.rotate(rot);          // hold the 0/180 base line along a reference line, not always horizontal
     ctx.scale(1, up?1:-1);
     ctx.fillStyle="rgba(147,184,216,0.32)";
     ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.4;
@@ -798,17 +828,17 @@
 
   async function animProtractor(s,items,k,it,myId){
     const cx=it.a[0],cy=it.a[1],a1=it.a[4],a2=it.a[5];
-    const up=(a2<=a1);
+    const up=(a2<=a1), rot=(it.a[8]?a1:0);      // it.a[8] (oriented) = protractor base line lies along the first arm of the angle
     await animateFrames(950*(0.6+0.4*SPEED),t=>{
       if(animId!==myId) return false;
       const op=Math.min(1,t*4)*0.95;
       const mark=a1+(a2-a1)*Math.min(1,t*1.2);
-      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,op,mark));
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,op,mark,rot));
     });
     if(animId!==myId) return;
     await animateFrames(240*SPEED,t=>{
       if(animId!==myId) return false;
-      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,(1-t)*0.95,a2));
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,(1-t)*0.95,a2,rot));
     });
   }
 
@@ -1008,6 +1038,7 @@
       else if(it.f==="drawArc"&&it.a[2]>=70) await animArc(s,items,k,it,myId);
       else if(it.f==="drawAngleDimOutward") await animProtractor(s,items,k,it,myId);
       else if(it.f==="drawCurve") await animCurve(s,items,k,it,myId);
+      else if(it.f==="demoAnim") await animDemo(s,items,k,it,myId);
       else { frameDraw(s-1,items,k+1,compassResting?restingCompassDraw:null); await sleep(90*SPEED); continue; }
       if(animId!==myId) return;
       if(ins){ prev=ins; compassResting=(ins==="compass"); }
@@ -1040,6 +1071,29 @@
     ctx.fillText(text,lx+(lx<px?-5:5),ly);
   }
   EXEC.drawCurveLabel=drawCurveLabel;
+  // Concept animation (rolling circle, unwinding string ...). fn(t) draws the picture for t = 0..1;
+  // when animated it plays over dur ms, otherwise it shows the finished picture (t = 1).
+  function demoAnim(fn,dur){
+    if(REC){REC.push({f:"demoAnim",a:Array.from(arguments)});return;}
+    fn(1);
+  }
+  EXEC.demoAnim=demoAnim;
+  async function animDemo(s,items,k,it,myId){
+    await animateFrames(it.a[1]*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>it.a[0](t));
+    });
+    if(animId!==myId) return;
+    await sleep(450*SPEED);
+  }
+  // small curved arrow (direction of turning); a1 -> a2 in canvas angles
+  function drawArrowArc(cx,cy,r,a1,a2,ccw,color){
+    if(REC){REC.push({f:"drawArrowArc",a:Array.from(arguments)});return;}
+    ctx.strokeStyle=color; ctx.lineWidth=1.6; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx,cy,r,a1,a2,ccw); ctx.stroke();
+    drawArrowhead(cx+r*Math.cos(a2),cy+r*Math.sin(a2),a2+(ccw?-Math.PI/2:Math.PI/2),color,3.4,10);
+  }
+  EXEC.drawArrowArc=drawArrowArc;
   // Picks a point on the finished curve toward its lower-left, and clear of the
   // horizontal centre line (so the label never lands exactly on the axis), then
   // writes the curve's name there with a leader line + arrowhead on the curve.
@@ -1089,7 +1143,7 @@
   }
 
   function fitRect(wmm,hmm){
-    const sc=Math.min((CANVAS_W-250)/wmm,(CANVAS_H-130)/hmm,3.2);
+    const sc=Math.min((CANVAS_W-PX(250))/wmm,(CANVAS_H-PY(130))/hmm,3.2);
     SCALE_PXMM=sc;
     return {sc, ox:(CANVAS_W-wmm*sc)/2-45, oy:(CANVAS_H-hmm*sc)/2};
   }
@@ -1500,10 +1554,33 @@
     const hStart=Object.keys(hGroups).map(k=>hGroups[k]);
 
     const steps=[
-     {text:`Mark the centre C on the left of the sheet and, with the compass, draw the rolling circle of radius = ${R1(r)} mm (as diameter ${R1(D)} mm). Mark the generating point P, which starts ${SPNAME}.`,
+     {demo:true,
+      text:`First understand the curve. A CYCLOID is the path traced by a point P on the circumference of a circle that rolls, without slipping, along a straight line. Watch the animation: the circle turns clockwise while it rolls to the right, and after one complete turn P is back on the line, having moved a distance equal to the circumference, πD = ${R1(BL)}. Then construct the curve step by step.`,
+      d:()=>demoAnim(t=>{
+        const th=t*2*Math.PI, R=r*s, cx=sx+R*th, cy=C0.y, N=Math.max(2,Math.round(th/0.05));
+        ctx.save(); ctx.setLineDash([]);
+        ctx.strokeStyle=COL_AXIS; ctx.lineWidth=LW_THIN;
+        ctx.beginPath(); ctx.moveTo(sx-24,baseY); ctx.lineTo(endX+24,baseY); ctx.stroke();
+        ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK;
+        ctx.beginPath(); ctx.moveTo(P0.x,P0.y);
+        for(let q=1;q<=N;q++){ const p=cyc(th*q/N); ctx.lineTo(p.x,p.y); }
+        ctx.stroke();
+        ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke();
+        const p=cyc(th);
+        ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p.x,p.y); ctx.stroke();
+        ctx.fillStyle="#c96a2b"; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill();
+        ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(cx,cy,2.6,0,2*Math.PI); ctx.fill();
+        ctx.restore();
+        drawArrowArc(cx,cy,R*0.5,-2.6,-0.55,false,COL_DIM);                    // circle turns clockwise
+        drawLine(cx+R+10,cy,cx+R+42,cy,COL_DIM,1.6,SOLID,"end");              // and rolls to the right
+      },7000)},
+     {text:`Mark the centre C on the left of the sheet and, with the compass, draw the rolling circle of radius = ${R1(r)} mm (as diameter ${R1(D)} mm). Mark the generating point P, which starts ${SPNAME}. The small arrows show that the circle will roll to the right, turning clockwise.`,
       d:()=>{ drawCircle(C0.x,C0.y,r*s,COL_THIN,LW_THIN);
         drawPoint(C0.x,C0.y,"C",{x:9,y:-9});
-        drawPoint(P0.x,P0.y,"P",radOff(C0.x,C0.y,P0.x,P0.y,16)); }},
+        drawPoint(P0.x,P0.y,"P",radOff(C0.x,C0.y,P0.x,P0.y,16));
+        drawArrowArc(C0.x,C0.y,r*s*0.5,-2.6,-0.55,false,COL_DIM);              // direction of turning: clockwise
+        drawLine(C0.x+r*s+10,C0.y,C0.x+r*s+42,C0.y,COL_DIM,1.6,SOLID,"end"); }},  // direction of rolling: to the right
      {text:`From the point where the circle touches the ground draw the base line with the scale, tangent to the circle and equal to the circumference: πD = ${R1(BL)} mm.`,
       d:()=>{ drawSLine(sx,baseY,endX,baseY,COL_AXIS,LW_THIN);
         drawPoint(endX,baseY,"A",{x:9,y:15});
@@ -1596,6 +1673,27 @@
     };
 
     const steps=[
+     {demo:true,
+      text:`First understand the curve. An INVOLUTE of a circle is the path traced by the end of a taut string that is unwound from the circle. Watch the animation: the string leaves the circle along a tangent, always kept straight, and its free end P draws the curve. After one complete turn the string is fully unwound and its length equals the circumference, πD = ${R1(CIR)}. Then construct the curve step by step.`,
+      d:()=>demoAnim(t=>{
+        const th=t*2*Math.PI, R=r*s, N=Math.max(2,Math.round(th/0.05));
+        const c=M(con(th)), p=M(inv(th));
+        ctx.save(); ctx.setLineDash([]);
+        ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK;
+        ctx.beginPath(); ctx.moveTo(P.x,P.y);
+        for(let q=1;q<=N;q++){ const u=M(inv(th*q/N)); ctx.lineTo(u.x,u.y); }
+        ctx.stroke();
+        ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.arc(O.x,O.y,R,0,2*Math.PI); ctx.stroke();
+        ctx.strokeStyle="#c96a2b"; ctx.lineWidth=3;                              // string still wound on the circle
+        ctx.beginPath(); ctx.arc(O.x,O.y,R,Math.PI/2+th,Math.PI/2+2*Math.PI,false); ctx.stroke();
+        ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(p.x,p.y); ctx.stroke();   // taut string
+        ctx.fillStyle="#c96a2b"; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill();
+        ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(O.x,O.y,2.6,0,2*Math.PI); ctx.fill();
+        ctx.restore();
+        if(th>0.05){ const q2=M(inv(th+0.03)), dx=q2.x-p.x, dy=q2.y-p.y, L=Math.hypot(dx,dy)||1;
+          drawLine(p.x,p.y,p.x+dx/L*30,p.y+dy/L*30,COL_DIM,1.6,SOLID,"end"); }   // direction in which P moves
+      },7000)},
      {text:`With the compass draw the given circle of diameter D = ${R1(D)} mm. Mark the centre O and the point P at the bottom of the circle, where the string begins to unwind.`,
       d:()=>{ drawCircle(O.x,O.y,r*s,COL_THIN,LW_THIN);
         drawPoint(O.x,O.y,"O",{x:8,y:-9}); drawPoint(P.x,P.y,"P",{x:-18,y:15}); }},
@@ -1945,24 +2043,53 @@
     const LA=arcs[arcs.length-1], tm=(LA.t0+LA.t1)/2;
     const anchor={x:LA.c.x+LA.r*Math.cos(tm), y:LA.c.y+LA.r*Math.sin(tm)};
     const F00=fitBox(box,15);
-    box.push({x:anchor.x+Math.cos(tm)*38/F00.s+Math.sign(Math.cos(tm)||1)*330/F00.s, y:anchor.y+Math.sin(tm)*38/F00.s});
+    const NARROW=CANVAS_W<600, LS=NARROW?-1:1;      // narrow (portrait) sheet: the name goes inside the curve, not beside it
+    if(!NARROW) box.push({x:anchor.x+Math.cos(tm)*38/F00.s+Math.sign(Math.cos(tm)||1)*330/F00.s, y:anchor.y+Math.sin(tm)*38/F00.s});
     const F0=fitBox(box,15), s=F0.s, M=F0.M;
     const cA=t=>-t;
     const STR=n*a;
     const IDEG=R1(inter*180/Math.PI), EDEG=R1(ext*180/Math.PI), aTxt=R1(a);
-    const nm=k=>"V"+(k+1);
     const A2P=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);          // canvas direction p -> q
     const side=(i,j)=>{ const p=M(V[i]), q=M(V[j]); drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK); };
     const dot=i=>{ const p=M(V[i]); drawPoint(p.x,p.y); };
     const span=()=>{ const p=M(V[0]), q=M(V[1]); measureSpan(p.x,p.y,q.x,q.y); };   // compass = first side
     const cutFrom=(i,j)=>{ const c=M(V[i]), t=M(V[j]); drawCut(c.x,c.y,a*s,A2P(c,t),COL_THIN); };
-    const protr=(i,j)=>{ const c=M(V[i]), t=M(V[j]); markAngles(c.x,c.y,30,[A2P(c,t)]); };
-    const angleAtV2=()=>{ const c=M(V[1]), p=M(V[0]), q=M(V[2]);
+    // protractor at corner i: base (0/180) line held along the existing line i -> ref, angle set out towards tgt
+    const protr=(i,ref,tgt,keep)=>{ const c=M(V[i]), p=M(V[ref]), q=M(V[tgt]);
       const a1=A2P(c,p), a2=A2P(c,q);
       let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
-      drawAngleDimOutward(c.x,c.y,22,IDEG+"°",a1,a1+d,d<0,Math.sin(a1+d/2)<0); };
+      drawAngleDimOutward(c.x,c.y,22,keep?IDEG+"°":"",a1,a1+d,d<0,Math.sin(a1+d/2)<0,true,!keep); };
+    const ORD=["1st","2nd","3rd","4th","5th","6th"];
     const steps=[
-     {text:`Mark the length of the first side = ${aTxt} and draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${IDEG}°. (Corners are called V1, V2 ... V${n} in clockwise order in these steps; they are not lettered on the figure.)`,
+     {demo:true,
+      text:`First understand the curve. An INVOLUTE of a ${NAME.toLowerCase()} is the path traced by the free end of a taut string that is unwound from the polygon. Watch the animation: the string, whose length equals the perimeter ${n} × ${aTxt} = ${R1(STR)}, leaves the polygon and swings about one corner after another, always kept straight. Its end draws arcs of circles whose radii grow by one side length at every corner. Then construct the curve step by step.`,
+      d:()=>demoAnim(t=>{
+        const Th=t*2*Math.PI;
+        let k=Math.floor(Th/ext-1e-9); k=Math.max(0,Math.min(arcs.length-1,k));
+        const A=arcs[k], sw=Math.min(ext,Th-k*ext), tt=A.t0-sw;
+        const pt=(C,rr,ang)=>M({x:C.x+rr*Math.cos(ang),y:C.y+rr*Math.sin(ang)});
+        const c=M(A.c), p=pt(A.c,A.r,tt);
+        ctx.save(); ctx.setLineDash([]);
+        ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK;          // path traced so far
+        ctx.beginPath(); ctx.moveTo(M(arcs[0].from).x,M(arcs[0].from).y);
+        for(let j=0;j<=k;j++){ const B=arcs[j], w=Math.min(ext,Th-j*ext); if(w<=0) break;
+          const m=Math.max(2,Math.ceil(w/ext*24));
+          for(let q=1;q<=m;q++){ const u=pt(B.c,B.r,B.t0-w*q/m); ctx.lineTo(u.x,u.y); } }
+        ctx.stroke();
+        ctx.strokeStyle="#5b87ad"; ctx.lineWidth=2;                  // the polygon
+        ctx.beginPath(); V.forEach((w,i)=>{ const u=M(w); if(i) ctx.lineTo(u.x,u.y); else ctx.moveTo(u.x,u.y); });
+        ctx.closePath(); ctx.stroke();
+        ctx.strokeStyle="#c96a2b"; ctx.lineWidth=3;                  // string still wound on the polygon
+        ctx.beginPath(); ctx.moveTo(c.x,c.y);
+        for(let j=(k+2)%n, g=0; k<n-1 && g<n; g++){ const u=M(V[j]); ctx.lineTo(u.x,u.y); if(j===0) break; j=(j+1)%n; }
+        ctx.stroke();
+        ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(p.x,p.y); ctx.stroke();   // taut string
+        ctx.fillStyle="#c96a2b"; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill();
+        ctx.restore();
+        if(Th>0.05){ const dx=Math.sin(tt), dy=Math.cos(tt);       // direction in which the free end moves
+          drawLine(p.x,p.y,p.x+dx*30,p.y+dy*30,COL_DIM,1.6,SOLID,"end"); }
+      },8000)},
+     {text:`Mark the length of the first side = ${aTxt} and draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${IDEG}°.`,
       d:()=>{ const p=M(V[0]), q=M(V[1]), yb=p.y+26;
         drawLine(p.x,p.y+3,p.x,yb+5,COL_DIM,LW_THIN);
         drawLine(q.x,q.y+3,q.x,yb+5,COL_DIM,LW_THIN);
@@ -1972,33 +2099,33 @@
     ];
     if(n===3){
       steps.push(
-       {text:`Set the compass to the length of the first side V1-V2 = ${aTxt} (measure it directly on the first line). With centre V1 draw an arc above the line.`,
+       {text:`Set the compass to the length of the first side ${aTxt} (measure it directly on the first line). With the compass point at the right end of the first line, draw an arc above the line.`,
         d:()=>{ span(); cutFrom(0,2); }},
-       {text:`With the same compass setting and centre V2 draw a second arc to cut the first one. The point of intersection is V3. Join V2-V3 and V3-V1 - all three sides are now equal and each angle is ${IDEG}°.`,
-        d:()=>{ span(); cutFrom(1,2); angleAtV2(); side(1,2); side(2,0); dot(2); }});
+       {text:`With the same compass setting and the point at the left end of the first line, draw a second arc to cut the first one. Join the point of intersection to both ends of the first line. All three sides are equal and each angle is ${IDEG}°.`,
+        d:()=>{ span(); cutFrom(1,2); protr(1,0,2,true); side(1,2); side(2,0); dot(2); }});
     } else {
       steps.push(
-       {text:`At V2 set the protractor to the interior angle ${IDEG}°, measured from V2-V1. Set the compass to the first side V1-V2 = ${aTxt} and, with centre V2, cut the protractor line at V3. Join V2-V3.`,
-        d:()=>{ angleAtV2(); span(); cutFrom(1,2); side(1,2); dot(2); }},
-       {text:`Repeat on the other end: at V1 set the protractor to ${IDEG}° from V1-V2, take the compass to ${aTxt} (first side) and, with centre V1, cut the line at V${n}. Join V1-V${n}.`,
-        d:()=>{ protr(0,n-1); span(); cutFrom(0,n-1); side(0,n-1); dot(n-1); }});
+       {text:`At the left end of the first line, hold the protractor with its 0° - 180° line along the first line and mark the interior angle of ${IDEG}°. Set the compass to the length of the first side ${aTxt} and, with its point at the left end, cut the marked direction. Draw the second side up to the cut.`,
+        d:()=>{ protr(1,0,2,true); span(); cutFrom(1,2); side(1,2); dot(2); }},
+       {text:`At the right end of the first line, again hold the protractor with its 0° - 180° line along the first line and mark ${IDEG}° on the other side. With the compass still at ${aTxt}, cut the marked direction from the right end and draw the next side up to the cut.`,
+        d:()=>{ protr(0,1,n-1,false); span(); cutFrom(0,n-1); side(0,n-1); dot(n-1); }});
       if(n===4){
-        steps.push({text:`Join V3-V4. It automatically comes equal to the first side, which completes the square.`,
+        steps.push({text:`Join the upper ends of the two new sides. This side comes out equal to the first one, which completes the square.`,
           d:()=>{ side(2,3); }});
       } else if(n===5){
-        steps.push({text:`Keep the compass at ${aTxt} (first side). With centres V3 and V5 draw two arcs cutting each other at V4. Join V3-V4 and V4-V5 to complete the pentagon.`,
+        steps.push({text:`Keep the compass at ${aTxt}. With its point at the upper end of each of the two new sides, draw arcs cutting each other above. Join this point to both upper ends to complete the pentagon.`,
           d:()=>{ span(); cutFrom(2,3); cutFrom(4,3); side(2,3); side(3,4); dot(3); }});
       } else {
         steps.push(
-         {text:`At V3 set the protractor to ${IDEG}° from V3-V2, take the compass to ${aTxt} (first side) and, with centre V3, cut the line at V4. Join V3-V4.`,
-          d:()=>{ protr(2,3); span(); cutFrom(2,3); side(2,3); dot(3); }},
-         {text:`In the same way at V6 obtain V5, then join V4-V5 to complete the hexagon.`,
-          d:()=>{ protr(5,4); span(); cutFrom(5,4); side(5,4); side(3,4); dot(4); }});
+         {text:`At the upper end of the left side, hold the protractor with its 0° - 180° line along that side and mark ${IDEG}°. With the compass at ${aTxt}, cut the marked direction and draw the next side up to the cut.`,
+          d:()=>{ protr(2,1,3,false); span(); cutFrom(2,3); side(2,3); dot(3); }},
+         {text:`In the same way, at the upper end of the right side, mark ${IDEG}° along that side and cut ${aTxt} with the compass. Join the two new points to complete the hexagon.`,
+          d:()=>{ protr(5,0,4,false); span(); cutFrom(5,4); side(5,4); side(3,4); dot(4); }});
       }
     }
     // all the tangent lines (the produced sides) are drawn first, with the string length dimensioned
     steps.push(
-     {text:`Produce the sides of the polygon one after another in the clockwise direction to get the tangent lines: beyond V2 for ${aTxt}, beyond V3 for 2 × ${aTxt}, and so on, up to ${n} × ${aTxt} = ${R1(STR)} beyond V1 for the last one. This last length is the LENGTH OF THE STRING (= perimeter of the polygon), shown by the dimension line.`,
+     {text:`Now draw all the tangent lines. Produce the sides of the polygon one after another in the clockwise direction, each from its corner: the first side ${aTxt} long, the next 2 × ${aTxt}, then 3 × ${aTxt} and so on, up to ${n} × ${aTxt} = ${R1(STR)} for the last one. This last length is the LENGTH OF THE STRING (equal to the perimeter of the polygon) and is shown by the dimension line.`,
       d:()=>{ arcs.forEach(A=>{ const c=M(A.c), t=M(A.to);
           drawSLine(c.x,c.y,t.x,t.y,COL_PROJ,LW_THIN); });
         const LA2=arcs[arcs.length-1], c=M(LA2.c), t=M(LA2.to);
@@ -2010,16 +2137,16 @@
         drawAlignedLabel(x1,y1,x2,y2,"String length = "+R1(STR),(Math.abs(a0)>Math.PI/2)?5:-5,0.5); }}
     );
     arcs.forEach((A,k)=>{
-      const cV="V"+(((k+1)%n)+1);
-      const prevP=(k===0)?"V1":("P"+k);
+      const centre=(k===0)?"the left end of the first line":`the corner from which the ${ORD[k]} tangent line starts`;
+      const from=(k===0)?"the right end of the first line":("P"+k);
       steps.push(
-       {text:`Set the compass with its point at ${cV} and pencil at ${prevP} (radius ${cV}-${prevP} = ${R1(A.r)}). With centre ${cV} swing an arc from ${prevP} through the exterior angle of ${EDEG}° until it meets the tangent line. Mark P${k+1}.`,
+       {text:`Set the compass with its point at ${centre} and the pencil at ${from} (radius ${R1(A.r)}). With this centre swing an arc from ${from} through the exterior angle of ${EDEG}° until it meets the ${ORD[k]} tangent line. Mark P${k+1}.`,
         d:()=>{ const c=M(A.c), t=M(A.to), f=M(A.from);
           measureSpan(c.x,c.y,f.x,f.y);
           drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),false,COL_THICK,LW_THICK);
           drawPoint(t.x,t.y,"P"+(k+1),radOff(c.x,c.y,t.x,t.y,14));
           if(k===arcs.length-1){ const ap=M(anchor), dx=Math.cos(-tm), dy=Math.sin(-tm);
-            drawCurveLabel(ap.x,ap.y,ap.x+38*dx,ap.y+38*dy,"INVOLUTE OF "+NAME); } }});
+            drawCurveLabel(ap.x,ap.y,ap.x+38*dx*LS,ap.y+38*dy*LS,"INVOLUTE OF "+NAME); } }});
     });
     const total=Math.PI*a*(n+1);
     const results=`<b>Final Results:</b><table>
@@ -2677,38 +2804,47 @@
   function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
   /* ---------------- full screen ---------------- */
   function syncFsUI(s,N){
-    const c=document.getElementById("fs-caption"); if(!c) return;
-    c.innerHTML=started?("<b>Step "+s+" of "+N+":</b> "+P.steps[s-1].text):("Ready - "+N+" steps. Press Next to begin.");
+    if(!document.getElementById("fsPrev")) return;
     document.getElementById("fsPrev").disabled=(!started||s<=1);
     document.getElementById("fsNext").disabled=(started&&s>=N);
   }
-  function toggleFullscreen(){
-    const w=document.getElementById("canvas-wrapper");
-    if(document.fullscreenElement||document.webkitFullscreenElement){
-      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
-    } else {
-      const req=w.requestFullscreen||w.webkitRequestFullscreen;
-      if(req){ const r=req.call(w); if(r&&r.catch) r.catch(()=>{}); }
-    }
-  }
-  // In full screen the canvas takes the whole screen: its drawing area is resized to the
-  // screen and the current problem is laid out again to fill it.
-  function sizeCanvasFor(fs){
-    const w=fs?Math.max(480,window.innerWidth-24):820, h=fs?Math.max(300,window.innerHeight-190):540;
+  const fsWrap=document.getElementById("canvas-wrapper");
+  let fsReal=false;
+  function isFs(){ return fsWrap.classList.contains("fs-on"); }
+  function setCanvasSize(w,h){
+    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
     if(w===CANVAS_W&&h===CANVAS_H) return;
-    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h;
-    compassPose=null;
+    CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none") rebuild(false); else clearCanvasWhite();
   }
+  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
+  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
+  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  let layoutTimer=0;
+  function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
+  function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }
+  function enterFs(){ fsWrap.classList.add("fs-on"); document.documentElement.style.overflow="hidden"; setFsButton(); layoutSoon(); }
+  function leaveFs(){ fsWrap.classList.remove("fs-on"); document.documentElement.style.overflow=""; setFsButton(); layoutCanvas(); }
+  function toggleFullscreen(){
+    if(isFs()){
+      if(document.fullscreenElement||document.webkitFullscreenElement) (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+      else leaveFs();
+      return;
+    }
+    enterFs();                              // page-filling overlay works everywhere (e.g. iPhone has no element full screen)
+    const req=fsWrap.requestFullscreen||fsWrap.webkitRequestFullscreen;
+    if(req){ try{ const r=req.call(fsWrap); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
+  }
   function onFsChange(){
-    const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
-    document.getElementById("fsBtn").textContent=on?"✕ Exit full screen":"⛶ Full screen";
-    sizeCanvasFor(on);
-    if(on) setTimeout(()=>sizeCanvasFor(true),120);
+    const real=!!(document.fullscreenElement||document.webkitFullscreenElement);
+    if(real) fsReal=true; else if(fsReal){ fsReal=false; if(isFs()) leaveFs(); }
+    layoutSoon();
   }
   document.addEventListener("fullscreenchange",onFsChange);
   document.addEventListener("webkitfullscreenchange",onFsChange);
-  window.addEventListener("resize",()=>{ if(document.fullscreenElement||document.webkitFullscreenElement) sizeCanvasFor(true); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&isFs()&&!document.fullscreenElement) leaveFs(); });
+  window.addEventListener("resize",()=>{ if(isFs()) layoutSoon(); });
+  window.addEventListener("orientationchange",()=>{ if(isFs()) layoutSoon(); });
   function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
   function canvasPos(e){
     const r=canvas.getBoundingClientRect();

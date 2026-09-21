@@ -85,6 +85,10 @@
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
+    #canvas-wrapper:fullscreen{overflow:auto;display:flex;flex-direction:column;align-items:center;border-radius:0;padding:12px;}
+    #canvas-wrapper:fullscreen #zoom-toolbar{width:100%;}
+    #canvas-wrapper:fullscreen canvas#projectionCanvas{max-width:none;width:min(calc(100vw - 28px),calc((100vh - 70px)*820/540));}
+    #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-hint{margin-left:auto;font-size:.8rem;color:var(--muted);}
   </style>
 </head>
@@ -150,6 +154,7 @@
         <span id="zoom-level">100%</span>
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
+        <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
@@ -2613,6 +2618,16 @@
     redraw();
   }
   function zoomBy(f){ zoomAt(CANVAS_W/2,CANVAS_H/2,f); }
+  function toggleFullscreen(){
+    const w=document.getElementById("canvas-wrapper");
+    if(document.fullscreenElement){ document.exitFullscreen(); }
+    else if(w.requestFullscreen){ w.requestFullscreen().catch(()=>{}); }
+    else if(w.webkitRequestFullscreen){ w.webkitRequestFullscreen(); }
+  }
+  document.addEventListener("fullscreenchange",()=>{
+    const b=document.getElementById("fsBtn");
+    if(b) b.textContent=document.fullscreenElement?"✕ Exit full screen":"⛶ Full screen";
+  });
   function resetView(){ viewZoom=1; viewPanX=0; viewPanY=0; redraw(); }
   function canvasPos(e){
     const r=canvas.getBoundingClientRect();

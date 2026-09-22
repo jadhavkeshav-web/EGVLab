@@ -1,7 +1,17 @@
 <!DOCTYPE html>
+<!--
+  Engineering Graphics - Interactive Drawing Simulators : Development of Lateral Surfaces
+  Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.
+
+  This work is protected by copyright. Copying, redistributing, republishing or
+  creating derivative works from this material without the author's written
+  permission is prohibited.
+-->
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="author" content="Prof. Keshav M. Jadhav">
+  <meta name="copyright" content="Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Development of Lateral Surfaces - Problems with Stepwise Solutions</title>
   <style>
@@ -52,9 +62,9 @@
     #stepCounter{text-align:center;font-size:.86rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.4px;}
 
     /* one-step viewport with auto-scroll */
-    #step-viewport{height:128px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;cursor:pointer;}
+    #step-viewport{height:196px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;cursor:pointer;}
     #stepList{list-style:none;margin:0;padding:0;transition:transform .35s ease;}
-    #stepList li{height:128px;display:flex;gap:12px;align-items:flex-start;padding:14px 14px;font-size:.89rem;line-height:1.4rem;color:#2c3644;}
+    #stepList li{height:196px;overflow-y:auto;overscroll-behavior:contain;display:flex;gap:10px;align-items:flex-start;padding:12px 12px;font-size:.86rem;line-height:1.33rem;color:#2c3644;}
     #stepList li .step-num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;margin-top:1px;}
 
     #results{margin-top:12px;font-size:.92rem;}
@@ -69,19 +79,19 @@
     .speed-row select{flex:1;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #given-fig{margin-top:14px;}
     #given-wrap{background:#fbfcfd;border:1px solid var(--line);border-radius:10px;padding:6px;}
-    #givenCanvas{display:block;background:#fff;width:100%;height:auto;cursor:grab;touch-action:none;border:1px solid #eef1f5;border-radius:6px;}
-    #givenCanvas.dragging{cursor:grabbing;}
+    #givenCanvas{display:block;background:#fff;width:100%;height:auto;cursor:crosshair;touch-action:none;border:1px solid #eef1f5;border-radius:6px;}
+    #givenCanvas.dragging{cursor:move;}
     #given-hint{font-size:.72rem;color:#7c8896;text-align:center;margin-top:5px;}
     #given-fig h4{margin:0 0 8px;}
     #canvas-wrapper{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(22,52,79,.06);}
-    canvas{display:block;background:#fff;cursor:grab;border:1px solid #eef1f5;border-radius:6px;width:100%;max-width:820px;height:auto;}
-    canvas.dragging{cursor:grabbing;}
+    canvas{display:block;background:#fff;cursor:crosshair;border:1px solid #eef1f5;border-radius:6px;width:100%;max-width:820px;height:auto;}
+    canvas.dragging{cursor:move;}
     #space-wrap{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
     #space-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
     #space-title{font-weight:700;color:var(--ink);font-size:.95rem;}
     #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
-    #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:grab;}
-    #spaceCanvas.dragging{cursor:grabbing;}
+    #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:crosshair;}
+    #spaceCanvas.dragging{cursor:move;}
     #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
     #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #zoom-toolbar button:hover{background:#eef2f7;}
@@ -202,6 +212,29 @@
 
 
 <script>
+  /* ---- sharp drawings on every screen ----
+     Every 2-D canvas is given a backing store 2-3 times its drawing size, and its context is scaled to
+     match, so the program still draws in the same units (canvas.width / height keep returning the
+     drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
+  (function(){
+    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
+    const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
+    const gc=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(type,opts){
+      const cx=gc.call(this,type,opts);
+      if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
+      const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
+      cv._hdS=S;
+      const st=cx.setTransform;
+      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
+      return cx;
+    };
+  })();
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
@@ -261,8 +294,13 @@
     const m=(a1+a2)/2, t=m+(ccw?-Math.PI/2:Math.PI/2);
     drawArrowhead(cx+r*Math.cos(m),cy+r*Math.sin(m),t,color);
   }
-  function drawAngleDimOutward(cx,cy,r,text,a1,a2,ccw,above){
+  function drawAngleDimOutward(cx,cy,r,text,a1,a2,ccw,above,oriented,tickOnly){
     if(REC){REC.push({f:"drawAngleDimOutward",a:Array.from(arguments)});return;}
+    if(tickOnly){
+      ctx.strokeStyle=COL_DIM; ctx.lineWidth=LW_THIN; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(cx+(r+8)*Math.cos(a2),cy+(r+8)*Math.sin(a2)); ctx.lineTo(cx+(r+20)*Math.cos(a2),cy+(r+20)*Math.sin(a2)); ctx.stroke();
+      return;
+    }
     drawArc(cx,cy,r,a1,a2,ccw,COL_DIM);
     const st=a1+(ccw?-Math.PI/2:Math.PI/2), et=a2+(ccw?-Math.PI/2:Math.PI/2);
     drawArrowhead(cx+r*Math.cos(a1),cy+r*Math.sin(a1),st+Math.PI,COL_DIM);
@@ -586,11 +624,12 @@
   }
 
   /* ---- protractor at a vertex; dome up or down; red marker at markAng ---- */
-  function drawProtractor(cx,cy,up,op,markAng){
+  function drawProtractor(cx,cy,up,op,markAng,rot){
     const Rp=88;
     ctx.save();
     ctx.globalAlpha=op;
     ctx.translate(cx,cy);
+    if(rot) ctx.rotate(rot);          // hold the 0/180 base line along a reference line, not always horizontal
     ctx.scale(1, up?1:-1);
     ctx.fillStyle="rgba(147,184,216,0.32)";
     ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.4;
@@ -804,17 +843,17 @@
 
   async function animProtractor(s,items,k,it,myId){
     const cx=it.a[0],cy=it.a[1],a1=it.a[4],a2=it.a[5];
-    const up=(a2<=a1);
+    const up=(a2<=a1), rot=(it.a[8]?a1:0);      // it.a[8] (oriented) = protractor base line lies along the first arm of the angle
     await animateFrames(950*(0.6+0.4*SPEED),t=>{
       if(animId!==myId) return false;
       const op=Math.min(1,t*4)*0.95;
       const mark=a1+(a2-a1)*Math.min(1,t*1.2);
-      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,op,mark));
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,op,mark,rot));
     });
     if(animId!==myId) return;
     await animateFrames(240*SPEED,t=>{
       if(animId!==myId) return false;
-      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,(1-t)*0.95,a2));
+      frameDraw(s-1,items,k,()=>drawProtractor(cx,cy,up,(1-t)*0.95,a2,rot));
     });
   }
 
@@ -1366,15 +1405,17 @@
   const LET="ABCDEFGHIJKL", let_="abcdefghijkl";
   const COL_DEV="#111", COL_CUT="#b8541f";
 
-  /* --- layout: FV above XY, TV below XY, development to the right --- */
+  /* --- layout: FV above XY (its base ON X-Y), TV below XY, development to the right --- */
+  const TVG=54;                                  // px between X-Y and the top of the top view (room for the first dimension)
   function layoutPL(fvW,upH,dnH,devW,devUp){
     const gap=Math.max(20,fvW*0.30);
     const totW=fvW+gap+devW;
-    const totH=Math.max(upH,devUp||0)+dnH+16;
-    const sc=Math.min((CANVAS_W-PX(110))/totW,(CANVAS_H-PY(110))/totH,3.2);
+    const upM=Math.max(upH,devUp||0);
+    const totH=upM+dnH;
+    const sc=Math.min((CANVAS_W-PX(110))/totW,(CANVAS_H-PY(110)-TVG)/totH,3.2);
     SCALE_PXMM=sc;
     const X0=(CANVAS_W-totW*sc)/2;
-    const REF=(CANVAS_H-totH*sc)/2+Math.max(upH,devUp||0)*sc+8;
+    const REF=(CANVAS_H-totH*sc-TVG)/2+upM*sc;
     return {sc,REF,fvL:X0,devL:X0+(fvW+gap)*sc,
             lineStart:X0-38,lineEnd:X0+totW*sc+30};
   }
@@ -1396,6 +1437,75 @@
     };
   }
 
+  /* --- distinct levels (heights) from a list of {h,x} --- */
+  function uniqLevels(arr){
+    const o=[]; arr.forEach(q=>{ if(!o.some(u=>Math.abs(u.h-q.h)<0.05)) o.push(q); });
+    return o;
+  }
+
+  /* --- base polygon of a prism / pyramid, drawn step by step exactly as the polygon is drawn in the
+         involute construction: first side (dimension first, then the line), the other sides found with
+         the compass set to the first side and the protractor held with its 0-180 line ALONG a drawn line.
+         Pt[0], Pt[1] = ends of the first (horizontal) side, Pt[1] on the left; corners then follow round. --- */
+  function tvPolySteps(steps,n,s,Pt,sc,labels){
+    const NAME=({3:"triangle",4:"square",5:"pentagon",6:"hexagon"})[n]||(n+"-sided polygon");
+    const IDEG=R1((n-2)*180/n), aTxt=R1(s);
+    const A2P=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);
+    const side=(i,j)=>drawSLine(Pt[i].x,Pt[i].y,Pt[j].x,Pt[j].y,COL_THICK,LW_THICK);
+    const dot=i=>drawPoint(Pt[i].x,Pt[i].y);
+    const span=()=>measureSpan(Pt[0].x,Pt[0].y,Pt[1].x,Pt[1].y);            // compass = first side
+    const cutFrom=(i,j)=>drawCut(Pt[i].x,Pt[i].y,s*sc,A2P(Pt[i],Pt[j]),COL_THIN);
+    const protr=(i,ref,tgt,keep)=>{ const c=Pt[i], a1=A2P(c,Pt[ref]), a2=A2P(c,Pt[tgt]);
+      let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
+      drawAngleDimOutward(c.x,c.y,22,keep?IDEG+"°":"",a1,a1+d,d<0,Math.sin(a1+d/2)<0,true,!keep); };
+    const first=steps.length;
+    steps.push({text:`Draw the TOP VIEW: the true shape of the base, a regular ${NAME} of side ${aTxt} mm with one side parallel to X–Y (VP). A regular ${NAME} has ${n} equal sides and each interior angle is ${IDEG}°. First put in the dimension of the first side ${aTxt} mm, then draw it horizontally with the scale.`,
+      hl:["base"],
+      d:()=>{ const p=Pt[1], q=Pt[0], yb=p.y-24;
+        drawLine(p.x,p.y-3,p.x,yb-5,COL_DIM,LW_THIN);
+        drawLine(q.x,q.y-3,q.x,yb-5,COL_DIM,LW_THIN);
+        drawHorizontalDim(yb,p.x,q.x,aTxt);
+        side(1,0); dot(0); dot(1); }});
+    if(n===3){
+      steps.push(
+       {text:`Set the compass to the length of the first side ${aTxt} mm (measure it directly on the first line). With the compass point at the right end of the first line, draw an arc below the line.`,
+        hl:["base"], d:()=>{ span(); cutFrom(0,2); }},
+       {text:`With the same compass setting and the point at the left end of the first line, draw a second arc to cut the first one. Join the point of intersection to both ends of the first line. All three sides are equal and each angle is ${IDEG}°.`,
+        hl:["base"], d:()=>{ span(); cutFrom(1,2); protr(1,0,2,true); side(1,2); side(2,0); dot(2); }});
+    } else {
+      steps.push(
+       {text:`At the left end of the first line, hold the protractor with its 0° - 180° line ALONG the first line and mark the interior angle of ${IDEG}°. Set the compass to the length of the first side ${aTxt} mm and, with its point at the left end, cut the marked direction. Draw the second side up to the cut.`,
+        hl:["base"], d:()=>{ protr(1,0,2,true); span(); cutFrom(1,2); side(1,2); dot(2); }},
+       {text:`At the right end of the first line, again hold the protractor with its 0° - 180° line along the first line and mark ${IDEG}° on the same side. With the compass still at ${aTxt} mm, cut the marked direction from the right end and draw the next side up to the cut.`,
+        hl:["base"], d:()=>{ protr(0,1,n-1,false); span(); cutFrom(0,n-1); side(0,n-1); dot(n-1); }});
+      if(n===4){
+        steps.push({text:`Join the lower ends of the two new sides. This side comes out equal to the first one, which completes the square.`,
+          hl:["base"], d:()=>{ side(2,3); }});
+      } else if(n===5){
+        steps.push({text:`Keep the compass at ${aTxt} mm. With its point at the lower end of each of the two new sides, draw arcs cutting each other below. Join this point to both lower ends to complete the pentagon.`,
+          hl:["base"], d:()=>{ span(); cutFrom(2,3); cutFrom(4,3); side(2,3); side(3,4); dot(3); }});
+      } else {
+        steps.push(
+         {text:`At the lower end of the left side, hold the protractor with its 0° - 180° line along that side and mark ${IDEG}°. With the compass at ${aTxt} mm, cut the marked direction and draw the next side up to the cut.`,
+          hl:["base"], d:()=>{ protr(2,1,3,false); span(); cutFrom(2,3); side(2,3); dot(3); }},
+         {text:`In the same way, at the lower end of the right side, mark ${IDEG}° along that side and cut ${aTxt} mm with the compass. Join the two new points to complete the hexagon.`,
+          hl:["base"], d:()=>{ protr(5,0,4,false); span(); cutFrom(5,4); side(5,4); side(3,4); dot(4); }});
+      }
+    }
+    const last=steps[steps.length-1], d0=last.d;
+    last.d=()=>{ d0(); labels(); };
+    last.text+=` Name the corners ${let_.slice(0,n).split("").join(", ")}.`;
+  }
+
+  /* --- development sector hanging from O : bounding box (mm, canvas y downwards) --- */
+  function sectorBox(phi0,SEC,Rm){
+    let x0=0,x1=0,y0=0,y1=0;
+    const M=Math.max(2,Math.ceil(SEC/0.05));
+    for(let q=0;q<=M;q++){ const a=phi0-SEC*q/M, x=Rm*Math.cos(a), y=Rm*Math.sin(a);
+      x0=Math.min(x0,x); x1=Math.max(x1,x); y0=Math.min(y0,y); y1=Math.max(y1,y); }
+    return {x0,x1,y0,y1};
+  }
+
   /* ================= PARALLEL LINE : PRISM ================= */
   function buildPrism(v,n,cut){
     const s=v.s, H=v.h;
@@ -1411,13 +1521,19 @@
     const hAt=x=>cut? (cut.type==="horiz"? v.hc : v.hc+x*tan) : H;
     const hc=cx.map(hAt);
     const devW=n*s;
-    const f=layoutPL(fvW,H,tvD+14,devW,Math.max.apply(null,hc));
+    const hTop=Math.max.apply(null,hc);
+    const f=layoutPL(fvW,H,tvD,devW,hTop);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x-xMin)*sc;                 // model x -> canvas x (FV & TV)
-    const TVY=REF+34;                              // top of the TV band
+    const TVY=REF+TVG;                             // top of the TV band
     const TY=z=>TVY+(zMax-z)*sc;
     const DX=q=>f.devL+q*sc;                       // distance along stretch-out
     const YH=h=>REF-h*sc;
+    const Pt=cx.map((x,i)=>({x:FX(x),y:TY(cz[i])}));
+    const grp=[];                                  // corners that share one vertical line in the FV
+    for(let i=0;i<n;i++){ let g=grp.find(q=>Math.abs(q.x-cx[i])<1e-6);
+      if(!g){ g={x:cx[i],idx:[],top:1e9}; grp.push(g); }
+      g.idx.push(i); g.top=Math.min(g.top,Pt[i].y); }
 
     /* development order : start at the shortest lateral edge */
     let k0=0; for(let i=1;i<n;i++) if(hc[i]<hc[k0]-1e-9) k0=i;
@@ -1432,39 +1548,29 @@
       return m;
     };
     const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
+    const xyEnd=f.devL-16;
 
     const steps=[];
-    steps.push({text:"Draw the X–Y reference line. The prism rests on the HP with its axis vertical, so the top view is drawn below X–Y and the front view above it.",
+    steps.push({text:"Draw the X–Y reference line. The prism rests on the HP on its base with its axis vertical, so the front view is drawn ABOVE X–Y with its base lying ON the X–Y line, and the top view is drawn below X–Y.",
       hl:[],
-      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+      d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
-        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+        drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:`Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":n===6?"hexagon":n+"-gon"} of side ${R1(s)} mm, with one face parallel to the VP. Name the corners ${let_.slice(0,n).split("").join(", ")}.`,
-      hl:["base"],
-      d:()=>{ const L=[];
-        for(let i=0;i<n;i++){ const j=(i+1)%n;
-          L.push([FX(cx[i]),TY(cz[i]),FX(cx[j]),TY(cz[j])]); }
-        lineSet(L,COL_THICK,LW_THICK);
-        for(let i=0;i<n;i++) drawPoint(FX(cx[i]),TY(cz[i]),let_[i],radOff(FX(0),TY(0),FX(cx[i]),TY(cz[i]),13)); }});
+    tvPolySteps(steps,n,s,Pt,sc,()=>{
+      for(let i=0;i<n;i++) drawPoint(Pt[i].x,Pt[i].y,let_[i],radOff(FX(0),TY(0),Pt[i].x,Pt[i].y,13)); });
 
-    steps.push({text:`Project every corner of the top view upwards and draw the front view: a rectangle ${R1(fvW)} mm wide and ${R1(H)} mm high. The vertical lines are the lateral edges ${let_[0]}′, ${let_[1]}′, … Each of them is a TRUE LENGTH.`,
+    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm, then project every corner of the top view upwards with thin projection lines drawn with the roll-and-draw scale, up to the top level.`,
       hl:latAll,
-      d:()=>{ const P=[];
-        for(let i=0;i<n;i++) P.push([FX(cx[i]),REF,FX(cx[i]),YH(H)]);
-        lineSet(P,COL_PROJ,LW_THIN,[6,4]);
-        drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+      d:()=>{ drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H));
+        rollSet(grp.map(g=>[FX(g.x),g.top,FX(g.x),YH(H)]),COL_PROJ,LW_THIN); }});
+
+    steps.push({text:`Draw the front view: the base ON X–Y, the top edge, and the lateral edges - a rectangle ${R1(fvW)} mm wide and ${R1(H)} mm high. Every edge of the solid is drawn DARK (thick). Each lateral edge ${let_[0]}′, ${let_[1]}′, … is a TRUE LENGTH.`,
+      hl:latAll,
+      d:()=>{ drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
         drawSLine(FX(xMin),YH(H),FX(xMax),YH(H),COL_THICK,LW_THICK);
-        drawSLine(FX(xMin),REF,FX(xMin),YH(H),COL_THICK,LW_THICK);
-        drawSLine(FX(xMax),REF,FX(xMax),YH(H),COL_THICK,LW_THICK);
-        const grp={};
-        for(let i=0;i<n;i++){ const key=cx[i].toFixed(2);
-          (grp[key]=grp[key]||[]).push(i); }
-        Object.keys(grp).forEach(key=>{
-          const g=grp[key], x=FX(+key);
-          drawLine(x,REF,x,YH(H),COL_THIN,LW_THIN);
-          drawPoint(x,REF,g.map(i=>let_[i]+"′").join(""),{x:-5*g.length,y:-13}); });
-        drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H)); }});
+        lineSet(grp.map(g=>[FX(g.x),REF,FX(g.x),YH(H)]),COL_THICK,LW_THICK);
+        grp.forEach(g=>drawPoint(FX(g.x),REF,g.idx.map(i=>let_[i]+"′").join(""),{x:-5*g.idx.length,y:-13})); }});
 
     if(cut){
       if(cut.type==="horiz"){
@@ -1476,61 +1582,68 @@
       } else {
         steps.push({text:`Draw the cutting plane in the front view: a line inclined at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
           hl:["cut"],
-          d:()=>{ const yL=YH(hAt(xMin)), yR=YH(hAt(xMax));
+          d:()=>{ const yL=YH(hAt(xMin));
             const eL=xMin-8/sc, eR=xMax+8/sc;
-            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
             drawLine(FX(xMin),yL,FX(xMin)+58,yL,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(xMin),yL,44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
+            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
             drawText(FX(eR)+6,YH(hAt(eR)),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
             for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
       }
     }
 
-    steps.push({text:`Draw the stretch-out line for the development. Its length is the perimeter of the base = ${n} × ${R1(s)} = ${R1(n*s)} mm, set out on the level of the base line, to the right of the front view.`,
+    steps.push({text:`Now the development. Its width is the perimeter of the base, and the widths are taken from the TOP VIEW, where every base edge shows its TRUE length ${R1(s)} mm: ${n} × ${R1(s)} = ${R1(n*s)} mm. The height comes from the front view. First put in the dimension, then draw the stretch-out line - level with X–Y, to the right of the front view - with the roll-and-draw scale.`,
       hl:["base"],
-      d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_THICK,LW_THICK);
-        drawHorizontalDim(REF+34,DX(0),DX(devW),"perimeter = "+R1(n*s)); }});
+      d:()=>{ const y=REF+46;
+        drawLine(DX(0),REF+3,DX(0),y+5,COL_DIM,LW_THIN);
+        drawLine(DX(devW),REF+3,DX(devW),y+5,COL_DIM,LW_THIN);
+        drawHorizontalDim(y,DX(0),DX(devW),"perimeter = "+n+" × "+R1(s)+" = "+R1(n*s));
+        drawRLine(DX(0),REF,DX(devW),REF,COL_THIN,LW_THIN); }});
 
-    steps.push({text:`Step off ${n} equal divisions of ${R1(s)} mm - the TRUE side length taken straight from the top view - and name the points ${ord.map(i=>LET[i]).join(", ")}. The seam is taken on the shortest edge ${LET[k0]}.`,
+    steps.push({text:`Mark all the points with the SAME distance taken from the top view: set the compass to the length of one base edge ${LET[ord[0]]}${LET[ord[1]]} = ${R1(s)} mm (measure it on the top view) and step off ${n} equal divisions along the stretch-out line, naming the points ${ord.map(i=>LET[i]).join(", ")}.${cut?` The seam is taken on the shortest edge ${LET[k0]}.`:""}`,
       hl:["base"],
-      d:()=>{ stepOff(DX(0),REF,DX(devW),REF,n);
-        for(let j=0;j<=n;j++) drawPoint(DX(j*s),REF,LET[ord[j]],{x:-4,y:15}); }});
-
-    steps.push({text:"Erect a perpendicular at every division point. These are the lateral edges of the opened-out surface, and each one shows its true length.",
-      hl:latAll,
-      d:()=>{ const P=[];
-        const top=Math.max.apply(null,hc);
-        for(let j=0;j<=n;j++) P.push([DX(j*s),REF,DX(j*s),YH(top)-10]);
-        lineSet(P,COL_THIN,LW_THIN); }});
+      d:()=>{ measureSpan(Pt[ord[0]].x,Pt[ord[0]].y,Pt[ord[1]].x,Pt[ord[1]].y);
+        drawPoint(DX(0),REF,LET[ord[0]],{x:-4,y:15});
+        for(let j=1;j<=n;j++){ drawCut(DX((j-1)*s),REF,s*sc,0,COL_THIN);
+          drawPoint(DX(j*s),REF,LET[ord[j]],{x:-4,y:15}); } }});
 
     if(!cut){
-      steps.push({text:`Cut every perpendicular to the height of the prism, ${R1(H)} mm, transferring the height from the front view with the compass.`,
+      steps.push({text:`Take the height ${R1(H)} mm across from the FRONT VIEW: with the roll-and-draw scale draw a thin line from the top of the front view, parallel to X–Y, into the development area.`,
         hl:latAll,
-        d:()=>{ for(let j=0;j<=n;j++){
-            measureSpan(DX(j*s),REF,DX(j*s),YH(H));
-            drawPoint(DX(j*s),YH(H),"",{x:0,y:0}); } }});
-      steps.push({text:`Join the top points. The development of the lateral surface is a rectangle ${R1(n*s)} mm × ${R1(H)} mm.`,
+        d:()=>{ rollSet([[FX(xMax),YH(H),DX(devW)+14,YH(H)]],COL_PROJ,LW_THIN); }});
+      steps.push({text:"Erect a perpendicular at every division point up to the height line. These are the lateral EDGES of the prism, so they are drawn DARK (thick); each shows its true length.",
+        hl:latAll,
+        d:()=>{ const P=[]; for(let j=0;j<=n;j++) P.push([DX(j*s),REF,DX(j*s),YH(H)]);
+          lineSet(P,COL_DEV,LW_THICK); }});
+      steps.push({text:`Draw the top and the bottom edge of the development dark. The development of the lateral surface is a rectangle ${R1(n*s)} mm × ${R1(H)} mm.`,
         hl:latAll.concat(["top"]),
         d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
-          drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
-          drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
+          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK);
           for(let j=0;j<=n;j++) drawPoint(DX(j*s),YH(H),LET[ord[j]]+"1",{x:-6,y:-12});
           drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
     } else {
-      steps.push({text:"Transfer the height of every cut point from the front view to the matching perpendicular in the development, using the compass or the scale. Mark 1, 2, 3 …",
+      const lv=uniqLevels(hc.map((h,i)=>({h:h,x:FX(cx[i])})));
+      steps.push({text:`Take the heights of the cut points 1′, 2′, 3′ … across from the FRONT VIEW: with the roll-and-draw scale draw thin lines from each cut point, parallel to X–Y, into the development area.`,
         hl:["cut"],
-        d:()=>{ for(let j=0;j<=n;j++){
-            const i=ord[j];
-            measureSpan(DX(j*s),REF,DX(j*s),YH(hc[i]));
-            drawPoint(DX(j*s),YH(hc[i]),String(i+1),{x:5,y:-11}); } }});
-      steps.push({text:`Join the points 1-2-3-… by straight lines: each lateral face of a prism is a plane, so the cut edge develops as a straight line. Close the figure with the two end edges.`,
+        d:()=>{ rollSet(lv.map(q=>[q.x,YH(q.h),DX(devW)+14,YH(q.h)]),COL_PROJ,LW_THIN); }});
+      steps.push({text:"Erect a perpendicular at every division point with thin lines, high enough to meet the projection lines. Everything is drawn thin for now.",
+        hl:latAll,
+        d:()=>{ const P=[]; for(let j=0;j<=n;j++) P.push([DX(j*s),REF,DX(j*s),YH(hTop)-10]);
+          lineSet(P,COL_THIN,LW_THIN); }});
+      steps.push({text:"Mark the cut points 1, 2, 3 … where each perpendicular meets its projection line - they have the same heights as in the front view.",
         hl:["cut"],
-        d:()=>{ const L=[];
-          for(let j=0;j<n;j++) L.push([DX(j*s),YH(hc[ord[j]]),DX((j+1)*s),YH(hc[ord[j+1]])]);
-          lineSet(L,COL_DEV,LW_THICK);
-          drawSLine(DX(0),REF,DX(0),YH(hc[ord[0]]),COL_DEV,LW_THICK);
-          drawSLine(DX(devW),REF,DX(devW),YH(hc[ord[n]]),COL_DEV,LW_THICK);
-          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK); }});
+        d:()=>{ for(let j=0;j<=n;j++) drawPoint(DX(j*s),YH(hc[ord[j]]),String(ord[j]+1),{x:5,y:-11}); }});
+      steps.push({text:"Join the points 1-2-3-… by thin straight lines: each lateral face of a prism is a plane, so the cut edge develops as straight lines.",
+        hl:["cut"],
+        d:()=>{ const L=[]; for(let j=0;j<n;j++) L.push([DX(j*s),YH(hc[ord[j]]),DX((j+1)*s),YH(hc[ord[j+1]])]);
+          lineSet(L,COL_THIN,LW_THIN); }});
+      steps.push({text:"Now, at the very end, make DARK only the retained portion: the bottom edge, the lateral edges up to the cut points and the cut edge 1-2-3-…",
+        hl:["cut"],
+        d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK);
+          const E=[]; for(let j=0;j<=n;j++) E.push([DX(j*s),REF,DX(j*s),YH(hc[ord[j]])]);
+          lineSet(E,COL_DEV,LW_THICK);
+          const L=[]; for(let j=0;j<n;j++) L.push([DX(j*s),YH(hc[ord[j]]),DX((j+1)*s),YH(hc[ord[j+1]])]);
+          lineSet(L,COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the lateral surface of the truncated prism is complete. The shortest edge measures ${R1(Math.min.apply(null,hc))} mm and the longest ${R1(Math.max.apply(null,hc))} mm.`,
         hl:["cut"].concat(latAll),
         d:()=>{ const mn=Math.min.apply(null,hc), mx=Math.max.apply(null,hc);
@@ -1560,13 +1673,16 @@
     const hAt=x=>cut?(cut.type==="horiz"?v.hc:v.hc+x*tan):H;
     const hg=gx.map(hAt);
     const devW=Math.PI*D;
-    const f=layoutPL(D,H,D+14,devW,Math.max.apply(null,hg));
+    const hTop=Math.max.apply(null,hg);
+    const f=layoutPL(D,H,D,devW,hTop);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x+R)*sc;
-    const TVY=REF+34;
+    const TVY=REF+TVG;
     const TY=z=>TVY+(R-z)*sc;
     const DX=q=>f.devL+q*sc;
     const YH=h=>REF-h*sc;
+    const xyEnd=f.devL-16;
+    const sepY=REF+div30(DX(0),REF,DX(devW),N,true).drop+34;   // where the dimension of the stretch-out goes (below the auxiliary construction)
 
     const model=()=>{
       let m=m_cyl(R,H,48);
@@ -1574,18 +1690,27 @@
                else m=clipModel(m,-tan,1,0,v.hc,"cut"); }
       return m;
     };
+    const curvePts=()=>{ const sm=[];
+      for(let i=0;i<=N*8;i++){ const u=i/(N*8)*TAU;
+        const ang=Math.PI-u;
+        const hh=cut.type==="horiz"?v.hc:v.hc+R*Math.cos(ang)*tan;
+        sm.push({x:DX(devW*i/(N*8)),y:YH(hh)}); }
+      return sm; };
 
     const steps=[];
-    steps.push({text:"Draw the X–Y reference line. The cylinder stands on the HP with its axis vertical.",
+    steps.push({text:"Draw the X–Y reference line. The cylinder stands on the HP on its base with its axis vertical, so the front view is drawn ABOVE X–Y with its base lying ON the X–Y line, and the top view below X–Y.",
       hl:[],
-      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+      d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
-        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
+        drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:`Draw the top view: a circle of diameter ${R1(D)} mm.`,
+    steps.push({text:`Draw the top view: first the dimension - diameter ${R1(D)} mm - then the circle, with the compass.`,
       hl:["base"],
-      d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK);
-        drawHorizontalDim(TY(0),FX(-R),FX(R),"Ø "+R1(D)); }});
+      d:()=>{ const yb=TY(R)-24;
+        drawLine(FX(-R),TY(0)-3,FX(-R),yb-5,COL_DIM,LW_THIN);
+        drawLine(FX(R),TY(0)-3,FX(R),yb-5,COL_DIM,LW_THIN);
+        drawHorizontalDim(yb,FX(-R),FX(R),"Ø "+R1(D));
+        drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
 
     steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1, 2, 3 … 12 starting from the extreme left.",
       hl:["base"],
@@ -1593,16 +1718,18 @@
         for(let i=0;i<N;i++)
           drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14)); }});
 
-    steps.push({text:`Project the 12 points upwards and draw the front view: a rectangle ${R1(D)} mm × ${R1(H)} mm containing the 12 generators 1′, 2′ … 12′.`,
+    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm, then project the 12 points of the top view upwards with thin projection lines (roll-and-draw scale) up to the top level. These thin lines are the generators 1′, 2′ … 12′.`,
       hl:["lat"],
-      d:()=>{ const P=[];
-        for(let i=0;i<N;i++) P.push([FX(gx[i]),REF,FX(gx[i]),YH(H)]);
-        lineSet(P,COL_THIN,LW_THIN);
-        drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+      d:()=>{ drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H));
+        const P=[]; for(let i=0;i<=N/2;i++) P.push([FX(gx[i]),TY(gz[i]),FX(gx[i]),YH(H)]);
+        rollSet(P,COL_PROJ,LW_THIN); }});
+
+    steps.push({text:`Draw the outline of the front view: the base ON X–Y, the top edge and the two extreme sides - a rectangle ${R1(D)} mm × ${R1(H)} mm - DARK (thick). The generators inside stay thin.`,
+      hl:["lat"],
+      d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
         drawSLine(FX(-R),YH(H),FX(R),YH(H),COL_THICK,LW_THICK);
         drawSLine(FX(-R),REF,FX(-R),YH(H),COL_THICK,LW_THICK);
-        drawSLine(FX(R),REF,FX(R),YH(H),COL_THICK,LW_THICK);
-        drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H)); }});
+        drawSLine(FX(R),REF,FX(R),YH(H),COL_THICK,LW_THICK); }});
 
     if(cut){
       if(cut.type==="horiz"){
@@ -1614,19 +1741,24 @@
         steps.push({text:`Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ where it crosses the generators.`,
           hl:["cut"],
           d:()=>{ const eL=-R-8/sc, eR=R+8/sc;
-            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
             drawLine(FX(-R),YH(hAt(-R)),FX(-R)+58,YH(hAt(-R)),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(-R),YH(hAt(-R)),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
+            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
             for(let i=0;i<N;i++) drawPoint(FX(gx[i]),YH(hg[i]),"",{x:0,y:0}); }});
       }
     }
 
-    steps.push({text:`Draw the stretch-out line to the right of the front view. Its length is the circumference of the base, π × ${R1(D)} = ${R1(devW)} mm.`,
-      hl:["base"],
-      d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_THICK,LW_THICK);
-        drawHorizontalDim(REF+div30(DX(0),REF,DX(devW),N,true).drop+30,DX(0),DX(devW),"πD = "+R1(devW)); }});
+    steps.push({text:`CALCULATION before the development. The development of the lateral surface of a cylinder is a RECTANGLE. Length of the rectangle = perimeter of the base = π × D = π × ${R1(D)} = ${R1(devW)} mm. Width of the rectangle = height of the cylinder = ${R1(H)} mm. Each of the 12 equal parts of the length = ${R1(devW)} / 12 = ${R1(devW/12)} mm.`,
+      hl:["lat"], d:()=>{ }});
 
-    steps.push({text:"Divide the stretch-out into 12 equal parts by the auxiliary-line method: draw a line at 30° from the left end, step off 12 equal convenient divisions on it with the divider, join the last division to the right end of πD, and draw parallels to that closing line.",
+    steps.push({text:`Draw the stretch-out line to the right of the front view, level with X–Y. Its length πD = ${R1(devW)} mm is calculated from the diameter D taken from the TOP VIEW. First put in the dimension, then draw the line with the roll-and-draw scale.`,
+      hl:["base"],
+      d:()=>{ drawLine(DX(0),REF+3,DX(0),sepY+5,COL_DIM,LW_THIN);
+        drawLine(DX(devW),REF+3,DX(devW),sepY+5,COL_DIM,LW_THIN);
+        drawHorizontalDim(sepY,DX(0),DX(devW),"πD = "+R1(devW));
+        drawRLine(DX(0),REF,DX(devW),REF,COL_THIN,LW_THIN); }});
+
+    steps.push({text:"Divide the stretch-out into 12 equal parts (each equal to the arc 1–2 of the top view) by the auxiliary-line method: draw a line at 30° from the left end, step off 12 equal convenient divisions on it with the divider, join the last division to the right end of πD, and draw parallels to that closing line.",
       hl:["base"],
       d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
         drawSLine(g.aux[0],g.aux[1],g.aux[2],g.aux[3],COL_THIN,LW_THIN);
@@ -1636,43 +1768,45 @@
         lineSet(g.paras,COL_PROJ,LW_THIN);
         for(let i=0;i<=N;i++) drawPoint(DX(devW*i/N),REF,String(i+1>12?1:i+1),{x:-4,y:-14}); }});
 
-    steps.push({text:"Erect a perpendicular at every division. These are the 12 generators of the opened-out surface.",
+    if(!cut){
+      steps.push({text:`Take the height ${R1(H)} mm across from the FRONT VIEW: with the roll-and-draw scale draw a thin line from the top of the front view, parallel to X–Y, into the development area.`,
+        hl:["lat"],
+        d:()=>{ rollSet([[FX(R),YH(H),DX(devW)+14,YH(H)]],COL_PROJ,LW_THIN); }});
+    } else {
+      const lv=uniqLevels(hg.map((h,i)=>({h:h,x:FX(gx[i])})));
+      steps.push({text:`Take the heights of the cut points 1′, 2′ … across from the FRONT VIEW: with the roll-and-draw scale draw thin lines from each cut point, parallel to X–Y, into the development area.`,
+        hl:["cut"],
+        d:()=>{ rollSet(lv.map(q=>[q.x,YH(q.h),DX(devW)+14,YH(q.h)]),COL_PROJ,LW_THIN); }});
+    }
+
+    steps.push({text:"Erect a perpendicular at every division - these are the 12 GENERATORS of the opened-out surface. Generators are only THIN lines; they are never drawn dark.",
       hl:["lat"],
-      d:()=>{ const P=[], top=Math.max.apply(null,hg);
-        for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(top)-10]);
+      d:()=>{ const P=[], top=cut?hTop:H;
+        for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(top)-(cut?8:0)]);
         lineSet(P,COL_THIN,LW_THIN); }});
 
     if(!cut){
-      steps.push({text:`Cut each generator to the height ${R1(H)} mm and join the tops. The development is a rectangle πD × H = ${R1(devW)} mm × ${R1(H)} mm.`,
+      steps.push({text:`Draw the outline of the development dark: the top edge, the bottom edge and the two end edges. The development is a rectangle πD × H = ${R1(devW)} mm × ${R1(H)} mm.`,
         hl:["lat","top"],
         d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
+          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK);
           drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
           drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
           drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
     } else {
-      steps.push({text:"Transfer the height of every cut point 1′, 2′ … from the front view on to the matching generator of the development.",
+      steps.push({text:"Mark the cut points 1, 2, 3 … 12 where every generator meets its projection line.",
         hl:["cut"],
-        d:()=>{ for(let i=0;i<=N;i++){
-            const q=i%N;
-            measureSpan(DX(devW*i/N),REF,DX(devW*i/N),YH(hg[q]));
+        d:()=>{ for(let i=0;i<=N;i++){ const q=i%N;
             drawPoint(DX(devW*i/N),YH(hg[q]),"",{x:0,y:0}); } }});
-      steps.push({text:"Draw a smooth curve through the points. Because the surface is curved, the cut edge develops as a curve - never as straight lines.",
+      steps.push({text:"Draw a smooth THIN curve through the points. Because the surface is curved, the cut edge develops as a curve - never as straight lines.",
         hl:["cut"],
-        d:()=>{ const pts=[];
-          for(let i=0;i<=N*4;i++){ const q=i/4, k=Math.floor(q)%N, kk=(k+1)%N, t=q-Math.floor(q);
-            const h=hg[k]+(hg[kk]-hg[k])*t;
-            const hs=(t===0)?hg[k]:h;
-            pts.push({x:DX(devW*q/N),y:YH(hs)}); }
-          const sm=[];
-          for(let i=0;i<=N*8;i++){ const u=i/(N*8)*TAU;
-            const x=devW*i/(N*8);
-            const ang=Math.PI-u;
-            const hh=cut.type==="horiz"?v.hc:v.hc+R*Math.cos(ang)*tan;
-            sm.push({x:DX(x),y:YH(hh)}); }
-          drawCurve(sm,COL_DEV,LW_THICK);
+        d:()=>{ drawCurve(curvePts(),COL_THIN,LW_THIN); }});
+      steps.push({text:"Now, at the very end, make DARK only the retained portion: the bottom edge, the two end edges up to the curve, and the curve itself. The generators stay thin.",
+        hl:["cut"],
+        d:()=>{ drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK);
           drawSLine(DX(0),REF,DX(0),YH(hg[0]),COL_DEV,LW_THICK);
           drawSLine(DX(devW),REF,DX(devW),YH(hg[0]),COL_DEV,LW_THICK);
-          drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK); }});
+          drawCurve(curvePts(),COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the truncated cylinder is complete. The shortest generator is ${R1(Math.min.apply(null,hg))} mm and the longest ${R1(Math.max.apply(null,hg))} mm.`,
         hl:["cut","lat"],
         d:()=>{ drawVerticalDim(DX(0)-15,YH(Math.min.apply(null,hg)),REF,R1(Math.min.apply(null,hg)));
@@ -1712,24 +1846,29 @@
     };
     const tt=Array.from({length:n},(_,i)=>cutT(i));
     const tlCut=tt.map(t=>TL*(1-t));                // true length from APEX to the cut point
-    const devR=TL;
-    const devW=(SEC>=Math.PI)?2*devR:2*devR*Math.sin(SEC/2);
-    const devUp=devR;
+    const phi0=Math.atan2(H,R);                     // first edge is PARALLEL to the true-length line o'a1' of the front view
+    const sb=sectorBox(phi0,SEC,TL);
     const kRot=(function(){let k=0;for(let i=1;i<n;i++) if(cz[i]>=-1e-9&&cx[i]>cx[k]) k=i; return k;})();
     const needRot=(R-xMax)>0.5;
-    const f=layoutPL(Math.max(xMax,R)-xMin,H,zMax-zMin+14,devW,devUp);
+    const f=layoutPL(Math.max(xMax,R)-xMin,H,zMax-zMin,sb.x1-sb.x0,sb.y1-sb.y0);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x-xMin)*sc;
-    const TVY=REF+34, TY=z=>TVY+(zMax-z)*sc;
+    const TVY=REF+TVG, TY=z=>TVY+(zMax-z)*sc;
     const YH=h=>REF-h*sc;
-    const APX=f.devL+devW*sc/2, APY=REF-devR*sc;    // apex of the development
-    const DA=j=>-Math.PI/2+(-SEC/2+2*half*j);       // canvas angle of development edge j
-    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
+    const APX=f.devL-sb.x0*sc, APY=REF-sb.y1*sc;    // apex O of the development
+    const DA=j=>phi0-2*half*j;                      // canvas angle of development edge j
+    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY+r*sc*Math.sin(DA(j))});
+    const Pt=cx.map((x,i)=>({x:FX(x),y:TY(cz[i])}));
 
     let k0=0; for(let i=1;i<n;i++) if(tlCut[i]<tlCut[k0]-1e-9) k0=i;
     const ord=Array.from({length:n+1},(_,j)=>(k0+j)%n);
     const apexFV={x:FX(0),y:YH(H)};
     const tlEndFV={x:FX(R),y:REF};                  // o′a₁ = TRUE LENGTH of a slant edge
+    const QT=i=>({x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])});
+    const grp=[];
+    for(let i=0;i<n;i++){ let g=grp.find(q=>Math.abs(q.x-cx[i])<1e-6);
+      if(!g){ g={x:cx[i],idx:[],top:1e9}; grp.push(g); }
+      g.idx.push(i); g.top=Math.min(g.top,Pt[i].y); }
 
     const model=()=>{
       let m=m_pyr(n,s,H,ph);
@@ -1741,48 +1880,49 @@
 
     const steps=[];
     const xyEnd=f.devL-16;
-    steps.push({text:"Draw the X–Y reference line. The pyramid rests on the HP on its base with the axis vertical, so the top view goes below X–Y and the front view above it.",
+    steps.push({text:"Draw the X–Y reference line. The pyramid rests on the HP on its base with the axis vertical, so the front view goes ABOVE X–Y with its base lying ON the X–Y line, and the top view goes below X–Y.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
         drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:`Draw the top view: a regular ${n===3?"triangle":n===4?"square":n===5?"pentagon":"hexagon"} of side ${R1(s)} mm with one side parallel to the VP. Mark the centre o and join it to every corner - these are the slant edges seen in plan.`,
-      hl:["base"],
-      d:()=>{ const L=[];
-        for(let i=0;i<n;i++){ const j=(i+1)%n; L.push([FX(cx[i]),TY(cz[i]),FX(cx[j]),TY(cz[j])]); }
-        lineSet(L,COL_THICK,LW_THICK);
-        const Rl=[]; for(let i=0;i<n;i++) Rl.push([FX(0),TY(0),FX(cx[i]),TY(cz[i])]);
-        lineSet(Rl,COL_THIN,LW_THIN);
-        drawPoint(FX(0),TY(0),"o",{x:6,y:12});
-        for(let i=0;i<n;i++) drawPoint(FX(cx[i]),TY(cz[i]),let_[i],radOff(FX(0),TY(0),FX(cx[i]),TY(cz[i]),13)); }});
+    tvPolySteps(steps,n,s,Pt,sc,()=>{
+      for(let i=0;i<n;i++) drawPoint(Pt[i].x,Pt[i].y,let_[i],radOff(FX(0),TY(0),Pt[i].x,Pt[i].y,13)); });
 
-    steps.push({text:`Project the corners up to X–Y and mark the apex o′ on the axis, ${R1(H)} mm above the base. Join o′ to every base corner: this is the front view.`,
+    steps.push({text:`Mark the centre o of the base and join it to every corner. These lines are the slant edges seen in plan - edges of the solid, so they are DARK (thick).`,
+      hl:["base"],
+      d:()=>{ drawPoint(FX(0),TY(0),"o",{x:6,y:12});
+        const Rl=[]; for(let i=0;i<n;i++) Rl.push([FX(0),TY(0),Pt[i].x,Pt[i].y]);
+        lineSet(Rl,COL_THICK,LW_THICK); }});
+
+    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm of the axis. Then project the corners of the top view up to X–Y with thin projection lines (roll-and-draw scale), draw the base ON X–Y and mark the apex o′ on the axis, ${R1(H)} mm above the base.`,
       hl:latAll,
-      d:()=>{ const P=[];
-        for(let i=0;i<n;i++) P.push([FX(cx[i]),TY(cz[i]),FX(cx[i]),REF]);
-        lineSet(P,COL_PROJ,LW_THIN,[6,4]);
+      d:()=>{ drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H));
+        rollSet(grp.map(g=>[FX(g.x),g.top,FX(g.x),REF]),COL_PROJ,LW_THIN);
         drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
         drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-        const E=[]; for(let i=0;i<n;i++) E.push([apexFV.x,apexFV.y,FX(cx[i]),REF]);
+        drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12}); }});
+
+    steps.push({text:`Join o′ to every base corner: the front view is complete. Every slant edge is an edge of the solid, so it is drawn DARK (thick).`,
+      hl:latAll,
+      d:()=>{ const E=[]; for(let i=0;i<n;i++) E.push([apexFV.x,apexFV.y,FX(cx[i]),REF]);
         lineSet(E,COL_THICK,LW_THICK);
-        drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12});
-        drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H)); }});
+        grp.forEach(g=>drawPoint(FX(g.x),REF,g.idx.map(i=>let_[i]+"′").join(""),{x:-5*g.idx.length,y:13})); }});
 
     if(needRot){
-      steps.push({text:`Find the TRUE LENGTH of a slant edge. A slant edge is inclined to both planes, so neither view shows it true. In the TOP VIEW, with centre o and radius o${let_[kRot]}, swing the corner round to a\u2081 on the horizontal line through o - the edge is now parallel to the VP.`,
+      steps.push({text:`Find the TRUE LENGTH of a slant edge. A slant edge is inclined to both planes, so neither view shows it true. In the TOP VIEW, with centre o and radius o${let_[kRot]}, swing the corner round to a₁ on the horizontal line through o - the edge is now parallel to the VP.`,
         hl:["lat"+(kRot+1)],
         d:()=>{ const a1=-A[kRot];
           drawArcWithMidArrow(FX(0),TY(0),R*sc,a1,0,false,COL_THIN);
-          drawPoint(FX(R),TY(0),"a\u2081",{x:8,y:10}); }});
-      steps.push({text:`Project a\u2081 up to X\u2013Y and join o\u2032a\u2081. This line is the TRUE LENGTH of every slant edge: TL = \u221a(R\u00b2 + H\u00b2) = ${R1(TL)} mm.`,
+          drawPoint(FX(R),TY(0),"a₁",{x:8,y:10}); }});
+      steps.push({text:`Project a₁ up to X–Y and join o′a₁. This line is the TRUE LENGTH of every slant edge: TL = √(R² + H²) = ${R1(TL)} mm.`,
         hl:latAll,
         d:()=>{ drawLine(FX(R),TY(0),FX(R),REF,COL_PROJ,LW_THIN,SOLID,"mid");
-          drawPoint(FX(R),REF,"a\u2081\u2032",{x:6,y:-12});
+          drawPoint(FX(R),REF,"a₁′",{x:6,y:-12});
           drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
           drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
     } else {
-      steps.push({text:`Find the TRUE LENGTH of a slant edge. Here the extreme edge o\u2032${let_[kRot]}\u2032 of the front view is already parallel to the VP, so it shows the true length directly: TL = \u221a(R\u00b2 + H\u00b2) = ${R1(TL)} mm.`,
+      steps.push({text:`Find the TRUE LENGTH of a slant edge. Here the extreme edge o′${let_[kRot]}′ of the front view is already parallel to the VP, so it shows the true length directly: TL = √(R² + H²) = ${R1(TL)} mm.`,
         hl:latAll,
         d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
           drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
@@ -1797,68 +1937,79 @@
             drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
           else{
             const eL=xMin-8/sc, eR=xMax+8/sc;
-            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK);
             drawLine(FX(xMin),YH(v.hc+xMin*tan),FX(xMin)+58,YH(v.hc+xMin*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-            drawAngleDimOutward(FX(xMin),YH(v.hc+xMin*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true); }
+            drawAngleDimOutward(FX(xMin),YH(v.hc+xMin*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
+            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK); }
           for(let i=0;i<n;i++){
             const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
             drawPoint(P.x,P.y,String(i+1),{x:5,y:-11}); } }});
 
-      steps.push({text:"To get the TRUE distance of every cut point from the apex, draw a horizontal from each point 1′, 2′ … to meet the true-length edge. The intercept measured from o′ is the true length required.",
+      steps.push({text:"To get the TRUE distance of every cut point from the apex, draw a horizontal thin line (roll-and-draw scale) from each point 1′, 2′ … to meet the true-length edge. The intercept measured from o′ is the true length required.",
         hl:["cut"],
         d:()=>{ const L=[];
-          for(let i=0;i<n;i++){
-            const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
-            const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
+          for(let i=0;i<n;i++){ const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])}, Q=QT(i);
             L.push([P.x,P.y,Q.x,Q.y]); }
-          lineSet(L,COL_PROJ,LW_THIN,[5,4]);
-          for(let i=0;i<n;i++){
-            const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
-            drawPoint(Q.x,Q.y,"",{x:0,y:0}); } }});
+          rollSet(L,COL_PROJ,LW_THIN);
+          for(let i=0;i<n;i++){ const Q=QT(i); drawPoint(Q.x,Q.y,"",{x:0,y:0}); } }});
     }
 
-    steps.push({text:`Start the development. With centre O and radius equal to the true length ${R1(TL)} mm, draw an arc - every slant edge of the pyramid is this same length.`,
+    const A0=DP(0,TL), tlDeg=R1(phi0*180/Math.PI);
+    steps.push({text:`Start the development. The radii are true lengths from the FRONT VIEW and the chords are true base edges from the TOP VIEW. Mark the apex O and, with the roll-and-draw scale, draw the FIRST edge O–${LET[ord[0]]} PARALLEL to the true-length line o′a₁′ of the front view (it is inclined at ${tlDeg}° to the horizontal). Set the compass to the true length TL = ${R1(TL)} mm taken from the front view and cut the length ${R1(TL)} mm on it.`,
       hl:latAll,
       d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
-        drawArcPlain(APX,APY,devR*sc,-DA(0),-DA(n),true,COL_THIN); }});
+        drawRLine(APX,APY,A0.x,A0.y,COL_THIN,LW_THIN);
+        measureSpan(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y);
+        drawCut(APX,APY,TL*sc,DA(0),COL_THIN);
+        drawPoint(A0.x,A0.y,LET[ord[0]],radOff(APX,APY,A0.x,A0.y,14)); }});
 
-    steps.push({text:`Step off ${n} chords of ${R1(s)} mm - the true side of the base - along that arc, and join every division to O. Name the points ${ord.map(i=>LET[i]).join(", ")}; the seam is at the shortest edge ${LET[k0]}.`,
+    steps.push({text:`With centre O and the same compass setting - radius ${R1(TL)} mm - draw an arc through the marked point, swinging it ANTICLOCKWISE (upwards from the first edge) through the total angle of the development (about ${R1(SEC*180/Math.PI)}°). Every slant edge of the pyramid is this same length.`,
+      hl:latAll,
+      d:()=>{ drawArcPlain(APX,APY,TL*sc,DA(0),DA(n),true,COL_THIN,LW_THIN); }});
+
+    steps.push({text:`Mark all the points with the SAME distance taken from the top view: set the compass to the base edge ${R1(s)} mm (measure it on the top view) and, from ${LET[ord[0]]}, cut the arc ${n} times, going anticlockwise, naming the points ${ord.map(i=>LET[i]).join(", ")}${cut?`; the seam is at the shortest edge ${LET[k0]}`:""}.`,
       hl:["base"],
-      d:()=>{ const L=[];
-        for(let j=0;j<=n;j++){ const P=DP(j,devR); L.push([APX,APY,P.x,P.y]); }
-        lineSet(L,COL_THIN,LW_THIN);
-        for(let j=0;j<=n;j++){ const P=DP(j,devR);
-          drawPoint(P.x,P.y,LET[ord[j]],radOff(APX,APY,P.x,P.y,14)); } }});
+      d:()=>{ measureSpan(Pt[ord[0]].x,Pt[ord[0]].y,Pt[ord[1]].x,Pt[ord[1]].y);
+        for(let j=1;j<=n;j++){ const P=DP(j-1,TL), Q=DP(j,TL);
+          drawCut(P.x,P.y,s*sc,Math.atan2(Q.y-P.y,Q.x-P.x),COL_THIN);
+          drawPoint(Q.x,Q.y,LET[ord[j]],radOff(APX,APY,Q.x,Q.y,14)); } }});
 
     if(!cut){
-      steps.push({text:`Join the divisions ${LET[ord[0]]}–${LET[ord[1]]}–… by straight lines. The development of the lateral surface is a fan of ${n} equal isosceles triangles, total angle ${R1(SEC*180/Math.PI)}°.`,
+      steps.push({text:`Join every point to O. These are the slant edges of the pyramid, so they are drawn DARK (thick); each is ${R1(TL)} mm long.`,
+        hl:latAll,
+        d:()=>{ const L=[]; for(let j=0;j<=n;j++){ const P=DP(j,TL); L.push([APX,APY,P.x,P.y]); }
+          lineSet(L,COL_DEV,LW_THICK); }});
+      steps.push({text:`Join the points ${LET[ord[0]]}–${LET[ord[1]]}–… by dark straight lines. The development of the lateral surface is a fan of ${n} equal isosceles triangles, total angle ${R1(SEC*180/Math.PI)}°.`,
         hl:latAll,
         d:()=>{ const L=[];
-          for(let j=0;j<n;j++){ const P=DP(j,devR), Q=DP(j+1,devR); L.push([P.x,P.y,Q.x,Q.y]); }
-          lineSet(L,COL_DEV,LW_THICK);
-          const P0=DP(0,devR), Pn=DP(n,devR);
-          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
-          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
+          for(let j=0;j<n;j++){ const P=DP(j,TL), Q=DP(j+1,TL); L.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(L,COL_DEV,LW_THICK); }});
     } else {
-      steps.push({text:"With centre O and the true lengths found in the front view as radii, cut the corresponding development edges at 1, 2, 3 …",
+      steps.push({text:"Join every point to O with thin lines - the slant edges of the fan. Everything is thin for now.",
+        hl:latAll,
+        d:()=>{ const L=[]; for(let j=0;j<=n;j++){ const P=DP(j,TL); L.push([APX,APY,P.x,P.y]); }
+          lineSet(L,COL_THIN,LW_THIN); }});
+      steps.push({text:"Set the compass to each true length O–1, O–2 … found in the front view (from o′ to the intercept on the true-length edge) and, with centre O, cut the corresponding development edge at 1, 2, 3 …",
         hl:["cut"],
-        d:()=>{ for(let j=0;j<=n;j++){
-            const i=ord[j], r=tlCut[i];
-            drawCut(APX,APY,r*sc,-DA(j),COL_THIN); } }});
-      steps.push({text:"Join 1-2-3-… by straight lines - each face of a pyramid is a plane triangle - and close the development with the two end edges.",
+        d:()=>{ for(let j=0;j<=n;j++){ const i=ord[j], P=DP(j,tlCut[i]);
+            if(j<n) measureSpan(apexFV.x,apexFV.y,QT(i).x,QT(i).y);
+            drawCut(APX,APY,tlCut[i]*sc,DA(j),COL_THIN);
+            drawPoint(P.x,P.y,String(i+1),radOff(APX,APY,P.x,P.y,-13)); } }});
+      steps.push({text:"Join 1-2-3-… by thin straight lines - each face of a pyramid is a plane triangle.",
         hl:["cut"],
         d:()=>{ const L=[];
-          for(let j=0;j<n;j++){ const P=DP(j,tlCut[ord[j]]), Q=DP(j+1,tlCut[ord[j+1]]);
-            L.push([P.x,P.y,Q.x,Q.y]); }
-          lineSet(L,COL_DEV,LW_THICK);
-          const B=[];
-          for(let j=0;j<n;j++){ const P=DP(j,devR), Q=DP(j+1,devR); B.push([P.x,P.y,Q.x,Q.y]); }
+          for(let j=0;j<n;j++){ const P=DP(j,tlCut[ord[j]]), Q=DP(j+1,tlCut[ord[j+1]]); L.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(L,COL_THIN,LW_THIN); }});
+      steps.push({text:"Now, at the very end, make DARK only the retained portion: the base edges, the slant edges from the base up to the cut points, and the cut edge 1-2-3-…",
+        hl:["cut"],
+        d:()=>{ const B=[];
+          for(let j=0;j<n;j++){ const P=DP(j,TL), Q=DP(j+1,TL); B.push([P.x,P.y,Q.x,Q.y]); }
           lineSet(B,COL_DEV,LW_THICK);
-          const P0=DP(0,devR), Pn=DP(n,devR);
-          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
-          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK);
-          for(let j=0;j<=n;j++){ const P=DP(j,tlCut[ord[j]]);
-            drawPoint(P.x,P.y,String(ord[j]+1),radOff(APX,APY,P.x,P.y,-13)); } }});
+          const E=[];
+          for(let j=0;j<=n;j++){ const P=DP(j,tlCut[ord[j]]), Q=DP(j,TL); E.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(E,COL_DEV,LW_THICK);
+          const C=[];
+          for(let j=0;j<n;j++){ const P=DP(j,tlCut[ord[j]]), Q=DP(j+1,tlCut[ord[j+1]]); C.push([P.x,P.y,Q.x,Q.y]); }
+          lineSet(C,COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the lateral surface of the truncated pyramid is complete. O–1 (shortest) = ${R1(Math.min.apply(null,tlCut))} mm and the longest = ${R1(Math.max.apply(null,tlCut))} mm.`,
         hl:["cut"].concat(latAll),
         d:()=>{ }});
@@ -1884,24 +2035,32 @@
     const A=Array.from({length:N},(_,i)=>Math.PI-TAU*i/N);
     const gx=A.map(a=>R*Math.cos(a)), gz=A.map(a=>R*Math.sin(a));
     const tan=cut?Math.tan(toRad(v.ang)):0;
-    const cutT=i=>{
+    const cutTx=x=>{
       if(!cut) return 1;
       if(cut.type==="horiz") return v.hc/H;
-      const x0=gx[i];
-      return (v.hc+x0*tan)/(H+x0*tan);
+      return (v.hc+x*tan)/(H+x*tan);
     };
-    const tt=Array.from({length:N},(_,i)=>cutT(i));
+    const tt=Array.from({length:N},(_,i)=>cutTx(gx[i]));
     const lCut=tt.map(t=>L*(1-t));
-    const devW=(SEC>=Math.PI)?2*L:2*L*Math.sin(SEC/2);
-    const f=layoutPL(D,H,D+14,devW,L);
+    const phi0=Math.atan2(H,R);                     // first generator is PARALLEL to the true-length generator o'1' of the front view
+    const sb=sectorBox(phi0,SEC,L);
+    const f=layoutPL(D,H,D,sb.x1-sb.x0,sb.y1-sb.y0);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x+R)*sc;
-    const TVY=REF+34, TY=z=>TVY+(R-z)*sc;
+    const TVY=REF+TVG, TY=z=>TVY+(R-z)*sc;
     const YH=h=>REF-h*sc;
-    const APX=f.devL+devW*sc/2, APY=REF-L*sc;
-    const DA=j=>-Math.PI/2+(-SEC/2+SEC*j/N);
-    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY-r*sc*Math.sin(DA(j))});
+    const APX=f.devL-sb.x0*sc, APY=REF-sb.y1*sc;
+    const DA=j=>phi0-SEC*j/N;
+    const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY+r*sc*Math.sin(DA(j))});
     const apexFV={x:FX(0),y:YH(H)}, tlEndFV={x:FX(R),y:REF};
+    const QT=i=>({x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])});
+    const chord=2*L*Math.sin(SEC/(2*N));
+    const thetaTxt=R1(SEC*180/Math.PI);
+    const rAt=q=>{ const a=Math.PI-TAU*q/N; return L*(1-cutTx(R*Math.cos(a))); };
+    const curvePts=()=>{ const pts=[];
+      for(let j=0;j<=N*6;j++){ const q=j/6, r=rAt(q), ang=DA(q);
+        pts.push({x:APX+r*sc*Math.cos(ang), y:APY+r*sc*Math.sin(ang)}); }
+      return pts; };
 
     const model=()=>{
       let m=m_cone(R,H,48);
@@ -1912,32 +2071,43 @@
 
     const steps=[];
     const xyEnd=f.devL-16;
-    steps.push({text:"Draw the X–Y reference line. The cone rests on the HP on its base with the axis vertical.",
+    steps.push({text:"Draw the X–Y reference line. The cone rests on the HP on its base with the axis vertical, so the front view is drawn ABOVE X–Y with its base lying ON the X–Y line, and the top view below X–Y.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
         drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
         drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
-    steps.push({text:`Draw the top view: a circle of diameter ${R1(D)} mm. Divide it into 12 equal parts and number them 1 to 12 from the extreme left.`,
+    steps.push({text:`Draw the top view: first the dimension - diameter ${R1(D)} mm - then the circle, with the compass.`,
       hl:["base"],
-      d:()=>{ drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK);
-        markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
+      d:()=>{ const yb=TY(R)-24;
+        drawLine(FX(-R),TY(0)-3,FX(-R),yb-5,COL_DIM,LW_THIN);
+        drawLine(FX(R),TY(0)-3,FX(R),yb-5,COL_DIM,LW_THIN);
+        drawHorizontalDim(yb,FX(-R),FX(R),"Ø "+R1(D));
+        drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
+
+    steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1 to 12 from the extreme left.",
+      hl:["base"],
+      d:()=>{ markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
         for(let i=0;i<N;i++)
-          drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14));
-        drawHorizontalDim(TY(0),FX(-R),FX(R),"Ø "+R1(D)); }});
+          drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14)); }});
 
-    steps.push({text:`Project the base up to X–Y and mark the apex o′ ${R1(H)} mm above it. Join o′ to the ends of the base: the front view is a triangle. Draw the 12 generators o′1′ … o′12′.`,
+    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm of the axis. Then project the ends of the base up to X–Y with thin projection lines (roll-and-draw scale), draw the base ON X–Y and mark the apex o′ on the axis, ${R1(H)} mm above it.`,
       hl:["lat"],
-      d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+      d:()=>{ drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H));
+        const P=[]; for(let i=0;i<=N/2;i++) P.push([FX(gx[i]),TY(gz[i]),FX(gx[i]),REF]);
+        rollSet(P,COL_PROJ,LW_THIN);
+        drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
         drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-        drawSLine(apexFV.x,apexFV.y,FX(-R),REF,COL_THICK,LW_THICK);
-        drawSLine(apexFV.x,apexFV.y,FX(R),REF,COL_THICK,LW_THICK);
-        const G=[]; for(let i=0;i<N;i++) G.push([apexFV.x,apexFV.y,FX(gx[i]),REF]);
-        lineSet(G,COL_THIN,LW_THIN);
-        drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12});
-        drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H)); }});
+        drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12}); }});
 
-    steps.push({text:`The extreme generator o′1′ is parallel to the VP, so it gives the TRUE slant length directly: L = √(R² + H²) = ${R1(L)} mm. Every generator of a cone is this same length.`,
+    steps.push({text:"Join o′ to the ends of the base: the front view is a triangle. The two extreme generators are the outline, drawn DARK (thick). Join o′ to the other projected points with THIN lines - the generators o′1′ … o′12′ are never dark.",
+      hl:["lat"],
+      d:()=>{ const G=[]; for(let i=1;i<N/2;i++) G.push([apexFV.x,apexFV.y,FX(gx[i]),REF]);
+        lineSet(G,COL_THIN,LW_THIN);
+        drawSLine(apexFV.x,apexFV.y,FX(-R),REF,COL_THICK,LW_THICK);
+        drawSLine(apexFV.x,apexFV.y,FX(R),REF,COL_THICK,LW_THICK); }});
+
+    steps.push({text:`The extreme generator o′${N/2+1}′ is parallel to the VP, so it gives the TRUE slant length directly: L = √(R² + H²) = ${R1(L)} mm. Every generator of a cone is this same length.`,
       hl:["lat"],
       d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
         drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"L = "+R1(L),9,0.55); }});
@@ -1950,72 +2120,84 @@
         d:()=>{ if(cut.type==="horiz")
             drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
           else{ const eL=-R-8/sc, eR=R+8/sc;
-            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK);
             drawLine(FX(-R),YH(v.hc-R*tan),FX(-R)+58,YH(v.hc-R*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
-            drawAngleDimOutward(FX(-R),YH(v.hc-R*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true); }
+            drawAngleDimOutward(FX(-R),YH(v.hc-R*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
+            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK); }
           for(let i=0;i<N;i++){
             const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])};
             drawPoint(P.x,P.y,"",{x:0,y:0}); } }});
 
-      steps.push({text:"Draw a horizontal from every cut point to the true-length generator o′1′. The intercept from o′ is the true distance of that point from the apex.",
+      steps.push({text:"Draw a horizontal thin line (roll-and-draw scale) from every cut point to the true-length generator. The intercept from o′ is the true distance of that point from the apex.",
         hl:["cut"],
         d:()=>{ const Ls=[];
           for(let i=0;i<N;i++){
-            const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])};
-            const Q={x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])};
+            const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])}, Q=QT(i);
             Ls.push([P.x,P.y,Q.x,Q.y]); }
-          lineSet(Ls,COL_PROJ,LW_THIN,[5,4]); }});
+          rollSet(Ls,COL_PROJ,LW_THIN); }});
     }
 
-    steps.push({text:`Before drawing the development, calculate the angle of the sector: θ = 360° × R / L = 360° × ${R1(R)} / ${R1(L)} = ${R1(SEC*180/Math.PI)}°.`,
+    steps.push({text:`CALCULATION before the development. The development of the lateral surface of a cone is a SECTOR of a circle. Slant length L = √(r² + h²) = √(${R1(R)}² + ${R1(H)}²) = ${R1(L)} mm - this is the RADIUS of the sector. Angle of the development θ = (r / L) × 360° = (${R1(R)} / ${R1(L)}) × 360° = ${thetaTxt}°. Check: the arc of the sector = πD = ${R1(Math.PI*D)} mm.`,
       hl:["lat"],
       d:()=>{}});
 
-    steps.push({text:`Start the development. With centre O and radius L = ${R1(L)} mm draw an arc through angle θ = ${R1(SEC*180/Math.PI)}°.`,
+    const A0=DP(0,L);
+    steps.push({text:`Start the development. The radius is the true slant length from the FRONT VIEW and the divisions come from the TOP VIEW. Mark the apex O and, with the roll-and-draw scale, draw the FIRST generator O–1 PARALLEL to the true-length generator o′${N/2+1}′ of the front view (inclined at ${R1(phi0*180/Math.PI)}° to the horizontal). Set the compass to L = ${R1(L)} mm from the front view and cut that length on it.`,
       hl:["lat"],
       d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
-        drawArcPlain(APX,APY,L*sc,-DA(0),-DA(N),true,COL_DEV,LW_THICK); }});
+        drawRLine(APX,APY,A0.x,A0.y,COL_THIN,LW_THIN);
+        measureSpan(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y);
+        drawCut(APX,APY,L*sc,DA(0),COL_THIN);
+        drawPoint(A0.x,A0.y,"1",radOff(APX,APY,A0.x,A0.y,14)); }});
 
-    steps.push({text:"Divide the sector into the same 12 equal parts and join every division to O. These are the 12 generators of the opened-out surface.",
+    steps.push({text:`With centre O and the same compass setting - radius L = ${R1(L)} mm - draw the arc ANTICLOCKWISE (swinging upwards from the marked point) through angle θ = ${thetaTxt}°.`,
       hl:["lat"],
-      d:()=>{ const Ls=[];
-        for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
-        lineSet(Ls,COL_THIN,LW_THIN);
-        for(let j=0;j<=N;j++){ const P=DP(j,L);
-          drawPoint(P.x,P.y,String(j+1>12?1:j+1),radOff(APX,APY,P.x,P.y,14)); } }});
+      d:()=>{ drawArcPlain(APX,APY,L*sc,DA(0),DA(N),true,COL_THIN,LW_THIN); }});
+
+    steps.push({text:"Mark all the points with the SAME distance taken from the top view: set the compass to the chord 1–2 of the top view (very nearly the arc 1–2 of the base circle) and, from point 1, cut the arc 12 times anticlockwise, numbering the points 2, 3 … 12 and 1.",
+      hl:["base"],
+      d:()=>{ measureSpan(FX(gx[0]),TY(gz[0]),FX(gx[1]),TY(gz[1]));
+        for(let j=1;j<=N;j++){ const P=DP(j-1,L), Q=DP(j,L);
+          drawCut(P.x,P.y,chord*sc,Math.atan2(Q.y-P.y,Q.x-P.x),COL_THIN);
+          drawPoint(Q.x,Q.y,String(j+1>N?1:j+1),radOff(APX,APY,Q.x,Q.y,14)); } }});
+
+    steps.push({text:"Join every division to O with THIN lines. These are the 12 generators of the opened-out surface - generators are never drawn dark.",
+      hl:["lat"],
+      d:()=>{ const Ls=[]; for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
+        lineSet(Ls,COL_THIN,LW_THIN); }});
 
     if(!cut){
-      steps.push({text:`Close the sector with the two end generators. The development of the cone is a sector of radius ${R1(L)} mm and angle ${R1(SEC*180/Math.PI)}°.`,
+      steps.push({text:`Make the outline dark: the arc and the two end generators. The development of the cone is a sector of radius ${R1(L)} mm and angle ${thetaTxt}°.`,
         hl:["lat"],
         d:()=>{ const P0=DP(0,L), Pn=DP(N,L);
+          drawArcPlain(APX,APY,L*sc,DA(0),DA(N),true,COL_DEV,LW_THICK);
           drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
           drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
     } else {
-      steps.push({text:"With centre O and the true lengths taken from the front view as radii, cut the matching generators of the development at 1, 2, 3 …",
+      steps.push({text:"Set the compass to each true length taken from the front view (from o′ to the intercept on the true-length generator) and, with centre O, cut the matching generators of the development at 1, 2, 3 …",
         hl:["cut"],
-        d:()=>{ for(let j=0;j<=N;j++){ const i=j%N; drawCut(APX,APY,lCut[i]*sc,-DA(j),COL_THIN); } }});
-      steps.push({text:"Draw a smooth curve through these points - the cut edge of a cone always develops as a curve. Close the figure with the two end generators.",
+        d:()=>{ for(let j=0;j<=N;j++){ const i=j%N;
+            if(j<N) measureSpan(apexFV.x,apexFV.y,QT(i).x,QT(i).y);
+            drawCut(APX,APY,lCut[i]*sc,DA(j),COL_THIN); } }});
+      steps.push({text:"Draw a smooth THIN curve through these points - the cut edge of a cone always develops as a curve.",
         hl:["cut"],
-        d:()=>{ const pts=[];
-          for(let j=0;j<=N*6;j++){
-            const q=j/6, i=Math.floor(q)%N, k=(i+1)%N, t=q-Math.floor(q);
-            const r=lCut[i]+(lCut[k]-lCut[i])*t;
-            const ang=-Math.PI/2+(-SEC/2+SEC*q/N);
-            pts.push({x:APX+r*sc*Math.cos(ang), y:APY-r*sc*Math.sin(ang)}); }
-          drawCurve(pts,COL_DEV,LW_THICK);
-          const P0=DP(0,L), Pn=DP(N,L);
-          drawSLine(APX,APY,P0.x,P0.y,COL_DEV,LW_THICK);
-          drawSLine(APX,APY,Pn.x,Pn.y,COL_DEV,LW_THICK); }});
+        d:()=>{ drawCurve(curvePts(),COL_THIN,LW_THIN); }});
+      steps.push({text:"Now, at the very end, make DARK only the retained portion: the arc, the two end generators between the curve and the arc, and the curve itself. The other generators stay thin.",
+        hl:["cut"],
+        d:()=>{ const P0=DP(0,L), Pn=DP(N,L), C0=DP(0,lCut[0]), Cn=DP(N,lCut[0]);
+          drawArcPlain(APX,APY,L*sc,DA(0),DA(N),true,COL_DEV,LW_THICK);
+          drawSLine(C0.x,C0.y,P0.x,P0.y,COL_DEV,LW_THICK);
+          drawSLine(Cn.x,Cn.y,Pn.x,Pn.y,COL_DEV,LW_THICK);
+          drawCurve(curvePts(),COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the truncated cone is complete. The shortest generator is ${R1(Math.min.apply(null,lCut))} mm and the longest ${R1(Math.max.apply(null,lCut))} mm from the apex.`,
         hl:["cut","lat"], d:()=>{ }});
     }
 
     const results=cut
       ? `<b>Result:</b><table>
-          <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
+          <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${thetaTxt}°</td></tr>
           <tr><td>Shortest O–point</td><td>${R1(Math.min.apply(null,lCut))} mm</td><td>Longest</td><td>${R1(Math.max.apply(null,lCut))} mm</td></tr></table>`
       : `<b>Result:</b><table>
-          <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${R1(SEC*180/Math.PI)}°</td></tr>
+          <tr><td>Slant length L</td><td>${R1(L)} mm</td><td>Sector angle</td><td>${thetaTxt}°</td></tr>
           <tr><td>Arc length</td><td colspan="3">πD = ${R1(Math.PI*D)} mm</td></tr></table>`;
 
     return {steps,results,
@@ -2311,6 +2493,8 @@
   }
 
   function showList(){
+    animId++; lastSpoken=-1;
+    if(voiceSupported) speechSynthesis.cancel();
     document.getElementById("screen-solve").style.display="none";
     document.getElementById("screen-list").style.display="block";
   }
@@ -2378,7 +2562,7 @@
     resetView();
   }
 
-  const STEP_ITEM_H=128;
+  const STEP_ITEM_H=196;
   function renderStepList(){
     const ol=document.getElementById("stepList");
     ol.innerHTML="";
@@ -2451,6 +2635,7 @@
     document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
     syncSpace(started&&s>=N&&!!P.space);
     document.getElementById("stepList").style.transform="translateY(-"+((s-1)*STEP_ITEM_H)+"px)";
+    { const li=document.querySelectorAll("#stepList li")[s-1]; if(li) li.scrollTop=0; }
     if(!started){
       renderGiven([]);
       clearCanvasWhite();
@@ -2566,6 +2751,7 @@
 
   // Tap / click the step card to hear it read aloud (works even when auto-voice is off)
   document.getElementById("step-viewport").addEventListener("click",()=>speakStep(true));
+  window.addEventListener("pagehide",()=>{ if(voiceSupported) speechSynthesis.cancel(); });
 
   /* ---------------- zoom / pan ---------------- */
   function updateZoomDisplay(){ document.getElementById("zoom-level").innerText=Math.round(viewZoom*100)+"%"; }
@@ -2673,6 +2859,6 @@
 
 </script>
 
-<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M Jadhav</a></footer>
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Prof. Keshav M. Jadhav &middot; All rights reserved</span></footer>
 </body>
 </html>

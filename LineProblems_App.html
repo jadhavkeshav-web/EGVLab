@@ -1,7 +1,17 @@
 <!DOCTYPE html>
+<!--
+  Engineering Graphics - Interactive Drawing Simulators : Projection of Lines
+  Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.
+
+  This work is protected by copyright. Copying, redistributing, republishing or
+  creating derivative works from this material without the author's written
+  permission is prohibited.
+-->
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="author" content="Prof. Keshav M. Jadhav">
+  <meta name="copyright" content="Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Projection of Line - Problem with Stepwise Solutions</title>
   <style>
@@ -48,9 +58,9 @@
     #voiceBtn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
     #stepCounter{text-align:center;font-size:.86rem;color:var(--muted);font-weight:600;margin-bottom:8px;letter-spacing:.4px;}
 
-    #step-viewport{height:128px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;cursor:pointer;}
+    #step-viewport{height:196px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;cursor:pointer;}
     #stepList{list-style:none;margin:0;padding:0;transition:transform .35s ease;}
-    #stepList li{height:128px;display:flex;gap:12px;align-items:flex-start;padding:14px 14px;font-size:.89rem;line-height:1.4rem;color:#2c3644;}
+    #stepList li{height:196px;overflow-y:auto;overscroll-behavior:contain;display:flex;gap:10px;align-items:flex-start;padding:12px 12px;font-size:.86rem;line-height:1.33rem;color:#2c3644;}
     #stepList li .step-num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;margin-top:1px;}
 
     #results{margin-top:12px;font-size:.92rem;}
@@ -64,8 +74,8 @@
     .speed-row label{font-size:.85rem;color:var(--ink);flex:0 0 auto;}
     .speed-row select{flex:1;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #canvas-wrapper{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(22,52,79,.06);}
-    canvas{display:block;background:#fff;cursor:grab;border:1px solid #eef1f5;border-radius:6px;width:100%;max-width:820px;height:auto;}
-    canvas.dragging{cursor:grabbing;}
+    canvas{display:block;background:#fff;cursor:crosshair;border:1px solid #eef1f5;border-radius:6px;width:100%;max-width:820px;height:auto;}
+    canvas.dragging{cursor:move;}
     #space-wrap{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
     #space-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
     #space-title{font-weight:700;color:var(--ink);font-size:.95rem;}
@@ -179,6 +189,29 @@
 </div>
 
 <script>
+  /* ---- sharp drawings on every screen ----
+     Every 2-D canvas is given a backing store 2-3 times its drawing size, and its context is scaled to
+     match, so the program still draws in the same units (canvas.width / height keep returning the
+     drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
+  (function(){
+    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
+    const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
+    const gc=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(type,opts){
+      const cx=gc.call(this,type,opts);
+      if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
+      const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
+      cv._hdS=S;
+      const st=cx.setTransform;
+      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
+      return cx;
+    };
+  })();
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
@@ -1639,6 +1672,8 @@
   }
 
   function showList(){
+    animId++; lastSpoken=-1;
+    if(voiceSupported) speechSynthesis.cancel();
     document.getElementById("screen-solve").style.display="none";
     document.getElementById("screen-list").style.display="block";
   }
@@ -1692,7 +1727,7 @@
     resetView();
   }
 
-  const STEP_ITEM_H=128;
+  const STEP_ITEM_H=196;
   function renderStepList(){
     const ol=document.getElementById("stepList");
     ol.innerHTML="";
@@ -1717,6 +1752,7 @@
     document.getElementById("results").innerHTML=(started&&s>=N)?P.results:"";
     syncSpace(started&&s>=N&&!!P.space);
     document.getElementById("stepList").style.transform="translateY(-"+((s-1)*STEP_ITEM_H)+"px)";
+    { const li=document.querySelectorAll("#stepList li")[s-1]; if(li) li.scrollTop=0; }
     if(!started){ clearCanvasWhite(); return; }
     speakCurrent();
 
@@ -1823,6 +1859,7 @@
   function speakCurrent(){ speakStep(false); }
 
   document.getElementById("step-viewport").addEventListener("click",()=>speakStep(true));
+  window.addEventListener("pagehide",()=>{ if(voiceSupported) speechSynthesis.cancel(); });
 
   const SW=820, SH=430;
   const sCanvas=document.getElementById("spaceCanvas");
@@ -2146,6 +2183,6 @@
   renderList();
 </script>
 
-<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M Jadhav</a></footer>
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Prof. Keshav M. Jadhav &middot; All rights reserved</span></footer>
 </body>
 </html>

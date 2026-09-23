@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Engineering Graphics - Interactive Drawing Simulators : Engineering Curves
-  Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.
+  Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.
 
   This work is protected by copyright. Copying, redistributing, republishing or
   creating derivative works from this material without the author's written
@@ -10,8 +10,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="author" content="Prof. Keshav M. Jadhav">
-  <meta name="copyright" content="Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.">
+  <meta name="author" content="Keshav M. Jadhav">
+  <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Engineering Curves - Problems with Stepwise Solutions</title>
   <style>
@@ -237,7 +237,7 @@
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
-  const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
+  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -252,7 +252,7 @@
   function clearCanvasWhite(){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
-    ctx.font="11px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+    ctx.font="22px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
     ctx.fillText("Note: All dimensions are in mm",CANVAS_W-8,CANVAS_H-6);
     ctx.restore();
   }
@@ -274,7 +274,7 @@
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="10px Arial"; ctx.fillStyle="#222";
+    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
       ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
@@ -2465,11 +2465,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 11px Arial";
-    const w=gctx.measureText(t).width+6;
+    gctx.font="bold 22px Arial";
+    const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
-    gctx.fillRect(x-w/2,y-7,w,14);
-    gText(x,y,t,color||GINK,"bold 11px Arial");
+    gctx.fillRect(x-w/2,y-14,w,28);
+    gText(x,y,t,color||GINK,"bold 22px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -2480,12 +2480,12 @@
   function gDimH(y,x1,x2,text,on){
     const c=on?HLC:GSOFT, w=on?1.7:1;
     gLine(x1,y,x2,y,c,w); gArrow(x1,y,Math.PI,c); gArrow(x2,y,0,c);
-    gLabel((x1+x2)/2,y-8,text,on?HLC:GINK);
+    gLabel((x1+x2)/2,y-16,text,on?HLC:GINK);
   }
   function gDimV(x,y1,y2,text,on){
     const c=on?HLC:GSOFT, w=on?1.7:1;
     gLine(x,y1,x,y2,c,w); gArrow(x,y1,-Math.PI/2,c); gArrow(x,y2,Math.PI/2,c);
-    gctx.save(); gctx.translate(x-9,(y1+y2)/2); gctx.rotate(-Math.PI/2);
+    gctx.save(); gctx.translate(x-18,(y1+y2)/2); gctx.rotate(-Math.PI/2);
     gLabel(0,0,text,on?HLC:GINK); gctx.restore();
   }
   function gFit(wmm,hmm){
@@ -3072,6 +3072,6 @@
   renderList();
 </script>
 
-<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Prof. Keshav M. Jadhav &middot; All rights reserved</span></footer>
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Prof. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Keshav M. Jadhav &middot; All rights reserved</span></footer>
 </body>
 </html>

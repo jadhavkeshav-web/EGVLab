@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Engineering Graphics - Interactive Drawing Simulators : Isometric Projections
-  Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.
+  Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.
 
   This work is protected by copyright. Copying, redistributing, republishing or
   creating derivative works from this material without the author's written
@@ -10,8 +10,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="author" content="Prof. Keshav M. Jadhav">
-  <meta name="copyright" content="Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.">
+  <meta name="author" content="Keshav M. Jadhav">
+  <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Isometric Projections - Problems with Stepwise Solutions</title>
   <style>
@@ -95,7 +95,7 @@
     #screen-list{max-width:1000px;}
     .prob-card{display:flex;gap:18px;align-items:center;}
     .pc-text{flex:1 1 300px;min-width:0;}
-    .pc-fig{flex:0 0 330px;max-width:100%;text-align:center;}
+    .pc-fig{flex:0 0 460px;max-width:100%;text-align:center;}
     .pc-fig canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:8px;cursor:default;}
     .pc-cap{font-size:.74rem;color:#7c8896;margin-top:4px;}
     @media (max-width:760px){ .prob-card{flex-direction:column;align-items:stretch;} .pc-fig{flex:0 0 auto;} }
@@ -263,7 +263,7 @@
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
-  const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
+  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -278,7 +278,7 @@
   function clearCanvasWhite(){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
-    ctx.font="11px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+    ctx.font="22px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
     ctx.fillText("Note: All dimensions are in mm",CANVAS_W-8,CANVAS_H-6);
     ctx.restore();
   }
@@ -300,7 +300,7 @@
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="10px Arial"; ctx.fillStyle="#222";
+    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
       ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
@@ -1678,7 +1678,6 @@
       if(drawn[key]) return; drawn[key]=1;
       const on=hot[key]||(e[2]&&hl&&hl.indexOf(e[2])>=0&&front[key]);
       if(front[key]) L(S[e[0]],S[e[1]],on?HL:INK,on?2.6:1.5);
-      else if(back[key]) L(S[e[0]],S[e[1]],HID,1,[5,4]);
     });
 
     /* dimensions */
@@ -1697,9 +1696,9 @@
         cc.closePath(); cc.fill(); };
       ar(A.x,A.y,ang+Math.PI,on?HL:"#93a2b1"); ar(B.x,B.y,ang,on?HL:"#93a2b1");
       const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-7;
-      cc.font="bold 11px Arial";
-      const w=cc.measureText(d.text).width+6;
-      cc.fillStyle="rgba(255,255,255,0.88)"; cc.fillRect(mx-w/2,my-7,w,14);
+      cc.font="bold 22px Arial";
+      const w=cc.measureText(d.text).width+12;
+      cc.fillStyle="rgba(255,255,255,0.88)"; cc.fillRect(mx-w/2,my-14,w,28);
       cc.fillStyle=on?HL:INK; cc.textAlign="center"; cc.textBaseline="middle";
       cc.fillText(d.text,mx,my);
     });
@@ -1715,7 +1714,7 @@
       ring.forEach(p=>{ const s=(p.x-pc.x)*u.x+(p.y-pc.y)*u.y; if(s>bd){bd=s;rim=p;} });
       let dx=rim.x-pc.x, dy=rim.y-pc.y; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
       let t=14; while(t<300&&Math.hypot(rim.x+dx*t-C0.x,rim.y+dy*t-C0.y)<lim) t+=2;
-      cc.font="bold 11px Arial";
+      cc.font="bold 22px Arial";
       const txt=ld.text, tw=cc.measureText(txt).width+10, dir=dx>=0?1:-1;
       let ex=rim.x+dx*t, ey=rim.y+dy*t;
       ey=Math.max(14,Math.min(H-14,ey));
@@ -1947,27 +1946,27 @@
     const fv=box.fv, sv=views[1]!=="tv"?views[1]:null, tv=views[1]==="tv";
     // dimension levels per zone decide the margins
     const zone={}; (spec.dims||[]).forEach(D=>{ const k=D.v+(D.h?(D.side||"T"):(D.side||"L")); if(D.h||D.vt) zone[k]=(zone[k]||0)+1; });
-    const lvPx=15, gapPx=28;
-    const need=(k)=>(zone[k]?16+lvPx*(zone[k]-1)+12:6);
+    const lvPx=30, gapPx=56;
+    const need=(k)=>(zone[k]?32+lvPx*(zone[k]-1)+24:12);
     let s;
     const GAPMM=0;          // gap is in pixels, below
     if(tv){ const t=box.tv;
-      const padL=Math.max(need("fvL"),need("tvL"))+14, padR=Math.max(need("fvR"),need("tvR"))+10;
-      const padT=need("fvT")+16, padB=need("tvB")+32, mid=Math.max(need("fvB"),0)+need("tvT")+gapPx;
+      const padL=Math.max(need("fvL"),need("tvL"))+28, padR=Math.max(need("fvR"),need("tvR"))+20;
+      const padT=need("fvT")+32, padB=need("tvB")+64, mid=Math.max(need("fvB"),0)+need("tvT")+gapPx;
       s=Math.min((W-padL-padR)/Math.max(fv.w,t.w),(H-padT-padB-mid)/(fv.h+t.h));
       const ox=padL+((W-padL-padR)-fv.w*s)/2;
       var PL={fv:{ox:ox-fv.x0*s, oy:padT+fv.y1*s},
               tv:{ox:ox-t.x0*s, oy:padT+fv.h*s+mid+t.y1*s}};
       var XY={y:padT+fv.h*s+need("fvB")+gapPx/2, x0:6, x1:W-6};
     } else { const q=box[sv], lft=(sv==="rsv");
-      const padT=Math.max(need("fvT"),need(sv+"T"))+16, padB=Math.max(need("fvB"),need(sv+"B"))+30;
-      const padL=need(lft?sv+"L":"fvL")+12, padR=need(lft?"fvR":sv+"R")+12, mid=need(lft?sv+"R":"fvR")+need(lft?"fvL":sv+"L")+gapPx;
+      const padT=Math.max(need("fvT"),need(sv+"T"))+32, padB=Math.max(need("fvB"),need(sv+"B"))+60;
+      const padL=need(lft?sv+"L":"fvL")+24, padR=need(lft?"fvR":sv+"R")+24, mid=need(lft?sv+"R":"fvR")+need(lft?"fvL":sv+"L")+gapPx;
       s=Math.min((W-padL-padR-mid)/(fv.w+q.w),(H-padT-padB)/Math.max(fv.h,q.h));
       const x0=padL+((W-padL-padR-mid)-(fv.w+q.w)*s)/2, base=padT+Math.max(fv.h,q.h)*s;
       const fx=lft?x0+q.w*s+mid:x0, qx=lft?x0:x0+fv.w*s+mid;
       var PL={fv:{ox:fx-fv.x0*s, oy:base+fv.y0*s}};
       PL[sv]={ox:qx-q.x0*s, oy:base+q.y0*s};
-      var XY={y:base+Math.max(need("fvB"),need(sv+"B"))*0+10, x0:6, x1:W-6};
+      var XY={y:base+Math.max(need("fvB"),need(sv+"B"))*0+20, x0:6, x1:W-6};
     }
     const toS=(vn,p)=>({x:PL[vn].ox+p.x*s, y:PL[vn].oy-p.y*s});
     const L=(a,b,col,w,dash)=>{ cc.strokeStyle=col; cc.lineWidth=w; cc.setLineDash(dash||[]);
@@ -2002,8 +2001,8 @@
     cc.font="bold 10px Arial"; cc.fillStyle="#44576b"; cc.textAlign="center"; cc.textBaseline="top";
     const lab={fv:"FRONT VIEW",tv:"TOP VIEW",lsv:"LHSV",rsv:"RHSV"};
     views.forEach(vn=>{ const b=box[vn], p0=toS(vn,{x:(b.x0+b.x1)/2,y:b.y0});
-      const below=(vn==="tv")?need("tvB")+2:(vn==="fv"&&tv)?need("fvB")-4:need(vn+"B")+2;
-      if(vn==="fv"&&tv){ const pt=toS(vn,{x:(b.x0+b.x1)/2,y:b.y1}); cc.textBaseline="bottom"; cc.fillText(lab[vn],pt.x,pt.y-need("fvT")-2); cc.textBaseline="top"; }
+      const below=(vn==="tv")?need("tvB")+4:(vn==="fv"&&tv)?need("fvB")-8:need(vn+"B")+4;
+      if(vn==="fv"&&tv){ const pt=toS(vn,{x:(b.x0+b.x1)/2,y:b.y1}); cc.textBaseline="bottom"; cc.fillText(lab[vn],pt.x,pt.y-need("fvT")-4); cc.textBaseline="top"; }
       else cc.fillText(lab[vn],p0.x,p0.y+below); });
     // dimensions
     const lvl={}; const nextLv=k=>{ const n=lvl[k]||0; lvl[k]=n+1; return n; };
@@ -2011,19 +2010,19 @@
       cc.lineTo(x-6*Math.cos(a)+2.2*Math.cos(a+Math.PI/2),y-6*Math.sin(a)+2.2*Math.sin(a+Math.PI/2));
       cc.lineTo(x-6*Math.cos(a)+2.2*Math.cos(a-Math.PI/2),y-6*Math.sin(a)+2.2*Math.sin(a-Math.PI/2)); cc.closePath(); cc.fill(); };
     const txt=(x,y,t,rot)=>{ cc.save(); cc.translate(x,y); if(rot) cc.rotate(-Math.PI/2);
-      cc.font="10px Arial"; const w=cc.measureText(t).width+4; cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(-w/2,-12,w,11);
-      cc.fillStyle="#111"; cc.textAlign="center"; cc.textBaseline="bottom"; cc.fillText(t,0,-2); cc.restore(); };
+      cc.font="20px Arial"; const w=cc.measureText(t).width+8; cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(-w/2,-24,w,22);
+      cc.fillStyle="#111"; cc.textAlign="center"; cc.textBaseline="bottom"; cc.fillText(t,0,-4); cc.restore(); };
     (spec.dims||[]).forEach(D=>{ const vn=D.v, b=box[vn]; if(!b) return;
       if(D.h){ const up=(D.side||"T")!=="B", n=nextLv(vn+(up?"T":"B"));
         const p1=toS(vn,sheet(vn,D.h[0],D.at!=null?D.at:0)), p2=toS(vn,sheet(vn,D.h[1],D.at!=null?D.at:0));
-        const edge=up?toS(vn,{x:0,y:b.y1}).y:toS(vn,{x:0,y:b.y0}).y, y=edge+(up?-1:1)*(16+lvPx*n);
+        const edge=up?toS(vn,{x:0,y:b.y1}).y:toS(vn,{x:0,y:b.y0}).y, y=edge+(up?-1:1)*(32+lvPx*n);
         const b1=D.at!=null?p1.y:edge, b2=D.at!=null?p2.y:edge;
         L({x:p1.x,y:b1+(up?-2:2)},{x:p1.x,y:y+(up?-4:4)},DIMC,0.7); L({x:p2.x,y:b2+(up?-2:2)},{x:p2.x,y:y+(up?-4:4)},DIMC,0.7);
         L({x:p1.x,y:y},{x:p2.x,y:y},DIMC,0.9); arrow(Math.min(p1.x,p2.x),y,Math.PI); arrow(Math.max(p1.x,p2.x),y,0);
         txt((p1.x+p2.x)/2,y,D.text);
       } else if(D.vt){ const lf=(D.side||"L")!=="R", n=nextLv(vn+(lf?"L":"R"));
         const p1=toS(vn,sheet(vn,D.at!=null?D.at:0,D.vt[0])), p2=toS(vn,sheet(vn,D.at!=null?D.at:0,D.vt[1]));
-        const edge=lf?toS(vn,{x:b.x0,y:0}).x:toS(vn,{x:b.x1,y:0}).x, x=edge+(lf?-1:1)*(16+lvPx*n);
+        const edge=lf?toS(vn,{x:b.x0,y:0}).x:toS(vn,{x:b.x1,y:0}).x, x=edge+(lf?-1:1)*(32+lvPx*n);
         const b1=D.at!=null?p1.x:edge, b2=D.at!=null?p2.x:edge;
         L({x:b1+(lf?-2:2),y:p1.y},{x:x+(lf?-4:4),y:p1.y},DIMC,0.7); L({x:b2+(lf?-2:2),y:p2.y},{x:x+(lf?-4:4),y:p2.y},DIMC,0.7);
         L({x:x,y:p1.y},{x:x,y:p2.y},DIMC,0.9); arrow(x,Math.min(p1.y,p2.y),-Math.PI/2); arrow(x,Math.max(p1.y,p2.y),Math.PI/2);
@@ -2032,7 +2031,7 @@
         const ca=Math.cos(a), sa=Math.sin(a), rim={x:c.x+r*ca,y:c.y+r*sa}, tip={x:rim.x+16*ca,y:rim.y+16*sa};
         if(D.dia){ L({x:c.x-r*ca,y:c.y-r*sa},tip,DIMC,0.9); arrow(rim.x,rim.y,a); arrow(c.x-r*ca,c.y-r*sa,a+Math.PI); }
         else { L(c,tip,DIMC,0.9); arrow(rim.x,rim.y,a); }
-        cc.font="10px Arial"; cc.fillStyle="#111"; cc.textAlign=ca>=0?"left":"right"; cc.textBaseline="middle";
+        cc.font="20px Arial"; cc.fillStyle="#111"; cc.textAlign=ca>=0?"left":"right"; cc.textBaseline="middle";
         cc.fillText(D.text,tip.x+(ca>=0?3:-3),tip.y);
       } });
     // the edges belonging to the current step, lit up in every view
@@ -2042,7 +2041,7 @@
       if(Math.hypot(b.x-a.x,b.y-a.y)<0.25){ const p=toS(vn,a); cc.fillStyle=HLC; cc.beginPath(); cc.arc(p.x,p.y,3.2,0,TAU); cc.fill(); return; }
       Pp.runs(sg.A,sg.B).forEach(r=>{ const pa={x:a.x+(b.x-a.x)*r[0],y:a.y+(b.y-a.y)*r[0]}, pb={x:a.x+(b.x-a.x)*r[1],y:a.y+(b.y-a.y)*r[1]};
         L(toS(vn,pa),toS(vn,pb),HLC,r[2]?3:1.6,r[2]?null:[4,3]); }); }); });
-    cc.font="10px Arial"; cc.fillStyle="#44576b"; cc.textAlign="left"; cc.textBaseline="bottom";
+    cc.font="20px Arial"; cc.fillStyle="#44576b"; cc.textAlign="left"; cc.textBaseline="bottom";
     cc.fillText("First-angle projection · all dimensions in mm",6,H-4);
   }
 
@@ -2106,20 +2105,24 @@
     const hd=q.name+" - FOUR-CENTRE METHOD";
     return [
       {text:hd+", step 1 of 6. The circle, Ø "+R1(D)+" mm, lies on a "+PLANE_FACE[q.plane]+", so its isometric view is drawn in that plane. Locate its centre O "+(q.where||"")+". Through O draw the two CENTRE LINES of the circle: on this face they run parallel to the "+ax[0]+" axis and to the "+ax[1]+" axis.",
+       constr:true,
        d:()=>{ const c=q.c, k=q.r+6;
          const P=(s,t)=>C.PJ({x:c.x+s*e[0].x+t*e[1].x,y:c.y+s*e[0].y+t*e[1].y,z:c.z+s*e[0].z+t*e[1].z});
          const a1=P(-k,0), a2=P(k,0), b1=P(0,-k), b2=P(0,k);
          drawLine(a1.x,a1.y,a2.x,a2.y,COL_CONS,LW_THIN,PATTERN_CL); drawLine(b1.x,b1.y,b2.x,b2.y,COL_CONS,LW_THIN,PATTERN_CL);
          const o=O(); drawPoint(o.x,o.y,"O",{x:6,y:10}); }},
       {text:hd+", step 2 of 6 - the ISOMETRIC SQUARE. Along each centre line step off the radius, "+R1(q.r)+" mm, on both sides of O - a true length, because the centre lines are parallel to the axes. This gives the four points P, Q, R and S. Through them draw lines parallel to the axes: a rhombus of side "+R1(D)+" mm - the isometric view of the square that just encloses the circle. P, Q, R and S are the mid-points of its sides, and the finished curve touches the rhombus exactly there.",
+       constr:true,
        d:()=>{ const E0=E(), R_=E0.rhombus;
          lineSet([[R_[0].x,R_[0].y,R_[1].x,R_[1].y],[R_[1].x,R_[1].y,R_[2].x,R_[2].y],[R_[2].x,R_[2].y,R_[3].x,R_[3].y],[R_[3].x,R_[3].y,R_[0].x,R_[0].y]],COL_CONS,LW_THIN);
          ["P","Q","R","S"].forEach(k=>{ const p=E0.mids[k], t=out(p); drawPoint(p.x,p.y,"",{x:0,y:0}); lab(t,k,0,0); }); }},
       {text:hd+", step 3 of 6. The rhombus has two OBTUSE corners (120°), A and C, at the ends of its SHORT diagonal, and two acute corners (60°), B and D. From A draw straight lines to the mid-points of the two sides opposite it, Q and R; from C draw lines to P and S. Each of these four lines is perpendicular to the side it meets.",
+       constr:true,
        d:()=>{ const E0=E(), K=corners(E0);
          lineSet(E0.lines.map(l=>[l[0].x,l[0].y,l[1].x,l[1].y]),COL_CONS,LW_THIN);
          [["A",K.A],["B",K.B],["C",K.Cc],["D",K.D]].forEach(p=>{ const t=out(p[1]); lab(t,p[0],0,0); }); }},
       {text:hd+", step 4 of 6 - the FOUR CENTRES. The line A–Q crosses C–P at the point 1, and A–R crosses C–S at the point 2; both lie on the long diagonal B–D. A, C, 1 and 2 are the four centres of the arcs.",
+       constr:true,
        d:()=>{ const E0=E(), K=corners(E0);
          drawLine(K.B.x,K.B.y,K.D.x,K.D.y,COL_CONS,0.8,[3,3]);
          const m1=E0.centres.m, n1=E0.centres.n;
@@ -2140,6 +2143,7 @@
     const dist=Math.hypot(d.x,d.y,d.z);
     return [
       {text:name+" - CENTRE-SHIFT METHOD. It is the same circle moved "+R1(dist)+" mm "+dirText+", so the whole construction need not be repeated: move each of the four centres A, C, 1 and 2 - and the tangent points P, Q, R, S - through "+R1(dist)+" mm "+dirText+". The distance is a true length, because it is measured parallel to an isometric axis.",
+       constr:true,
        d:()=>{ const E0=E(), E1=E2();
          const pairs=[[E0.centres.O1,E1.centres.O1],[E0.centres.O2,E1.centres.O2],[E0.centres.m,E1.centres.m],[E0.centres.n,E1.centres.n]];
          lineSet(pairs.map(p=>[p[0].x,p[0].y,p[1].x,p[1].y]),COL_CONS,0.8,[3,3]);
@@ -2279,8 +2283,17 @@
 
     // groups may be given as a list, or as a function of the construction context (for the four-centre steps)
     const flat=a=>a.reduce((o,g)=>o.concat(Array.isArray(g)?flat(g):[g]),[]);
-    flat(typeof O.groups==="function"?O.groups(CTX):(O.groups||[])).forEach(g=>{
-      steps.push({text:g.text, hl:g.hl||[], nohl:!!g.nohl, d:()=>g.d(CTX)});
+    const groupItems=flat(typeof O.groups==="function"?O.groups(CTX):(O.groups||[]));
+    // four-centre / centre-shift steps marked constr:true are throwaway construction (centre lines,
+    // the rhombus, its diagonals) - keep them while any circle is still being built, but once every
+    // circle in this problem is finished (and for "Show all") they are no longer drawn, so the later
+    // steps and the completed view show only the finished curves, not the scaffolding behind them.
+    const circlesFinishIdx=steps.length+groupItems.length;
+    groupItems.forEach(g=>{
+      steps.push({text:g.text, hl:g.hl||[], nohl:!!g.nohl, d:()=>{
+        if(g.constr&&currentStep>circlesFinishIdx) return;
+        g.d(CTX);
+      }});
     });
 
     steps.push({text:"Line in the finished isometric view with the full DARK line. Only the edges that can actually be SEEN are drawn - in an isometric view hidden edges are left out altogether"+(O.circles||O.cyls?"; of each isometric circle only the part that can be seen is lined in, and the outlines of a curved surface are drawn as TANGENTS to its two end curves":"")+". Leave the construction lines thin.",
@@ -2641,7 +2654,7 @@
         IH={id:"H",label:"Height H",unit:"mm"};
   const vB=v=>(v.L<=0||v.B<=0||v.H<=0)?"Length, depth and height must all be positive.":null;
   const QV={tv:"front view and top view",lsv:"front view and left-hand side view",rsv:"front view and right-hand side view"};
-  const Q=(desc,qv,extra)=>v=>desc+" Its "+QV[qv||"tv"]+" are given in the question figure (first-angle projection, all dimensions in mm)."+(extra?" "+extra:"")+" Draw its ISOMETRIC VIEW (isometric drawing, full size).";
+  const Q=(desc,qv,extra)=>v=>desc+(extra?" "+extra:"")+" Draw its isometric view from the given "+QV[qv||"tv"]+".";
 
   const PROBLEMS=[
     { title:"Problem 1 - Isometric view of a rectangular block",
@@ -2856,11 +2869,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 11px Arial";
-    const w=gctx.measureText(t).width+6;
+    gctx.font="bold 22px Arial";
+    const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
-    gctx.fillRect(x-w/2,y-7,w,14);
-    gText(x,y,t,color||GINK,"bold 11px Arial");
+    gctx.fillRect(x-w/2,y-14,w,28);
+    gText(x,y,t,color||GINK,"bold 22px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -2871,12 +2884,12 @@
   function gDimH(y,x1,x2,text,on){
     const c=on?HLC:GSOFT, w=on?1.7:1;
     gLine(x1,y,x2,y,c,w); gArrow(x1,y,Math.PI,c); gArrow(x2,y,0,c);
-    gLabel((x1+x2)/2,y-8,text,on?HLC:GINK);
+    gLabel((x1+x2)/2,y-16,text,on?HLC:GINK);
   }
   function gDimV(x,y1,y2,text,on){
     const c=on?HLC:GSOFT, w=on?1.7:1;
     gLine(x,y1,x,y2,c,w); gArrow(x,y1,-Math.PI/2,c); gArrow(x,y2,Math.PI/2,c);
-    gctx.save(); gctx.translate(x-9,(y1+y2)/2); gctx.rotate(-Math.PI/2);
+    gctx.save(); gctx.translate(x-18,(y1+y2)/2); gctx.rotate(-Math.PI/2);
     gLabel(0,0,text,on?HLC:GINK); gctx.restore();
   }
   function gFit(wmm,hmm){
@@ -2986,7 +2999,7 @@
       const card=document.createElement("div");
       card.className="prob-card";
       card.innerHTML=`<div class="pc-text"><h3>${p.title}</h3><p>${p.statement(p.defaults)}</p></div>
-                      <div class="pc-fig"><canvas width="460" height="400"></canvas><div class="pc-cap">Question figure &middot; dimensions in mm</div></div>`;
+                      <div class="pc-fig"><canvas width="560" height="480"></canvas><div class="pc-cap">Question figure &middot; dimensions in mm</div></div>`;
       const btn=document.createElement("button");
       btn.innerText="Solve this problem ▶";
       btn.onclick=()=>openProblem(i);
@@ -3387,6 +3400,6 @@
 
 </script>
 
-<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Prof. Keshav M. Jadhav &middot; All rights reserved</span></footer>
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Prof. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Keshav M. Jadhav &middot; All rights reserved</span></footer>
 </body>
 </html>

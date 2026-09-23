@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Engineering Graphics - Interactive Drawing Simulators : Orthographic Projections
-  Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.
+  Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.
 
   This work is protected by copyright. Copying, redistributing, republishing or
   creating derivative works from this material without the author's written
@@ -10,8 +10,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="author" content="Prof. Keshav M. Jadhav">
-  <meta name="copyright" content="Copyright (c) 2026 Prof. Keshav M. Jadhav. All rights reserved.">
+  <meta name="author" content="Keshav M. Jadhav">
+  <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Orthographic Projections - Problems with Stepwise Solutions</title>
   <style>
@@ -285,7 +285,7 @@
   const LW_THIN=1.2, LW_THICK=2.8;
   const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#8a97a4";
   const COL_OBS="#c0392b";          // direction-of-observation arrows
-  const FONT_MAIN="13px Arial", FONT_DIM="10px Arial";
+  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -300,7 +300,7 @@
   function clearCanvasWhite(){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
-    ctx.font="11px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+    ctx.font="22px Arial"; ctx.fillStyle="#555"; ctx.textAlign="right"; ctx.textBaseline="bottom";
     ctx.fillText("Note: All dimensions are in mm",CANVAS_W-8,CANVAS_H-6);
     ctx.restore();
   }
@@ -363,7 +363,7 @@
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="10px Arial"; ctx.fillStyle="#222";
+    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
       ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
@@ -1883,9 +1883,9 @@
         cc.lineTo(s1.x-13*Math.cos(an)+5*Math.cos(an+Math.PI/2), s1.y-13*Math.sin(an)+5*Math.sin(an+Math.PI/2));
         cc.lineTo(s1.x-13*Math.cos(an)+5*Math.cos(an-Math.PI/2), s1.y-13*Math.sin(an)+5*Math.sin(an-Math.PI/2));
         cc.closePath(); cc.fill();
-        cc.font="bold 14px Arial"; cc.textAlign="center"; cc.textBaseline="middle";
-        const lx=s1.x+13*Math.cos(an), ly=s1.y+13*Math.sin(an), lw=cc.measureText(q.label||"A").width+6;
-        cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(lx-lw/2,ly-9,lw,18);
+        cc.font="bold 28px Arial"; cc.textAlign="center"; cc.textBaseline="middle";
+        const lx=s1.x+13*Math.cos(an), ly=s1.y+13*Math.sin(an), lw=cc.measureText(q.label||"A").width+12;
+        cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(lx-lw/2,ly-18,lw,36);
         cc.fillStyle="#000"; cc.fillText(q.label||"A",lx,ly);
       });
       cc.restore();
@@ -1941,9 +1941,9 @@
         if(!radius) ar(P1.x,P1.y,ang+Math.PI);
         ar(Q1.x,Q1.y,ang);
         const mx2=(P1.x+Q1.x)/2, my2=(P1.y+Q1.y)/2;
-        cc.font="bold 11px Arial";
-        const w=cc.measureText(text).width+6;
-        cc.fillStyle="rgba(255,255,255,0.93)"; cc.fillRect(mx2-w/2,my2-7,w,14);
+        cc.font="bold 22px Arial";
+        const w=cc.measureText(text).width+12;
+        cc.fillStyle="rgba(255,255,255,0.93)"; cc.fillRect(mx2-w/2,my2-14,w,28);
         cc.fillStyle=DIMC; cc.textAlign="center"; cc.textBaseline="middle";
         cc.fillText(text,mx2,my2);
       };
@@ -1966,8 +1966,8 @@
         for(let i=0;i<220;i++){ const x=Rs.x+ux*t, y=Rs.y+uy*t;
           if(x>bx1+m||x<bx0-m||y<by0-m) break; t+=3; }
         const T={x:Rs.x+ux*t, y:Rs.y+uy*t};
-        cc.font="bold 11px Arial";
-        const w=cc.measureText(txt).width+8;
+        cc.font="bold 22px Arial";
+        const w=cc.measureText(txt).width+16;
         let dir=ux>=0?1:-1;
         if(dir>0&&T.x+w>W-4) dir=-1; else if(dir<0&&T.x-w<4) dir=1;
         L(T,{x:T.x+dir*w,y:T.y},DIMC,1.1);                                     // the shelf
@@ -2245,7 +2245,7 @@
   }
   /* every figure and every solution carries the note that sizes are in millimetres */
   function figNote(cc,W,H){
-    cc.save(); cc.font="11px Arial"; cc.fillStyle="#3d4f60"; cc.textAlign="left"; cc.textBaseline="bottom";
+    cc.save(); cc.font="22px Arial"; cc.fillStyle="#3d4f60"; cc.textAlign="left"; cc.textBaseline="bottom";
     cc.fillText("NOTE: All dimensions are in mm.",8,H-6); cc.restore();
   }
 
@@ -2423,7 +2423,7 @@
        every zone keeps its own level counter, so two dimensions never
        land on top of one another; the overall sizes are allocated last
        and therefore sit outside the feature sizes. */
-    const DG=26, DS=20;    // first dimension line 26 px off the view, 20 px between lines
+    const DG=52, DS=40;    // first dimension line off the view, and between stacked lines
     // D.chain : put this dimension on the same line as the previous one in its zone (chain dimensioning)
     const Z={}; let CHAIN=false; const zl=k=>{ const n=Z[k]||0; if(CHAIN&&n) return n-1; Z[k]=n+1; return n; };
     function dimFn(D){
@@ -2466,13 +2466,13 @@
 
     /* ---- reference lines and observer arrows ---------------------- */
     // X-Y must reach past the outermost dimension line, or the Y label lands on it
-    const zout=n=>(n?DG+DS*(n-1)+26:26);      // clearance beyond the outermost dimension
-    const zpad=n=>(n?DG+DS*(n-1)+18:10);      // ... a little tighter, for the view titles
+    const zout=n=>(n?DG+DS*(n-1)+52:52);      // clearance beyond the outermost dimension
+    const zpad=n=>(n?DG+DS*(n-1)+36:20);      // ... a little tighter, for the view titles
     const padL=zout(Math.max(Z.fvL||0,Z.tvL||0)), padR=zout(Math.max(Z.fvR||0,Z.tvR||0));
     const xyL=Math.min(VB.fv.l-padL,VB.sv.l-26), xyR=Math.max(VB.fv.r+padR,VB.sv.r+26);
     const x1T=Math.max(16,VB.fv.t-72), y1B=VB.tv.b+44;
     // the side-view arrow stands clear of the dimensions on that side of the top view
-    const obsGap=Math.max(56,zout(Math.max(Z.tvL||0,Z.tvR||0))+6);
+    const obsGap=Math.max(112,zout(Math.max(Z.tvL||0,Z.tvR||0))+12);
     const obsSX=(SIDE==="LHSV")?Math.max(8,TVx(0)-obsGap-30):Math.min(CANVAS_W-8,TVx(L)+obsGap+30);
     const obsEX=(SIDE==="LHSV")?obsSX+30:obsSX-30;
     const obsFVx=(SIDE==="LHSV")?TVx(L)+24:TVx(0)-24;
@@ -2646,14 +2646,14 @@
 
     steps.push({text:"Label the views and check them against one another: front view and top view line up vertically, front view and "+SVFULL+" line up horizontally, and every depth in the side view equals the same depth in the top view. "+(SEC?"Write SECTION "+SEC.name+" under the sectional front view. ":"")+"Mark the sheet FIRST ANGLE PROJECTION. The three views are complete – now turn the 3-D model below to see where each of them comes from.",
       hl:O.hlAll||[],
-      d:()=>{ drawText(FVx(L/2),VB.fv.t-zpad(Z.fvT||0)-6,SEC?("SECTIONAL FRONT VIEW  –  SECTION "+SEC.name):"FRONT VIEW",COL_DIM,"bold 12px Arial","center","middle");
-              drawText(TVx(L/2),VB.tv.b+zpad(Z.tvB||0)+6,"TOP VIEW",COL_DIM,"bold 12px Arial","center","middle");
+      d:()=>{ drawText(FVx(L/2),VB.fv.t-zpad(Z.fvT||0)-12,SEC?("SECTIONAL FRONT VIEW  –  SECTION "+SEC.name):"FRONT VIEW",COL_DIM,"bold 12px Arial","center","middle");
+              drawText(TVx(L/2),VB.tv.b+zpad(Z.tvB||0)+12,"TOP VIEW",COL_DIM,"bold 12px Arial","center","middle");
               drawText(svMid,VB.sv.t-28,SIDE,COL_DIM,"bold 12px Arial","center","middle");
               // bottom-left - unless the top view and its dimensions reach that corner; then the corner under
               // the side view, if there is room below the end of the 45° line
-              const faY=Math.max(CANVAS_H-58,TVy(B)+46);
-              if(SIDE==="LHSV"&&VB.tv.l-zout(Z.tvL||0)<150&&faY<=CANVAS_H-40) drawFirstAngleSymbol(CANVAS_W-150,faY,14);
-              else drawFirstAngleSymbol(62,CANVAS_H-46,14); }});
+              const faY=Math.max(CANVAS_H-82,TVy(B)+46);
+              if(SIDE==="LHSV"&&VB.tv.l-zout(Z.tvL||0)<150&&faY<=CANVAS_H-64) drawFirstAngleSymbol(CANVAS_W-150,faY,14);
+              else drawFirstAngleSymbol(62,CANVAS_H-70,14); }});
 
     const results=`<b>Overall sizes:</b>
       <table>
@@ -3698,11 +3698,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 11px Arial";
-    const w=gctx.measureText(t).width+6;
+    gctx.font="bold 22px Arial";
+    const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
-    gctx.fillRect(x-w/2,y-7,w,14);
-    gText(x,y,t,color||GINK,"bold 11px Arial");
+    gctx.fillRect(x-w/2,y-14,w,28);
+    gText(x,y,t,color||GINK,"bold 22px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -3713,12 +3713,12 @@
   function gDimH(y,x1,x2,text,on){
     const c=on?HLC:GSOFT, w=on?1.7:1;
     gLine(x1,y,x2,y,c,w); gArrow(x1,y,Math.PI,c); gArrow(x2,y,0,c);
-    gLabel((x1+x2)/2,y-8,text,on?HLC:GINK);
+    gLabel((x1+x2)/2,y-16,text,on?HLC:GINK);
   }
   function gDimV(x,y1,y2,text,on){
     const c=on?HLC:GSOFT, w=on?1.7:1;
     gLine(x,y1,x,y2,c,w); gArrow(x,y1,-Math.PI/2,c); gArrow(x,y2,Math.PI/2,c);
-    gctx.save(); gctx.translate(x-9,(y1+y2)/2); gctx.rotate(-Math.PI/2);
+    gctx.save(); gctx.translate(x-18,(y1+y2)/2); gctx.rotate(-Math.PI/2);
     gLabel(0,0,text,on?HLC:GINK); gctx.restore();
   }
   function gFit(wmm,hmm){
@@ -4297,6 +4297,6 @@
 
 </script>
 
-<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Mr. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Prof. Keshav M. Jadhav &middot; All rights reserved</span></footer>
+<footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Prof. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Keshav M. Jadhav &middot; All rights reserved</span></footer>
 </body>
 </html>

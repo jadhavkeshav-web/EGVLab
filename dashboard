@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faculty dashboard - Engineering Graphics</title>
+<style>
+  :root{
+    --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
+    --line:#dfe5ec; --paper:#f4f6f9; --card:#ffffff; --muted:#6b7686;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:#16202b; font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif; padding:24px 16px;}
+  .wrap{max-width:1100px; margin:0 auto;}
+  .back{font-size:.82rem; color:var(--muted); text-decoration:none;}
+  h1{color:var(--ink); font-size:1.25rem; margin:10px 0 4px;}
+  .sub{color:var(--muted); font-size:.85rem; margin-bottom:4px;}
+  .gen{color:var(--muted); font-size:.76rem; margin-bottom:14px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 1px 3px rgba(22,52,79,.08); padding:16px; overflow-x:auto;}
+
+  /* toolbar */
+  .toolbar{display:flex; flex-wrap:wrap; align-items:end; gap:14px; margin-bottom:16px; background:var(--card);
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:0 1px 3px rgba(22,52,79,.06);}
+  .field{display:flex; flex-direction:column; gap:4px; position:relative;}
+  .field label{font-size:.76rem; color:var(--muted); font-weight:600;}
+  .field input, .field select{padding:7px 9px; border:1px solid var(--line); border-radius:8px; font:inherit; background:#fff; color:#16202b; min-width:200px;}
+  .suggest{position:absolute; top:100%; left:0; right:0; margin-top:-1px; background:#fff; border:1px solid var(--line);
+    border-radius:0 0 8px 8px; max-height:180px; overflow:auto; z-index:5; box-shadow:0 4px 10px rgba(22,52,79,.08);}
+  .suggest div{padding:7px 10px; font-size:.86rem; cursor:pointer;}
+  .suggest div:hover{background:#eef2f7;}
+  .filter-chip{display:inline-flex; align-items:center; gap:6px; background:#eef2f7; color:var(--ink); font-size:.82rem;
+    font-weight:600; padding:5px 10px; border-radius:999px; margin-bottom:10px;}
+  .filter-chip button{border:0; background:none; color:var(--muted); cursor:pointer; font:inherit; padding:0; line-height:1;}
+  .filter-chip button:hover{color:var(--ink);}
+  .toolbar button{padding:8px 14px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);
+    font:600 .85rem/1 inherit; cursor:pointer; white-space:nowrap;}
+  .toolbar button:hover{background:#eef2f7;}
+  .toolbar .primary{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .toolbar .primary:hover{background:var(--ink-2);}
+  .toolbar .spacer{flex:1 1 auto;}
+
+  table{border-collapse:collapse; width:100%; font-size:.85rem;}
+  th, td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap;}
+  th{color:var(--ink); background:#eef2f7; position:sticky; top:0;}
+  td.num{text-align:center;}
+  th:first-child, td:first-child{position:sticky; left:0; background:var(--card); z-index:1;}
+  th.num{text-align:center;}
+  td{vertical-align:top;}
+  .sub-line{color:var(--muted); font-size:.76rem; margin-top:2px;}
+  .unused{color:#b8c0ca;}
+  th:first-child{background:#eef2f7; z-index:2;}
+  .legend{color:var(--muted); font-size:.78rem; margin-top:10px;}
+  tr:hover td{background:#f8fafc;}
+  .empty{color:var(--muted); padding:24px; text-align:center;}
+  .gate{max-width:420px; margin:60px auto; text-align:center; color:var(--muted);}
+  .gate a{color:var(--ink-2);}
+  .pct{font-weight:700; color:var(--ink-2);}
+  td.overall{font-weight:700; color:var(--ink);}
+
+  /* chart */
+  .chart-card{margin-top:16px;}
+  .chart-card h3{margin:0 0 10px; font-size:.92rem; color:var(--ink);}
+  #chart{display:block; width:100%; height:auto;}
+
+  @media print{
+    body{padding:0; background:#fff;}
+    .no-print{display:none !important;}
+    .card{box-shadow:none; border:1px solid #ccc;}
+    th{position:static;}
+    th:first-child, td:first-child{position:static;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back no-print" href="index.html">&larr; Back to Engineering Graphics</a>
+  <div id="gate" class="gate" style="display:none;">
+    <p>You need to be logged in as faculty to see this page.</p>
+    <p><a href="account.html">Log in or register</a></p>
+  </div>
+  <div id="content" style="display:none;">
+    <h1 id="h1">Your students' usage</h1>
+    <div class="sub" id="who"></div>
+    <div class="sub" id="range-line"></div>
+    <div class="gen" id="gen-line"></div>
+
+    <div class="toolbar no-print">
+      <div class="field">
+        <label for="f-from">From</label>
+        <input type="date" id="f-from">
+      </div>
+      <div class="field">
+        <label for="f-to">To</label>
+        <input type="date" id="f-to">
+      </div>
+      <button type="button" id="apply-range">Apply</button>
+      <button type="button" id="clear-range">All time</button>
+      <div class="field" id="scope-field" hidden>
+        <label for="scope-select">Dashboard</label>
+        <select id="scope-select">
+          <option value="mine">My students</option>
+          <option value="admin">All institutes (admin)</option>
+        </select>
+      </div>
+      <div class="field" id="groupby-field" hidden>
+        <label for="group-by">View by</label>
+        <select id="group-by">
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="institute">Institute</option>
+        </select>
+      </div>
+      <div class="field" id="inst-filter-field" hidden>
+        <label for="f-institute">Filter by institute</label>
+        <input type="text" id="f-institute" autocomplete="off" placeholder="Start typing an institute's name">
+        <div id="f-institute-suggest" class="suggest" hidden></div>
+      </div>
+      <div class="field" id="fac-filter-field" hidden>
+        <label for="f-faculty">Filter by faculty</label>
+        <input type="text" id="f-faculty" autocomplete="off" placeholder="Start typing a faculty's name">
+        <div id="f-faculty-suggest" class="suggest" hidden></div>
+      </div>
+      <div class="spacer"></div>
+      <button type="button" class="primary" id="download-pdf">&#8681; Download report (PDF)</button>
+    </div>
+
+    <div class="filter-chip no-print" id="filter-chip" hidden>
+      Showing only: <span id="filter-chip-label"></span>
+      <button type="button" id="clear-filter" title="Clear filter">&times;</button>
+    </div>
+
+    <div class="card">
+      <table id="table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+      <div id="empty" class="empty" style="display:none;">No students have registered under you yet.</div>
+    </div>
+
+    <div class="card chart-card" id="chart-card" hidden>
+      <h3>Percentage of each topic covered, across the students shown above</h3>
+      <svg id="chart" viewBox="0 0 640 220"></svg>
+    </div>
+
+    <div class="legend">"Solved" counts different problems the student worked through to the last step, one step at a time, out of the problems they started. "Via Show all" counts problems where they jumped straight to the finished answer instead. "% covered" is problems completed out of that topic's total problems. The time shown is how long that app was open and visible on their screen.</div>
+  </div>
+</div>
+
+<script src="account.js"></script>
+<script>
+(function(){
+  "use strict";
+  var APP_LABELS = { curves:"Curves", lines:"Lines", orthographic:"Orthographic", isometric:"Isometric", development:"Development" };
+
+  var sess = EG.session();
+  if (!sess || (sess.role !== "faculty" && sess.role !== "admin")) {
+    document.getElementById("gate").style.display = "";
+    return;
+  }
+  document.getElementById("content").style.display = "";
+  document.getElementById("who").textContent = "Logged in as " + sess.name + (sess.role === "admin" ? " (admin)" : "");
+
+  // A stand-alone admin account always sees every institute. A faculty
+  // account with the extra is_admin privilege defaults to its own students,
+  // but can switch views - opening with ?admin=1 (e.g. from account.html)
+  // starts it in admin scope.
+  var canSwitch = sess.role === "faculty" && sess.is_admin;
+  var adminScope = sess.role === "admin" || (canSwitch && /(^\?|[&?])admin=1(&|$)/.test(location.search));
+  if (canSwitch) {
+    document.getElementById("scope-field").hidden = false;
+    document.getElementById("scope-select").value = adminScope ? "admin" : "mine";
+  }
+  var groupBy = "student";
+  var lastData = null;
+  var filterType = null, filterId = null; // 'institute' | 'faculty' - set only via search-and-pick below
+
+  function applyScopeUI(){
+    document.getElementById("h1").textContent = adminScope ? "All students' usage" : "Your students' usage";
+    document.getElementById("groupby-field").hidden = !adminScope;
+    document.getElementById("inst-filter-field").hidden = !adminScope;
+    document.getElementById("fac-filter-field").hidden = !adminScope;
+    if (!adminScope) { groupBy = "student"; clearFilter(); }
+  }
+  applyScopeUI();
+  document.getElementById("scope-select").addEventListener("change", function(){
+    adminScope = this.value === "admin";
+    applyScopeUI();
+    load();
+  });
+
+  // ---- search-and-pick a single institute or faculty, narrowing everything shown (and downloaded) to it ----
+  function liveSearch(input, list, url, onPick){
+    var timer = null;
+    input.addEventListener("input", function(){
+      var q = input.value.trim();
+      if (timer) clearTimeout(timer);
+      list.hidden = true; list.innerHTML = "";
+      if (!q) return;
+      timer = setTimeout(function(){
+        EG.apiFetch(url + encodeURIComponent(q)).then(function(d){
+          if (input.value.trim() !== q) return; // a newer search is already on its way
+          list.innerHTML = "";
+          var items = (d && d.ok) ? (d.institutes || d.faculty || []) : [];
+          items.forEach(function(item){
+            var row = document.createElement("div");
+            row.textContent = item.name + (item.institute_name ? " — " + item.institute_name : "");
+            row.addEventListener("click", function(){ list.hidden = true; onPick(item); });
+            list.appendChild(row);
+          });
+          list.hidden = !items.length;
+        });
+      }, 250);
+    });
+  }
+  liveSearch(document.getElementById("f-institute"), document.getElementById("f-institute-suggest"), "/institutes.php?q=", function(item){
+    setFilter("institute", item.id, item.name);
+    document.getElementById("f-institute").value = item.name;
+    document.getElementById("f-faculty").value = "";
+  });
+  liveSearch(document.getElementById("f-faculty"), document.getElementById("f-faculty-suggest"), "/admin_faculty_search.php?q=", function(item){
+    setFilter("faculty", item.id, item.name);
+    document.getElementById("f-faculty").value = item.name;
+    document.getElementById("f-institute").value = "";
+  });
+  function setFilter(type, id, label){
+    filterType = type; filterId = id;
+    groupBy = "student"; document.getElementById("group-by").value = "student";
+    document.getElementById("filter-chip").hidden = false;
+    document.getElementById("filter-chip-label").textContent = label + (type === "institute" ? " (institute)" : " (faculty)");
+    load();
+  }
+  function clearFilter(){
+    filterType = null; filterId = null;
+    document.getElementById("f-institute").value = ""; document.getElementById("f-faculty").value = "";
+    document.getElementById("filter-chip").hidden = true;
+  }
+  document.getElementById("clear-filter").addEventListener("click", function(){ clearFilter(); load(); });
+
+  function qs(params){
+    var parts = [];
+    Object.keys(params).forEach(function(k){ if (params[k]) parts.push(k + "=" + encodeURIComponent(params[k])); });
+    return parts.length ? "?" + parts.join("&") : "";
+  }
+
+  function load(){
+    var from = document.getElementById("f-from").value, to = document.getElementById("f-to").value;
+    document.getElementById("empty").style.display = "none";
+    var params = { from: from, to: to, admin: adminScope ? "1" : "" };
+    if (filterType === "institute") params.institute_id = filterId;
+    if (filterType === "faculty") params.faculty_id = filterId;
+    EG.apiFetch("/faculty_summary.php" + qs(params)).then(function(d){
+      if (!d || d.ok !== true) {
+        if (d && d._status === 401) {
+          document.getElementById("content").style.display = "none";
+          document.getElementById("gate").style.display = "";
+          return;
+        }
+        var why = "Couldn't reach the server - please try again in a little while.";
+        if (d && d.error === "not configured") why = "The account backend for this site isn't set up yet.";
+        else if (d && d._status && d.error) why = d.error;
+        document.getElementById("empty").style.display = "";
+        document.getElementById("empty").textContent = why;
+        document.querySelector("#table thead").innerHTML = "";
+        document.querySelector("#table tbody").innerHTML = "";
+        document.getElementById("chart-card").hidden = true;
+        return;
+      }
+      lastData = d;
+      document.getElementById("range-line").textContent = (d.from || d.to)
+        ? "Showing activity from " + (d.from || "the start") + " to " + (d.to || "now")
+        : "Showing activity for all time";
+      document.getElementById("gen-line").textContent = "Report generated " + new Date().toLocaleString();
+      render();
+    });
+  }
+
+  function render(){
+    var d = lastData;
+    if (!d) return;
+    var isAdmin = d.scope === "admin";
+    var keys = d.app_keys || Object.keys(APP_LABELS);
+    var totals = d.app_totals || {};
+    var thead = document.querySelector("#table thead");
+    var tbody = document.querySelector("#table tbody");
+    thead.innerHTML = ""; tbody.innerHTML = "";
+
+    if (!d.students.length) {
+      document.getElementById("empty").style.display = "";
+      document.getElementById("empty").textContent = "No students have registered under you yet.";
+      document.getElementById("chart-card").hidden = true;
+      return;
+    }
+
+    var rows = (isAdmin && groupBy !== "student") ? rollUp(d.students, groupBy) : d.students.map(function(s){
+      return { label: s.name, sub: s.email, extra: isAdmin ? (s.faculty_name || "—") : null,
+               extraSub: isAdmin ? s.institute_name : null, apps: s.apps, pct_overall: s.pct_overall, count: null };
+    });
+
+    var headRow = document.createElement("tr");
+    headRow.appendChild(el("th", groupBy === "faculty" ? "Faculty" : groupBy === "institute" ? "Institute" : "Student"));
+    if (isAdmin && groupBy === "student") headRow.appendChild(el("th", "Faculty / institute"));
+    if (isAdmin && groupBy !== "student") headRow.appendChild(el("th", "Students", "num"));
+    keys.forEach(function(k){ headRow.appendChild(el("th", APP_LABELS[k]||k, "num")); });
+    headRow.appendChild(el("th", "Overall", "num"));
+    thead.appendChild(headRow);
+
+    rows.forEach(function(r){
+      var row = document.createElement("tr");
+      var who = el("td", r.label);
+      if (r.sub) who.appendChild(el("div", r.sub, "sub-line"));
+      row.appendChild(who);
+      if (isAdmin && groupBy === "student" && r.extra !== null) {
+        var fac = el("td", r.extra);
+        if (r.extraSub) fac.appendChild(el("div", r.extraSub, "sub-line"));
+        row.appendChild(fac);
+      }
+      if (isAdmin && groupBy !== "student") row.appendChild(el("td", String(r.count), "num"));
+      keys.forEach(function(k){
+        var a = r.apps[k] || { opened:0, completed:0, revealed:0, duration_ms:0, pct:0 };
+        var total = totals[k] || 0;
+        var cell = document.createElement("td");
+        cell.className = "num";
+        if (!a.opened && !a.duration_ms && !a.completed) {
+          cell.appendChild(el("span", "—", "unused"));
+        } else {
+          var line = document.createElement("div");
+          line.appendChild(document.createTextNode(a.completed + (total ? " of " + total : "") + " "));
+          var pctSpan = document.createElement("span"); pctSpan.className = "pct"; pctSpan.textContent = "(" + (a.pct || 0) + "%)";
+          line.appendChild(pctSpan);
+          cell.appendChild(line);
+          if (a.revealed) cell.appendChild(el("div", a.revealed + " via Show all", "sub-line"));
+          cell.appendChild(el("div", fmtDuration(a.duration_ms), "sub-line"));
+        }
+        row.appendChild(cell);
+      });
+      var ov = el("td", (r.pct_overall || 0) + "%", "num overall");
+      row.appendChild(ov);
+      tbody.appendChild(row);
+    });
+
+    drawChart(keys, rows, totals);
+  }
+
+  /** Rolls the per-student rows up into one row per faculty or per institute. */
+  function rollUp(students, by){
+    var groups = {}, order = [];
+    students.forEach(function(s){
+      var key = by === "faculty" ? (s.faculty_name || "(no faculty)") : (s.institute_name || "(no institute)");
+      if (!groups[key]) { groups[key] = { label: key, sub: null, extra: null, extraSub: null, count: 0, apps: {}, _sumPct: 0 }; order.push(key); }
+      var g = groups[key];
+      g.count++;
+      g._sumPct += (s.pct_overall || 0);
+      Object.keys(s.apps).forEach(function(k){
+        if (!g.apps[k]) g.apps[k] = { opened:0, completed:0, revealed:0, duration_ms:0, _sumPct:0 };
+        var a = s.apps[k], ga = g.apps[k];
+        ga.opened += a.opened; ga.completed += a.completed; ga.revealed += a.revealed;
+        ga.duration_ms += a.duration_ms; ga._sumPct += (a.pct || 0);
+      });
+    });
+    return order.map(function(key){
+      var g = groups[key];
+      Object.keys(g.apps).forEach(function(k){ g.apps[k].pct = Math.round(g.apps[k]._sumPct / g.count); });
+      g.pct_overall = Math.round(g._sumPct / g.count);
+      return g;
+    });
+  }
+
+  function drawChart(keys, rows, totals){
+    var svg = document.getElementById("chart");
+    document.getElementById("chart-card").hidden = false;
+    var W = 640, H = 220, padL = 90, padB = 26, padT = 10, barH = 22, gap = 14;
+    var n = keys.length;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + Math.max(H, padT + n * (barH + gap)));
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    function svgEl(tag, attrs){ var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.keys(attrs).forEach(function(k){ e.setAttribute(k, attrs[k]); }); return e; }
+
+    // average % covered per app across the rows currently shown
+    var avg = {};
+    keys.forEach(function(k){
+      var sum = 0, count = 0;
+      rows.forEach(function(r){ var a = r.apps[k]; if (a) { sum += (a.pct || 0); count++; } });
+      avg[k] = count ? Math.round(sum / count) : 0;
+    });
+
+    var plotW = W - padL - 60;
+    keys.forEach(function(k, i){
+      var y = padT + i * (barH + gap);
+      svg.appendChild(svgEl("text", { x: padL - 8, y: y + barH * 0.68, "text-anchor": "end", "font-size": "13", fill: "#2c3e50" })).textContent = APP_LABELS[k] || k;
+      svg.appendChild(svgEl("rect", { x: padL, y: y, width: plotW, height: barH, fill: "#eef2f7", rx: 4 }));
+      var w = Math.max(2, Math.round(plotW * avg[k] / 100));
+      svg.appendChild(svgEl("rect", { x: padL, y: y, width: w, height: barH, fill: "#2a5a86", rx: 4 }));
+      svg.appendChild(svgEl("text", { x: padL + plotW + 8, y: y + barH * 0.68, "font-size": "13", fill: "#16344f", "font-weight": "700" })).textContent = avg[k] + "%";
+    });
+  }
+
+  document.getElementById("apply-range").addEventListener("click", load);
+  document.getElementById("clear-range").addEventListener("click", function(){
+    document.getElementById("f-from").value = ""; document.getElementById("f-to").value = ""; load();
+  });
+  document.getElementById("group-by").addEventListener("change", function(){ groupBy = this.value; render(); });
+  document.getElementById("download-pdf").addEventListener("click", function(){ window.print(); });
+
+  function el(tag, text, cls){
+    var e = document.createElement(tag);
+    e.textContent = text;               // textContent only - student/app data is untrusted for HTML purposes
+    if (cls) e.className = cls;
+    return e;
+  }
+  function fmtDuration(ms){
+    if (!ms) return "—";
+    var mins = Math.round(ms/60000);
+    if (mins < 1) return "<1 min";
+    if (mins < 60) return mins + " min";
+    return Math.floor(mins/60) + "h " + (mins%60) + "m";
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

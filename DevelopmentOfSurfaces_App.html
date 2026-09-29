@@ -14,6 +14,7 @@
   <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Development of Lateral Surfaces - Problems with Stepwise Solutions</title>
+  <script src="account.js"></script>
   <style>
     :root{
       --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
@@ -92,17 +93,23 @@
     #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
     #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:crosshair;}
     #spaceCanvas.dragging{cursor:move;}
-    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
     #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    .fs-only{display:none;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    /* step-navigation controls, relocated here from the left panel so they sit right above the sketch
+       (and so the same controls - not a duplicate set - are still reachable in full screen) */
+    #step-toolbar{display:flex;align-items:center;gap:14px;row-gap:8px;flex-wrap:wrap;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--line);}
+    #step-toolbar .btn-group{margin-bottom:0;flex-wrap:wrap;}
+    #step-toolbar .btn-group button{flex:0 0 auto;padding:7px 14px;}
+    #step-toolbar .speed-row{flex-wrap:nowrap;}
+    #step-toolbar .speed-row select{flex:0 0 auto;width:auto;}
     /* full screen (real or, where the browser has none, a page-filling overlay) */
     #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
     #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on #step-toolbar{flex:0 0 auto;}
     #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
     #canvas-wrapper.fs-on #space-wrap{display:none !important;}
     /* phones and small tablets */
@@ -155,27 +162,6 @@
       </div>
 
       <h4>Step-by-step solution</h4>
-      <div class="btn-group" id="start-row">
-        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
-      </div>
-      <div class="btn-group">
-        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
-        <button id="nextButton" onclick="nextStep()">Next ▶</button>
-      </div>
-      <div class="btn-group">
-        <button onclick="restartSteps()">Restart</button>
-        <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
-      </div>
-      <div class="btn-group speed-row">
-        <label for="speedSel">Drawing speed</label>
-        <select id="speedSel" onchange="setSpeed(this.value)">
-          <option value="1.7">Slow</option>
-          <option value="1" selected>Normal</option>
-          <option value="0.62">Fast</option>
-          <option value="0.35">Very fast</option>
-        </select>
-      </div>
       <div id="stepCounter"></div>
       <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
       <div id="results"></div>
@@ -188,14 +174,30 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
-        <span class="fs-only fs-nav">
-          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
-          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
-          <button class="fs-btn" id="fsRestart" onclick="restartSteps()">↺ Restart</button>
-          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
-        </span>
-
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <div id="step-toolbar">
+        <div class="btn-group" id="start-row">
+          <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+        </div>
+        <div class="btn-group">
+          <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+          <button id="nextButton" onclick="nextStep()">Next ▶</button>
+        </div>
+        <div class="btn-group">
+          <button onclick="restartSteps()">Restart</button>
+          <button onclick="showAll()">Show all</button>
+          <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
+        </div>
+        <div class="btn-group speed-row">
+          <label for="speedSel">Drawing speed</label>
+          <select id="speedSel" onchange="setSpeed(this.value)">
+            <option value="1.7">Slow</option>
+            <option value="1" selected>Normal</option>
+            <option value="0.62">Fast</option>
+            <option value="0.35">Very fast</option>
+          </select>
+        </div>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
 
@@ -217,7 +219,7 @@
      match, so the program still draws in the same units (canvas.width / height keep returning the
      drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
   (function(){
-    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const S=Math.min(4,Math.max(3,Math.ceil(window.devicePixelRatio||1)));   // at least 3x, so labels stay crisp on a projector
     const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
     const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
     const gc=HTMLCanvasElement.prototype.getContext;
@@ -225,12 +227,12 @@
       const cx=gc.call(this,type,opts);
       if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
       const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
-      cv._hdS=S;
+      cv._hdS=S; cv._hdBase=S;   // _hdS drops below S in full screen on a small screen (see layoutCanvas)
       const st=cx.setTransform;
-      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
-      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
-      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
-      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      cx.setTransform=function(a,b,c,d,e,f){ const k=cv._hdS; return (typeof a==="number")?st.call(this,a*k,b*k,c*k,d*k,e*k,f*k):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,cv._hdS,0,0,cv._hdS,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
       PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
       return cx;
     };
@@ -238,8 +240,8 @@
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
-  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
-  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#222", COL_LOCUS="#777", COL_PROJ="#777";
+  const FONT_MAIN="13px Arial", FONT_DIM="15px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -273,11 +275,100 @@
     else if(arrow==="end") drawArrowhead(x2,y2,a,color);
     else if(arrow==="both"){ drawArrowhead(x2,y2,a,color); drawArrowhead(x1,y1,a+Math.PI,color); }
   }
+  /* ---- point names placed clear of the drawing ----
+     When a problem is (re)built, its finished drawing is rendered once without the point names (autoLayout).
+     Each name is then put at the spot nearest its usual position (off) that keeps clear of the lines, the
+     curve and the names already placed, and every step - animated or not - uses that same spot. */
+  const LBL_FONT="15px Arial", LBL_H=12;
+  let LBL=null, LBL_REQ=null;
+  const lblKey=(x,y,t)=>t+"@"+Math.round(x)+","+Math.round(y);
+  function drawLabel(x,y,label,off={x:6,y:6},color){
+    if(REC){REC.push({f:"drawLabel",a:Array.from(arguments)});return;}
+    if(LBL_REQ){ LBL_REQ.push({x:x,y:y,t:label,off:off}); return; }
+    const o=(LBL&&LBL.get(lblKey(x,y,label)))||off;
+    ctx.font=LBL_FONT; ctx.fillStyle=color||"#111";
+    ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+o.x,y+o.y);
+  }
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
-      ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
+    if(label) drawLabel(x,y,label,off);
+  }
+  function autoLayout(){
+    LBL=null;
+    if(!P) return;
+    LBL_REQ=[];
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    try{ P.steps.forEach(st=>{ if(!st.demo) st.d(); }); }catch(e){ console.warn(e); }
+    ctx.restore();
+    const req=LBL_REQ; LBL_REQ=null;
+    // darkness of the drawing per canvas unit, as a summed-area table for quick box totals
+    const W=Math.ceil(CANVAS_W), H=Math.ceil(CANVAS_H), k=canvas._hdS||1;
+    const bw=Math.round(CANVAS_W*k), bh=Math.round(CANVAS_H*k);
+    const px=ctx.getImageData(0,0,bw,bh).data;
+    const T=new Float32Array((W+1)*(H+1));
+    for(let y=0;y<H;y++){
+      let row=0;
+      const y0=Math.floor(y*k), y1=Math.max(y0+1,Math.floor((y+1)*k));
+      for(let x=0;x<W;x++){
+        const x0=Math.floor(x*k), x1=Math.max(x0+1,Math.floor((x+1)*k));
+        let m=0;
+        for(let yy=y0;yy<y1&&yy<bh;yy++) for(let xx=x0;xx<x1&&xx<bw;xx++){
+          const i=(yy*bw+xx)*4, d=255-Math.min(px[i],px[i+1],px[i+2]);
+          if(d>m) m=d;
+        }
+        row+=m>40?Math.pow(m/255,3):0;       // cubed: a faint construction line matters far less than the curve or text
+        T[(y+1)*(W+1)+x+1]=T[y*(W+1)+x+1]+row;
+      }
+    }
+    const ink=(x0,y0,x1,y1)=>{
+      x0=Math.max(0,Math.floor(x0)); y0=Math.max(0,Math.floor(y0)); x1=Math.min(W,Math.ceil(x1)); y1=Math.min(H,Math.ceil(y1));
+      if(x1<=x0||y1<=y0) return 0;
+      return T[y1*(W+1)+x1]-T[y0*(W+1)+x1]-T[y1*(W+1)+x0]+T[y0*(W+1)+x0];
+    };
+    ctx.save(); ctx.font=LBL_FONT;
+    const h=LBL_H;
+    req.forEach(r=>{
+      const w=ctx.measureText(r.t).width;
+      r.w=w; r.pc={x:r.x+r.off.x+w/2, y:r.y+r.off.y};
+      r.cands=[r.pc];
+      for(const g of [4,8,13,19]) for(let a=0;a<24;a++){
+        const c=Math.cos(a*Math.PI/12), s=Math.sin(a*Math.PI/12), d=g+w/2*Math.abs(c)+h/2*Math.abs(s);
+        r.cands.push({x:r.x+c*d, y:r.y+s*d, g:g});
+      }
+    });
+    const gap=(L,R,U,D,p)=>Math.hypot(Math.max(L-p.x,0,p.x-R),Math.max(U-p.y,0,p.y-D));
+    req.forEach(r=>{
+      const w=r.w;
+      r.cands.forEach(c=>{      // the drawing under each candidate never changes - score it once
+        const L=c.x-w/2, R=c.x+w/2, U=c.y-h/2, D=c.y+h/2;
+        c.base=ink(L-1,U-1,R+1,D+1)*10 + Math.hypot(c.x-r.pc.x,c.y-r.pc.y)*0.8 + (c.g||0)*0.4
+             + ((L<2||U<2||R>CANVAS_W-2||D>CANVAS_H-2)?1e6:0);
+        // a name must sit nearer its own point than any other named point, or it reads as the wrong one
+        const own=gap(L,R,U,D,r);
+        req.forEach(o=>{ if(o===r||(Math.abs(o.x-r.x)<1&&Math.abs(o.y-r.y)<1)) return;
+          const d=gap(L,R,U,D,o); if(d<own+5) c.base+=(own+5-d)*8; });
+      });
+    });
+    const boxOf=(r,c)=>({L:c.x-r.w/2,R:c.x+r.w/2,U:c.y-h/2,D:c.y+h/2});
+    const choose=r=>{
+      let best=r.pc, bs=Infinity;
+      r.cands.forEach(c=>{
+        const b0=boxOf(r,c); let sc=c.base;
+        req.forEach(o=>{ if(o===r||!o.box) return; const b=o.box;
+          const ox=Math.min(b0.R+2,b.R)-Math.max(b0.L-2,b.L), oy=Math.min(b0.D+2,b.D)-Math.max(b0.U-2,b.U);
+          if(ox>0&&oy>0) sc+=ox*oy*50; });
+        if(sc<bs){ bs=sc; best=c; }
+      });
+      r.pick=best; r.box=boxOf(r,best);
+    };
+    req.forEach(choose);                         // in drawing order ...
+    for(let pass=0;pass<2;pass++) req.forEach(choose);   // ... then let each name move again, knowing where all the others went
+    const out=new Map();
+    req.forEach(r=>out.set(lblKey(r.x,r.y,r.t),{x:r.pick.x-r.w/2-r.x, y:r.pick.y-r.y}));
+    ctx.restore();
+    LBL=out;
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
     if(REC){REC.push({f:"drawText",a:Array.from(arguments)});return;}
@@ -306,7 +397,9 @@
     drawArrowhead(cx+r*Math.cos(a1),cy+r*Math.sin(a1),st+Math.PI,COL_DIM);
     drawArrowhead(cx+r*Math.cos(a2),cy+r*Math.sin(a2),et,COL_DIM);
     const m=(a1+a2)/2;
-    drawText(cx+(r+20)*Math.cos(m), cy+(r+20)*Math.sin(m)+(above?-8:8), text,"#111",FONT_DIM,"center","middle");
+    // the figure goes where it is clear of the lines (see autoLayout), starting from just outside the arc
+    ctx.save(); ctx.font=LBL_FONT; const tw=ctx.measureText(text).width; ctx.restore();
+    drawLabel(cx+(r+20)*Math.cos(m), cy+(r+20)*Math.sin(m)+(above?-8:8), text, {x:-tw/2,y:0});
   }
   function drawVerticalDim(x,yT,yB,label){
     if(REC){REC.push({f:"drawVerticalDim",a:Array.from(arguments)});return;}
@@ -347,10 +440,33 @@
   let animId=0;      // token to cancel a running animation
   let compassPose=null;   // {ax,ay,bx,by} - where the compass legs last were, so it can move (not vanish) to its next job
 
-  const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
+  const EXEC={drawLine,drawPoint,drawLabel,drawText,drawArc,drawArcWithMidArrow,
               drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
               drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
-              drawCut,drawArcPlain,lineSet};
+              drawCut,drawArcPlain,lineSet,drawCutPlane};
+  let SHOWN=Infinity;                  // how many whole steps are on the sheet in the frame being drawn
+  const PATTERN_HID=[7,4], COL_HID="#1a1a1a", LW_HID=1.5;
+  const CP_EXT=46, PATTERN_CP=[16,5,3,5];   // cutting plane: runs this far (px) beyond the view; long dash - gap - short dash - gap   // hidden edge: short dashes, dark, thinner than a visible edge
+
+  /* The cutting plane, drawn to convention (as in the orthographic problems): a thin chain line, THICK at both
+     ends, with an arrow at each end at right angles to the plane showing the direction of viewing - towards
+     the part that is kept. (x1,y1)-(x2,y2) is the plane's edge view; the arrows go to the side (nx,ny). */
+  function drawCutPlane(x1,y1,x2,y2,nx,ny){
+    if(REC){REC.push({f:"drawCutPlane",a:Array.from(arguments)});return;}
+    const L=Math.hypot(x2-x1,y2-y1)||1, ux=(x2-x1)/L, uy=(y2-y1)/L, e=Math.min(14,L*0.2);
+    if(nx==null){ nx=-uy; ny=ux; if(ny<0){ nx=-nx; ny=-ny; } }        // default: towards the part below the plane - the part kept
+    const nl=Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+    ctx.save(); ctx.lineCap="butt";
+    drawLine(x1,y1,x1+ux*e,y1+uy*e,"#000",3.2);                       // thick ends
+    drawLine(x2-ux*e,y2-uy*e,x2,y2,"#000",3.2);
+    drawLine(x1+ux*e,y1+uy*e,x2-ux*e,y2-uy*e,"#111",1.4,PATTERN_CP);   // thin chain line between them
+    [[x1,y1],[x2,y2]].forEach(p=>{
+      ctx.strokeStyle="#000"; ctx.lineWidth=2.6; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(p[0],p[1]); ctx.lineTo(p[0]+nx*20,p[1]+ny*20); ctx.stroke();
+      drawArrowhead(p[0]+nx*32,p[1]+ny*32,Math.atan2(ny,nx),"#000",5,14);
+    });
+    ctx.restore();
+  }
   function execItem(it){ EXEC[it.f].apply(null,it.a); }
 
   // draw: full steps 0..baseCount-1, then items[0..k-1], then an optional partial element
@@ -358,7 +474,13 @@
     clearCanvasWhite();
     ctx.save();
     ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
-    for(let i=0;i<baseCount;i++) P.steps[i].d();
+    SHOWN=baseCount;                    // a line rubbed out in a later step is still drawn in the frames before it
+    for(let i=0;i<baseCount;i++){
+      const st=P.steps[i];
+      if(st.demo && !(items.length===0 && i===baseCount-1)) continue;   // concept animation: not part of the drawing itself
+      st.d();
+    }
+    SHOWN=Infinity;
     for(let i=0;i<k;i++) execItem(items[i]);
     if(partial) partial();
     ctx.restore();
@@ -375,6 +497,33 @@
       }
       requestAnimationFrame(tick);
     });
+  }
+
+  // Concept animation (solid rotating, cutting plane sweeping, surface unfolding ...). fn(t) draws the picture for t = 0..1.
+  // still=true shows only the starting position (t = 0); otherwise it plays over dur ms when
+  // animated, and shows the finished picture (t = 1) when not.
+  function demoAnim(fn,dur,still){
+    if(REC){REC.push({f:"demoAnim",a:Array.from(arguments)});return;}
+    fn(still?0:1);
+  }
+  EXEC.demoAnim=demoAnim;
+  // A concept animation takes two steps: the starting position first, then - on Next - the animation.
+  function demoSteps(text,fn,dur){
+    const cut=text.indexOf(" Watch the animation");
+    const intro=cut>0?text.slice(0,cut):text, watch=cut>0?text.slice(cut+1):text;
+    return [
+      {demo:true, text:intro+" The picture shows the starting position - press Next to watch it move.", d:()=>demoAnim(fn,dur,true)},
+      {demo:true, text:watch, d:()=>demoAnim(fn,dur)}
+    ];
+  }
+  async function animDemo(s,items,k,it,myId){
+    if(it.a[2]){ frameDraw(s-1,items,k,()=>it.a[0](0)); return; }   // starting position only - nothing moves yet
+    await animateFrames(it.a[1]*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>it.a[0](t));
+    });
+    if(animId!==myId) return;
+    await sleep(450*SPEED);
   }
 
   /* ---- extra recordable primitives ---- */
@@ -1053,6 +1202,7 @@
       else if(it.f==="drawArc"&&it.a[2]>=70) await animArc(s,items,k,it,myId);
       else if(it.f==="drawAngleDimOutward") await animProtractor(s,items,k,it,myId);
       else if(it.f==="drawCurve") await animCurve(s,items,k,it,myId);
+      else if(it.f==="demoAnim") await animDemo(s,items,k,it,myId);
       else { frameDraw(s-1,items,k+1,compassResting?restingCompassDraw:null); await sleep(90*SPEED); continue; }
       if(animId!==myId) return;
       if(ins){ prev=ins; compassResting=(ins==="compass"); }
@@ -1073,6 +1223,19 @@
     ctx.stroke(); ctx.setLineDash([]);
   }
   EXEC.drawCurve=drawCurve;
+  // 45-degree section hatching for a closed region given as canvas-pixel points (scan-line, even-odd rule)
+  function hatchPolygonPx(pts,cs){
+    const out=[], S=pts.map(p=>[p.x,p.y]), sv=S.map(p=>p[0]+p[1]), step=cs||8;
+    for(let c=Math.ceil(Math.min.apply(null,sv)/step)*step; c<=Math.max.apply(null,sv); c+=step){
+      const xs=[];
+      for(let i=0;i<S.length;i++){ const a=S[i], b=S[(i+1)%S.length], fa=a[0]+a[1]-c, fb=b[0]+b[1]-c;
+        if((fa<0)!==(fb<0)){ const t=fa/(fa-fb); xs.push(a[0]+(b[0]-a[0])*t); } }
+      xs.sort((p,q)=>p-q);
+      for(let k=0;k+1<xs.length;k+=2){ const xa=xs[k], xb=xs[k+1];
+        if(xb-xa>0.8) out.push([xa,c-xa,xb,c-xb]); }
+    }
+    return out;
+  }
 
   async function animCurve(s,items,k,it,myId){
     const pts=it.a[0], color=it.a[1]||COL_THICK, width=it.a[2]||LW_THICK;
@@ -1348,6 +1511,21 @@
       }
     });
 
+    /* optional: shade every front-facing face so the solid reads as a real
+       solid rather than a bare wireframe (used by the concept-animation
+       steps; off by default so the technical given/step drawings are
+       unaffected) - simple back-to-front painter's sort by face depth */
+    if(o.shadeAll){
+      m.faces.filter(f=>f._front&&!f._on).map(f=>{
+        let z=0; f.v.forEach(vi=>{ z+=rot(m.verts[vi]).z; }); z/=f.v.length;
+        return {f,z};
+      }).sort((a,b)=>a.z-b.z).forEach(({f})=>{
+        cc.beginPath();
+        f.v.forEach((vi,i)=>{ const p=S[vi]; i?cc.lineTo(p.x,p.y):cc.moveTo(p.x,p.y); });
+        cc.closePath(); cc.fillStyle=o.shadeFill||"rgba(198,213,228,0.65)"; cc.fill();
+      });
+    }
+
     /* shaded highlighted faces, painted back to front */
     m.faces.filter(f=>f._front&&f._on).forEach(f=>{
       cc.beginPath();
@@ -1388,7 +1566,7 @@
         cc.closePath(); cc.fill(); };
       ar(A.x,A.y,ang+Math.PI,on?HL:"#93a2b1"); ar(B.x,B.y,ang,on?HL:"#93a2b1");
       const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-7;
-      cc.font="bold 22px Arial";
+      cc.font="bold 17px Arial";
       const w=cc.measureText(d.text).width+12;
       cc.fillStyle="rgba(255,255,255,0.88)"; cc.fillRect(mx-w/2,my-14,w,28);
       cc.fillStyle=on?HL:INK; cc.textAlign="center"; cc.textBaseline="middle";
@@ -1398,26 +1576,180 @@
   }
 
   /* =========================================================
+     CONCEPT ANIMATION : solid -> cutting-plane sweep -> unfold
+     A lateral surface is a chain of flat or near-flat panels
+     hinged along shared edges. Panel 0 is the anchor (fixed);
+     each later panel, together with every panel beyond it, is
+     rotated about its shared edge with the previous panel until
+     all panels lie in one plane (the flattened net). A cylinder
+     or cone is treated as a many-sided prism/pyramid so the same
+     hinge-chain maths gives a smoothly rolling unfold.
+  ========================================================= */
+  const v3sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
+  const v3add=(a,b)=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z});
+  const v3scl=(a,s)=>({x:a.x*s,y:a.y*s,z:a.z*s});
+  const v3dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+  const v3cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
+  const v3norm=a=>{const l=Math.hypot(a.x,a.y,a.z)||1;return {x:a.x/l,y:a.y/l,z:a.z/l};};
+  const v3perp=(v,axis)=>v3sub(v,v3scl(axis,v3dot(v,axis)));
+  const v3signedAngle=(v1,v2,axis)=>Math.atan2(v3dot(v3cross(v1,v2),axis),v3dot(v1,v2));
+  function v3rodrigues(p,axisPt,axisDir,theta){
+    const v=v3sub(p,axisPt), k=axisDir;
+    const vrot=v3add(v3add(v3scl(v,Math.cos(theta)),v3scl(v3cross(k,v),Math.sin(theta))),
+                      v3scl(k,v3dot(k,v)*(1-Math.cos(theta))));
+    return v3add(axisPt,vrot);
+  }
+  // panels: [{ids:[...]}], each an ordered ring of vertex ids into vertsOriginal; panels[i] shares
+  // exactly two ids with panels[i-1] (its hinge edge). panels[0] never moves. Returns fn(t)-> {id:{x,y,z}}.
+  function buildHingeUnfold(vertsOriginal,panels){
+    const n=panels.length, joints=[], downstream=[];
+    for(let i=1;i<n;i++){
+      const prevIds=panels[i-1].ids, curIds=panels[i].ids;
+      const shared=curIds.filter(id=>prevIds.indexOf(id)>=0);
+      joints.push({shared,refPrevId:prevIds.find(id=>shared.indexOf(id)<0),
+                          refCurId:curIds.find(id=>shared.indexOf(id)<0)});
+      const set={}; for(let j=i;j<n;j++) panels[j].ids.forEach(id=>set[id]=1);
+      downstream.push(Object.keys(set).map(Number));
+    }
+    return function(t){
+      const pos={};
+      vertsOriginal.forEach((p,id)=>{ pos[id]={x:p.x,y:p.y,z:p.z}; });
+      for(let i=1;i<n;i++){
+        const J=joints[i-1], A=pos[J.shared[0]], B=pos[J.shared[1]];
+        const axisDir=v3norm(v3sub(B,A));
+        const v1=v3perp(v3sub(pos[J.refPrevId],A),axisDir), v2=v3perp(v3sub(pos[J.refCurId],A),axisDir);
+        let delta=Math.PI-v3signedAngle(v1,v2,axisDir);
+        while(delta>Math.PI) delta-=2*Math.PI;
+        while(delta<-Math.PI) delta+=2*Math.PI;
+        const theta=delta*t;
+        downstream[i-1].forEach(id=>{ pos[id]=v3rodrigues(pos[id],A,axisDir,theta); });
+      }
+      return pos;
+    };
+  }
+  // oblique projection shared by the schematic solid/unfold animations (independent of wireRender's own fit)
+  function animProj(p,rotY,rotX,ox,oy,k){
+    const cy=Math.cos(rotY),sy=Math.sin(rotY),cxr=Math.cos(rotX),sxr=Math.sin(rotX);
+    const X=p.x*cy-p.z*sy, Z=p.x*sy+p.z*cy, Y=p.y;
+    const Yr=Y*cxr-Z*sxr, Zr=Y*sxr+Z*cxr;
+    return {x:ox+X*k,y:oy-Yr*k,z:Zr};
+  }
+  // fit a hinge-chain animation (sampled at a few t) into a WxH box, centred at (cxS,cyS)
+  function fitHingeAnim(chain,rotY,rotX,W,H,pad,cxS,cyS){
+    let xmin=1e9,xmax=-1e9,ymin=1e9,ymax=-1e9;
+    [0,0.35,0.7,1].forEach(t=>{
+      const pos=chain(t);
+      Object.keys(pos).forEach(id=>{
+        const p=animProj(pos[id],rotY,rotX,0,0,1);
+        xmin=Math.min(xmin,p.x); xmax=Math.max(xmax,p.x);
+        ymin=Math.min(ymin,-p.y); ymax=Math.max(ymax,-p.y);   // undo the y-flip animProj applies, for a plain extent
+      });
+    });
+    const w=xmax-xmin||1, h=ymax-ymin||1;
+    const k=Math.min((W-2*pad)/w,(H-2*pad)/h);
+    return {k,ox:cxS-(xmin+xmax)/2*k,oy:cyS+(ymin+ymax)/2*k};
+  }
+  function paintPanels(posMap,panels,rotY,rotX,ox,oy,k,opt){
+    const o=opt||{};
+    const items=panels.map(pn=>{
+      const pts=pn.ids.map(id=>animProj(posMap[id],rotY,rotX,ox,oy,k));
+      return {pts,depth:pts.reduce((s,p)=>s+p.z,0)/pts.length};
+    });
+    items.sort((a,b)=>a.depth-b.depth);
+    items.forEach(it=>{
+      ctx.beginPath();
+      it.pts.forEach((p,i)=>{ i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); });
+      ctx.closePath();
+      ctx.fillStyle=o.fill||"rgba(224,86,31,0.14)";
+      ctx.fill();
+      // a curved (many-segment) surface only shows its OUTER silhouette (see `outline` below),
+      // not every one of its fine internal divisions - those would look like stray generators.
+      if(!o.outline){ ctx.strokeStyle=o.stroke||COL_THICK; ctx.lineWidth=o.lw||1.6; ctx.stroke(); }
+    });
+    if(o.outline){
+      ctx.beginPath();
+      o.outline.forEach((id,i)=>{ const p=animProj(posMap[id],rotY,rotX,ox,oy,k); i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); });
+      ctx.closePath();
+      ctx.strokeStyle=o.stroke||COL_THICK; ctx.lineWidth=o.lw||1.6; ctx.stroke();
+    }
+  }
+  // one frame of the cutting-plane sweep: the plane starts clear of the solid and moves to the final cut
+  function sweepCutFrame(baseModelFn,nx,ny,nz,dFinal,rotY,rotX,panY,fitOpt){
+    return function(t){
+      const m0=baseModelFn();
+      let dMax=-Infinity; m0.verts.forEach(p=>{ const d=p.x*nx+p.y*ny+p.z*nz; if(d>dMax) dMax=d; });
+      const d0=dMax+Math.max(1,Math.abs(dMax)*0.08);
+      const d=d0+(dFinal-d0)*t;
+      wireRender(ctx,CANVAS_W,CANVAS_H,clipModel(m0,nx,ny,nz,d,"cut"),["cut"],rotY,rotX,1,0,panY,fitOpt||{fill:0.30,shadeAll:true});
+    };
+  }
+  // one frame of a hinge-chain unfold, fitted and centred at (cxS,cyS)
+  function unfoldFrame(vertsOriginal,panels,rotY,rotX,cxS,cyS,pad,opt){
+    const chain=buildHingeUnfold(vertsOriginal,panels);
+    const fit=fitHingeAnim(chain,rotY,rotX,CANVAS_W,CANVAS_H,pad||60,cxS,cyS);
+    return function(t){ paintPanels(chain(t),panels,rotY,rotX,fit.ox,fit.oy,fit.k,opt); };
+  }
+  // index into `angles` (radians, x=r cos a, z=r sin a) whose point faces the fixed
+  // concept-animation camera most directly - used to choose where the demo unfold
+  // starts, so the anchor panel is clearly visible instead of edge-on/behind.
+  function angDist(a,b){ let d=(a-b)%TAU; if(d>Math.PI) d-=TAU; if(d<-Math.PI) d+=TAU; return Math.abs(d); }
+  function faceIndex(angles,camYaw){
+    const t=Math.PI/2-camYaw; let k=0,best=1e9;
+    angles.forEach((a,i)=>{ const d=angDist(a,t); if(d<best){best=d;k=i;} });
+    return k;
+  }
+  // a ring of quad lateral faces (prism/cylinder, or a truncated/frustum pyramid/cone's base-to-cut band),
+  // visited in `ord` order (ord.length = count+1, ord[count]===ord[0] closing the ring). The ring is cut
+  // open at the seam so it can lie flat, so the seam corner needs two distinct vertex copies (start + end).
+  // `outline` lists the ids tracing the whole net's silhouette (bottom rail, right edge, top rail, left
+  // edge) - painting just that instead of every panel's own edges hides the internal division lines.
+  function ringQuadPanels(bottomAt,topAt,ord){
+    const n=ord.length-1, verts=[];
+    for(let j=0;j<n;j++){ verts[2*j]=bottomAt(ord[j]); verts[2*j+1]=topAt(ord[j]); }
+    verts[2*n]=bottomAt(ord[0]); verts[2*n+1]=topAt(ord[0]);       // duplicate seam corner (far end)
+    const idB=j=>2*j, idT=j=>2*j+1;
+    const panels=[]; for(let j=0;j<n;j++) panels.push({ids:[idB(j),idB(j+1),idT(j+1),idT(j)]});
+    const outline=[]; for(let j=0;j<=n;j++) outline.push(idB(j));
+    for(let j=n;j>=0;j--) outline.push(idT(j));
+    return {verts,panels,outline};
+  }
+  // a fan of triangular lateral faces sharing a fixed apex (plain pyramid/cone). The apex lies on every
+  // hinge axis by construction, so - unlike the base ring - it never needs a duplicate copy.
+  function fanTriPanels(apexPt,baseAt,ord){
+    const n=ord.length-1, verts=[apexPt];
+    for(let j=0;j<n;j++) verts[1+j]=baseAt(ord[j]);
+    verts[1+n]=baseAt(ord[0]);                                     // duplicate seam base corner (far end)
+    const idBase=j=>1+j;
+    const panels=[]; for(let j=0;j<n;j++) panels.push({ids:[0,idBase(j),idBase(j+1)]});
+    const outline=[0]; for(let j=0;j<=n;j++) outline.push(idBase(j));
+    return {verts,panels,outline};
+  }
+
+  /* =========================================================
      DEVELOPMENT OF LATERAL SURFACES
      Parallel-line method : prisms and cylinders
      Radial-line method   : pyramids and cones
   ========================================================= */
   const LET="ABCDEFGHIJKL", let_="abcdefghijkl";
+  const NAMES={3:"triangle",4:"square",5:"pentagon",6:"hexagon"};
   const COL_DEV="#111", COL_CUT="#b8541f";
 
   /* --- layout: FV above XY (its base ON X-Y), TV below XY, development to the right --- */
-  const TVG=54;                                  // px between X-Y and the top of the top view (room for the first dimension)
-  function layoutPL(fvW,upH,dnH,devW,devUp){
+  const TVG=72;                                  // px between X-Y and the top of the top view (room for the first dimension)
+  function layoutPL(fvW,upH,dnH,devW,devUp,cut){
     const gap=Math.max(20,fvW*0.30);
     const totW=fvW+gap+devW;
     const upM=Math.max(upH,devUp||0);
     const totH=upM+dnH;
-    const sc=Math.min((CANVAS_W-PX(110))/totW,(CANVAS_H-PY(110)-TVG)/totH,3.2);
+    // a cut solid: the cutting plane runs CP_EXT px out on both sides, so leave room for it (and the height
+    // dimension pushed out beyond it) on the left, and between the front view and the development
+    const padL=cut?60:0, padG=cut?CP_EXT:0;
+    const sc=Math.min((CANVAS_W-PX(110)-padL-padG)/totW,(CANVAS_H-PY(110)-TVG)/totH,3.2);
     SCALE_PXMM=sc;
-    const X0=(CANVAS_W-totW*sc)/2;
+    const X0=(CANVAS_W-totW*sc-padL-padG)/2+padL;
     const REF=(CANVAS_H-totH*sc-TVG)/2+upM*sc;
-    return {sc,REF,fvL:X0,devL:X0+(fvW+gap)*sc,
-            lineStart:X0-38,lineEnd:X0+totW*sc+30};
+    return {sc,REF,fvL:X0,devL:X0+(fvW+gap)*sc+padG,
+            lineStart:X0-(cut?96:38),lineEnd:X0+totW*sc+padG+30};
   }
 
   /* --- divide a horizontal line into n parts with the 30° auxiliary line --- */
@@ -1447,11 +1779,11 @@
          involute construction: first side (dimension first, then the line), the other sides found with
          the compass set to the first side and the protractor held with its 0-180 line ALONG a drawn line.
          Pt[0], Pt[1] = ends of the first (horizontal) side, Pt[1] on the left; corners then follow round. --- */
-  function tvPolySteps(steps,n,s,Pt,sc,labels){
+  function tvPolySteps(steps,n,s,Pt,sc,labels,thin){       // thin: a cut solid - its views are darkened only at the end
     const NAME=({3:"triangle",4:"square",5:"pentagon",6:"hexagon"})[n]||(n+"-sided polygon");
     const IDEG=R1((n-2)*180/n), aTxt=R1(s);
     const A2P=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);
-    const side=(i,j)=>drawSLine(Pt[i].x,Pt[i].y,Pt[j].x,Pt[j].y,COL_THICK,LW_THICK);
+    const side=(i,j)=>drawSLine(Pt[i].x,Pt[i].y,Pt[j].x,Pt[j].y,thin?COL_THIN:COL_THICK,thin?LW_THIN:LW_THICK);
     const dot=i=>drawPoint(Pt[i].x,Pt[i].y);
     const span=()=>measureSpan(Pt[0].x,Pt[0].y,Pt[1].x,Pt[1].y);            // compass = first side
     const cutFrom=(i,j)=>drawCut(Pt[i].x,Pt[i].y,s*sc,A2P(Pt[i],Pt[j]),COL_THIN);
@@ -1506,6 +1838,20 @@
     return {x0,x1,y0,y1};
   }
 
+  /* Corners of a regular base (corner i at angle ph + 2πi/n, z towards the VP) grouped by the vertical line they
+     give in the FRONT VIEW. The line is SEEN when a face beside one of its corners is turned towards the observer
+     (outward normal pointing away from the VP, z < 0); otherwise it lies behind the front faces and is HIDDEN -
+     e.g. the two rear corners of a pentagon standing with a side parallel to the VP. */
+  function frontGroups(n,ph,cx,Pt){
+    const fwd=k=>Math.sin(ph+TAU*(((k%n)+n)%n+0.5)/n)<-1e-6;        // side k (corner k to k+1) faces the observer
+    const grp=[];
+    for(let i=0;i<n;i++){ let g=grp.find(q=>Math.abs(q.x-cx[i])<1e-6);
+      if(!g){ g={x:cx[i],idx:[],top:1e9,seen:false}; grp.push(g); }
+      g.idx.push(i); g.top=Math.min(g.top,Pt[i].y);
+      if(fwd(i)||fwd(i-1)) g.seen=true; }
+    return grp;
+  }
+
   /* ================= PARALLEL LINE : PRISM ================= */
   function buildPrism(v,n,cut){
     const s=v.s, H=v.h;
@@ -1522,7 +1868,7 @@
     const hc=cx.map(hAt);
     const devW=n*s;
     const hTop=Math.max.apply(null,hc);
-    const f=layoutPL(fvW,H,tvD,devW,hTop);
+    const f=layoutPL(fvW,H,tvD,devW,hTop,!!cut);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x-xMin)*sc;                 // model x -> canvas x (FV & TV)
     const TVY=REF+TVG;                             // top of the TV band
@@ -1530,10 +1876,7 @@
     const DX=q=>f.devL+q*sc;                       // distance along stretch-out
     const YH=h=>REF-h*sc;
     const Pt=cx.map((x,i)=>({x:FX(x),y:TY(cz[i])}));
-    const grp=[];                                  // corners that share one vertical line in the FV
-    for(let i=0;i<n;i++){ let g=grp.find(q=>Math.abs(q.x-cx[i])<1e-6);
-      if(!g){ g={x:cx[i],idx:[],top:1e9}; grp.push(g); }
-      g.idx.push(i); g.top=Math.min(g.top,Pt[i].y); }
+    const grp=frontGroups(n,ph,cx,Pt);              // corners that share one vertical line in the FV, seen or hidden
 
     /* development order : start at the shortest lateral edge */
     let k0=0; for(let i=1;i<n;i++) if(hc[i]<hc[k0]-1e-9) k0=i;
@@ -1550,7 +1893,23 @@
     const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
     const xyEnd=f.devL-16;
 
+    const ANY=0.5, ANX=0.16;                        // viewing angle shared by the intro concept animation
     const steps=[];
+    steps.push({demo:true, text:"Here is the solid whose lateral surface is to be developed. Use the 'Given solid' panel alongside to drag-rotate, scroll to zoom, and double-click to reset the 3-D view.",
+      d:()=>{ wireRender(ctx,CANVAS_W,CANVAS_H,m_prism(n,s,H,ph),[],ANY,ANX,1,0,0,{fill:0.34,shadeAll:true}); }});
+    if(cut){
+      steps.push(...demoSteps(
+        `The solid is cut by the cutting plane shown earlier. Watch the animation: the plane sweeps down from clear of the top to its final position, and the portion above it is removed.`,
+        sweepCutFrame(()=>m_prism(n,s,H,ph),cut.type==="horiz"?0:-tan,1,0,v.hc,ANY,ANX,0),1500));
+    }
+    (function(){
+      const k0=faceIndex(A,ANY);
+      const ordDemo=Array.from({length:n+1},(_,j)=>(k0+j)%n);
+      const rq=ringQuadPanels(i=>({x:cx[i],y:0,z:cz[i]}),i=>({x:cx[i],y:hc[i],z:cz[i]}),ordDemo);
+      steps.push(...demoSteps(
+        `The lateral surface can be imagined as opening out flat, like unrolling a carton. Watch the animation: each face swings outward about its vertical edge until the whole surface lies flat - this flattened shape is the development we are about to draw.`,
+        unfoldFrame(rq.verts,rq.panels,ANY,ANX,CANVAS_W*0.52,CANVAS_H*0.48),1800));
+    })();
     steps.push({text:"Draw the X–Y reference line. The prism rests on the HP on its base with its axis vertical, so the front view is drawn ABOVE X–Y with its base lying ON the X–Y line, and the top view is drawn below X–Y.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
@@ -1558,36 +1917,41 @@
         drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
     tvPolySteps(steps,n,s,Pt,sc,()=>{
-      for(let i=0;i<n;i++) drawPoint(Pt[i].x,Pt[i].y,let_[i],radOff(FX(0),TY(0),Pt[i].x,Pt[i].y,13)); });
+      for(let i=0;i<n;i++) drawPoint(Pt[i].x,Pt[i].y,let_[i],radOff(FX(0),TY(0),Pt[i].x,Pt[i].y,13)); },!!cut);
+    const IK=cut?COL_THIN:COL_THICK, IW=cut?LW_THIN:LW_THICK;     // a cut solid: views thin until the part kept is darkened at the end
 
     steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm, then project every corner of the top view upwards with thin projection lines drawn with the roll-and-draw scale, up to the top level.`,
       hl:latAll,
-      d:()=>{ drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H));
+      d:()=>{ drawVerticalDim(FX(xMin)-(cut?70:16),YH(H),REF,R1(H));
         rollSet(grp.map(g=>[FX(g.x),g.top,FX(g.x),YH(H)]),COL_PROJ,LW_THIN); }});
 
-    steps.push({text:`Draw the front view: the base ON X–Y, the top edge, and the lateral edges - a rectangle ${R1(fvW)} mm wide and ${R1(H)} mm high. Every edge of the solid is drawn DARK (thick). Each lateral edge ${let_[0]}′, ${let_[1]}′, … is a TRUE LENGTH.`,
+    const hidG=grp.filter(g=>!g.seen), hidNames=hidG.map(g=>g.idx.map(i=>let_[i]+"′").join("")).join(" and ");
+    steps.push({text:`Draw the front view: the base ON X–Y, the top edge, and the lateral edges - a rectangle ${R1(fvW)} mm wide and ${R1(H)} mm high. `
+        +(cut?"The solid is to be cut, so draw the whole prism in THIN lines for now: only the part that is kept will be made dark, at the very end, after the development. "
+             :"Every visible edge of the solid is drawn DARK (thick). ")
+        +`Each lateral edge ${let_[0]}′, ${let_[1]}′, … is a TRUE LENGTH.`
+        +(hidG.length?` The edges at ${hidNames} belong to the rear corners of the ${NAMES[n]||"base"}: they lie behind the front faces and do not line up with any front edge, so they are HIDDEN - drawn as thin dashed lines.`:""),
       hl:latAll,
-      d:()=>{ drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
-        drawSLine(FX(xMin),YH(H),FX(xMax),YH(H),COL_THICK,LW_THICK);
-        lineSet(grp.map(g=>[FX(g.x),REF,FX(g.x),YH(H)]),COL_THICK,LW_THICK);
+      d:()=>{ drawSLine(FX(xMin),REF,FX(xMax),REF,IK,IW);
+        drawSLine(FX(xMin),YH(H),FX(xMax),YH(H),IK,IW);
+        lineSet(grp.filter(g=>g.seen).map(g=>[FX(g.x),REF,FX(g.x),YH(H)]),IK,IW);
+        if(hidG.length) lineSet(hidG.map(g=>[FX(g.x),REF,FX(g.x),YH(H)]),COL_HID,LW_HID,PATTERN_HID);
         grp.forEach(g=>drawPoint(FX(g.x),REF,g.idx.map(i=>let_[i]+"′").join(""),{x:-5*g.idx.length,y:-13})); }});
 
     if(cut){
       if(cut.type==="horiz"){
-        steps.push({text:`Draw the cutting plane in the front view: a horizontal line ${R1(v.hc)} mm above the base. It cuts every lateral edge, giving the points 1′, 2′, 3′ …`,
+        steps.push({text:`Draw the cutting plane in the front view: a horizontal line ${R1(v.hc)} mm above the base, drawn to convention - a thin chain line, thick at both ends, with arrows at the ends pointing towards the part that is kept. It cuts every lateral edge, giving the points 1′, 2′, 3′ …`,
           hl:["cut"],
-          d:()=>{ drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
-            drawText(FX(xMax)+18,YH(v.hc),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
+          d:()=>{ drawCutPlane(FX(xMin)-CP_EXT,YH(v.hc),FX(xMax)+CP_EXT,YH(v.hc));
             for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
       } else {
-        steps.push({text:`Draw the cutting plane in the front view: a line inclined at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
+        steps.push({text:`Draw the cutting plane in the front view: a line inclined at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base, drawn to convention - a thin chain line, thick at both ends, with arrows at the ends pointing towards the part that is kept. Mark 1′, 2′, 3′ … where it crosses the lateral edges.`,
           hl:["cut"],
           d:()=>{ const yL=YH(hAt(xMin));
-            const eL=xMin-8/sc, eR=xMax+8/sc;
+            const eL=xMin-CP_EXT/sc, eR=xMax+CP_EXT/sc;
             drawLine(FX(xMin),yL,FX(xMin)+58,yL,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(xMin),yL,44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
-            drawText(FX(eR)+6,YH(hAt(eR)),"cutting plane",COL_CUT,FONT_DIM,"left","middle");
+            drawCutPlane(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)));
             for(let i=0;i<n;i++) drawPoint(FX(cx[i]),YH(hc[i]),String(i+1),{x:5,y:-11}); }});
       }
     }
@@ -1648,8 +2012,14 @@
         hl:["cut"].concat(latAll),
         d:()=>{ const mn=Math.min.apply(null,hc), mx=Math.max.apply(null,hc);
           const jmn=ord.indexOf(hc.indexOf(mn)), jmx=ord.indexOf(hc.indexOf(mx));
-          drawVerticalDim(DX(jmn*s)-15,YH(mn),REF,R1(mn));
+          drawVerticalDim(DX(jmn*s)+16,YH(mn),REF,R1(mn));   // inside, beside its generator (clear of the Y of X-Y)
           drawVerticalDim(DX(jmx*s)+16,YH(mx),REF,R1(mx)); }});
+      steps.push({text:`Finally make DARK, in the front view and the top view, only the part of the prism that is KEPT. In the front view: the base, each visible lateral edge from the base up to its cut point, and the cut edge ${cut.type==="horiz"?"":"1′-2′-3′… "}along the cutting plane. In the top view: the whole ${NAMES[n]||"base"} - the lateral faces are vertical, so the cut face lies right over the base outline. The part above the cutting plane has been removed, so everything there stays THIN.`,
+        hl:["cut"].concat(latAll),
+        d:()=>{ drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+          lineSet(grp.filter(g=>g.seen).map(g=>[FX(g.x),REF,FX(g.x),YH(hAt(g.x))]),COL_THICK,LW_THICK);
+          drawSLine(FX(xMin),YH(hAt(xMin)),FX(xMax),YH(hAt(xMax)),COL_THICK,LW_THICK);
+          lineSet(Pt.map((p,i)=>[p.x,p.y,Pt[(i+1)%n].x,Pt[(i+1)%n].y]),COL_THICK,LW_THICK); }});
     }
 
     const results=cut
@@ -1674,7 +2044,7 @@
     const hg=gx.map(hAt);
     const devW=Math.PI*D;
     const hTop=Math.max.apply(null,hg);
-    const f=layoutPL(D,H,D,devW,hTop);
+    const f=layoutPL(D,H,D,devW,hTop,!!cut);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x+R)*sc;
     const TVY=REF+TVG;
@@ -1682,7 +2052,11 @@
     const DX=q=>f.devL+q*sc;
     const YH=h=>REF-h*sc;
     const xyEnd=f.devL-16;
-    const sepY=REF+div30(DX(0),REF,DX(devW),N,true).drop+34;   // where the dimension of the stretch-out goes (below the auxiliary construction)
+    // The circle and the stretch-out are divided only when the cut edge varies round the cylinder (an inclined
+    // cut): uncut, or cut by a horizontal plane, every generator has the same length and the development is a
+    // plain rectangle - no divisions are needed.
+    const div=!!cut&&cut.type!=="horiz", Hk=cut?v.hc:H;          // Hk: height kept (uncut / horizontal cut)
+    const sepY=div?REF+div30(DX(0),REF,DX(devW),N,true).drop+34:REF+46;   // where the dimension of the stretch-out goes (below any auxiliary construction)
 
     const model=()=>{
       let m=m_cyl(R,H,48);
@@ -1697,7 +2071,26 @@
         sm.push({x:DX(devW*i/(N*8)),y:YH(hh)}); }
       return sm; };
 
+    const ANY=0.5, ANX=0.16;                        // viewing angle shared by the intro concept animation
     const steps=[];
+    steps.push({demo:true, text:"Here is the solid whose lateral surface is to be developed. Use the 'Given solid' panel alongside to drag-rotate, scroll to zoom, and double-click to reset the 3-D view.",
+      d:()=>{ wireRender(ctx,CANVAS_W,CANVAS_H,m_cyl(R,H,48),[],ANY,ANX,1,0,0,{fill:0.34,shadeAll:true}); }});
+    if(cut){
+      steps.push(...demoSteps(
+        `The solid is cut by the cutting plane shown earlier. Watch the animation: the plane sweeps down from clear of the top to its final position, and the portion above it is removed.`,
+        sweepCutFrame(()=>m_cyl(R,H,48),cut.type==="horiz"?0:-tan,1,0,v.hc,ANY,ANX,0),1500));
+    }
+    (function(){
+      const NF=48;                                  // fine segmentation - a many-sided prism rolls out smoothly
+      const FA=Array.from({length:NF},(_,i)=>Math.PI-TAU*i/NF);
+      const fgx=FA.map(a=>R*Math.cos(a)), fgz=FA.map(a=>R*Math.sin(a));
+      const k0=faceIndex(FA,ANY);
+      const ordF=Array.from({length:NF+1},(_,j)=>(k0+j)%NF);
+      const rq=ringQuadPanels(i=>({x:fgx[i],y:0,z:fgz[i]}),i=>({x:fgx[i],y:hAt(fgx[i]),z:fgz[i]}),ordF);
+      steps.push(...demoSteps(
+        `The curved lateral surface can be imagined as peeling off flat, like unrolling a label from a can. Watch the animation: the surface rolls out straight until it lies flat - this flattened shape is the development we are about to draw.`,
+        unfoldFrame(rq.verts,rq.panels,ANY,ANX,CANVAS_W*0.52,CANVAS_H*0.48,60,{outline:rq.outline}),1800));
+    })();
     steps.push({text:"Draw the X–Y reference line. The cylinder stands on the HP on its base with its axis vertical, so the front view is drawn ABOVE X–Y with its base lying ON the X–Y line, and the top view below X–Y.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
@@ -1710,45 +2103,51 @@
         drawLine(FX(-R),TY(0)-3,FX(-R),yb-5,COL_DIM,LW_THIN);
         drawLine(FX(R),TY(0)-3,FX(R),yb-5,COL_DIM,LW_THIN);
         drawHorizontalDim(yb,FX(-R),FX(R),"Ø "+R1(D));
-        drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
+        drawCircle(FX(0),TY(0),R*sc,cut?COL_THIN:COL_THICK,cut?LW_THIN:LW_THICK); }});
 
-    steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1, 2, 3 … 12 starting from the extreme left.",
+    if(div) steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1, 2, 3 … 12 starting from the extreme left.",
       hl:["base"],
       d:()=>{ markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
         for(let i=0;i<N;i++)
           drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14)); }});
 
-    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm, then project the 12 points of the top view upwards with thin projection lines (roll-and-draw scale) up to the top level. These thin lines are the generators 1′, 2′ … 12′.`,
+    steps.push({text:div
+        ? `Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm, then project the 12 points of the top view upwards with thin projection lines (roll-and-draw scale) up to the top level. These thin lines are the generators 1′, 2′ … 12′.`
+        : `Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm, then project the two ends of the diameter of the top view upwards with thin projection lines (roll-and-draw scale) up to the top level.`,
       hl:["lat"],
-      d:()=>{ drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H));
-        const P=[]; for(let i=0;i<=N/2;i++) P.push([FX(gx[i]),TY(gz[i]),FX(gx[i]),YH(H)]);
+      d:()=>{ drawVerticalDim(FX(-R)-(cut?70:16),YH(H),REF,R1(H));
+        const P=[]; for(let i=0;i<=N/2;i+=(div?1:N/2)) P.push([FX(gx[i]),TY(gz[i]),FX(gx[i]),YH(H)]);
         rollSet(P,COL_PROJ,LW_THIN); }});
 
-    steps.push({text:`Draw the outline of the front view: the base ON X–Y, the top edge and the two extreme sides - a rectangle ${R1(D)} mm × ${R1(H)} mm - DARK (thick). The generators inside stay thin.`,
+    const IK=cut?COL_THIN:COL_THICK, IW=cut?LW_THIN:LW_THICK;     // a cut solid: views thin until the part kept is darkened at the end
+    steps.push({text:`Draw the outline of the front view: the base ON X–Y, the top edge and the two extreme sides - a rectangle ${R1(D)} mm × ${R1(H)} mm`
+        +(cut?" - in THIN lines for now, because the cylinder is to be cut: only the part that is kept will be made dark, at the very end, after the development. The top view circle is thin for the same reason.":" - DARK (thick).")
+        +(div?" The generators inside stay thin.":""),
       hl:["lat"],
-      d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
-        drawSLine(FX(-R),YH(H),FX(R),YH(H),COL_THICK,LW_THICK);
-        drawSLine(FX(-R),REF,FX(-R),YH(H),COL_THICK,LW_THICK);
-        drawSLine(FX(R),REF,FX(R),YH(H),COL_THICK,LW_THICK); }});
+      d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,IK,IW);
+        drawSLine(FX(-R),YH(H),FX(R),YH(H),IK,IW);
+        drawSLine(FX(-R),REF,FX(-R),YH(H),IK,IW);
+        drawSLine(FX(R),REF,FX(R),YH(H),IK,IW); }});
 
     if(cut){
       if(cut.type==="horiz"){
-        steps.push({text:`Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting every generator.`,
+        steps.push({text:`Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, drawn to convention - a thin chain line, thick at both ends, with arrows at the ends pointing towards the part that is kept. Every generator is cut at the same height, so the part kept is simply a shorter cylinder.`,
           hl:["cut"],
-          d:()=>{ drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
-            drawText(FX(R)+18,YH(v.hc),"cutting plane",COL_CUT,FONT_DIM,"left","middle"); }});
+          d:()=>{ drawCutPlane(FX(-R)-CP_EXT,YH(v.hc),FX(R)+CP_EXT,YH(v.hc)); }});
       } else {
-        steps.push({text:`Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ where it crosses the generators.`,
+        steps.push({text:`Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base, drawn to convention - a thin chain line, thick at both ends, with arrows at the ends pointing towards the part that is kept. Mark 1′, 2′ … 12′ where it crosses the generators.`,
           hl:["cut"],
-          d:()=>{ const eL=-R-8/sc, eR=R+8/sc;
+          d:()=>{ const eL=-R-CP_EXT/sc, eR=R+CP_EXT/sc;
             drawLine(FX(-R),YH(hAt(-R)),FX(-R)+58,YH(hAt(-R)),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(-R),YH(hAt(-R)),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            drawSLine(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)),COL_CUT,LW_THICK);
+            drawCutPlane(FX(eL),YH(hAt(eL)),FX(eR),YH(hAt(eR)));
             for(let i=0;i<N;i++) drawPoint(FX(gx[i]),YH(hg[i]),"",{x:0,y:0}); }});
       }
     }
 
-    steps.push({text:`CALCULATION before the development. The development of the lateral surface of a cylinder is a RECTANGLE. Length of the rectangle = perimeter of the base = π × D = π × ${R1(D)} = ${R1(devW)} mm. Width of the rectangle = height of the cylinder = ${R1(H)} mm. Each of the 12 equal parts of the length = ${R1(devW)} / 12 = ${R1(devW/12)} mm.`,
+    steps.push({text:`CALCULATION before the development. The development of the lateral surface of a cylinder is a RECTANGLE. Length of the rectangle = perimeter of the base = π × D = π × ${R1(D)} = ${R1(devW)} mm. `
+        +(div?`Width of the rectangle = height of the cylinder = ${R1(H)} mm. Each of the 12 equal parts of the length = ${R1(devW)} / 12 = ${R1(devW/12)} mm.`
+             :`Width of the rectangle = ${cut?`the height kept below the cutting plane = ${R1(Hk)} mm`:`height of the cylinder = ${R1(H)} mm`}. Every generator has this same length, so the rectangle needs no divisions.`),
       hl:["lat"], d:()=>{ }});
 
     steps.push({text:`Draw the stretch-out line to the right of the front view, level with X–Y. Its length πD = ${R1(devW)} mm is calculated from the diameter D taken from the TOP VIEW. First put in the dimension, then draw the line with the roll-and-draw scale.`,
@@ -1758,20 +2157,22 @@
         drawHorizontalDim(sepY,DX(0),DX(devW),"πD = "+R1(devW));
         drawRLine(DX(0),REF,DX(devW),REF,COL_THIN,LW_THIN); }});
 
-    steps.push({text:"Divide the stretch-out into 12 equal parts (each equal to the arc 1–2 of the top view) by the auxiliary-line method: draw a line at 30° from the left end, step off 12 equal convenient divisions on it with the divider, join the last division to the right end of πD, and draw parallels to that closing line.",
+    if(div) steps.push({text:"Divide the stretch-out into 12 equal parts (each equal to the arc 1–2 of the top view) by the auxiliary-line method: draw a line at 30° from the left end, step off 12 equal convenient divisions on it with the divider, join the last division to the right end of πD, and draw parallels to that closing line.",
       hl:["base"],
       d:()=>{ const g=div30(DX(0),REF,DX(devW),N,true);
         drawSLine(g.aux[0],g.aux[1],g.aux[2],g.aux[3],COL_THIN,LW_THIN);
         stepOff(g.aux[0],g.aux[1],g.aux[2],g.aux[3],N);
-        drawText(g.aux[2]+6,g.aux[3]+4,"30° auxiliary line",COL_DIM,FONT_DIM,"left","middle");
+        drawLabel(g.aux[2],g.aux[3],"30° auxiliary line",{x:-150,y:16});   // under the line it names, clear of the πD dimension
         drawSLine(g.closing[0],g.closing[1],g.closing[2],g.closing[3],COL_THIN,LW_THIN);
         lineSet(g.paras,COL_PROJ,LW_THIN);
         for(let i=0;i<=N;i++) drawPoint(DX(devW*i/N),REF,String(i+1>12?1:i+1),{x:-4,y:-14}); }});
 
-    if(!cut){
-      steps.push({text:`Take the height ${R1(H)} mm across from the FRONT VIEW: with the roll-and-draw scale draw a thin line from the top of the front view, parallel to X–Y, into the development area.`,
-        hl:["lat"],
-        d:()=>{ rollSet([[FX(R),YH(H),DX(devW)+14,YH(H)]],COL_PROJ,LW_THIN); }});
+    if(!div){
+      steps.push({text:cut
+          ? `Take the height of the cut, ${R1(Hk)} mm, across from the FRONT VIEW: with the roll-and-draw scale draw a thin line from where the cutting plane meets the outline, parallel to X–Y, into the development area.`
+          : `Take the height ${R1(H)} mm across from the FRONT VIEW: with the roll-and-draw scale draw a thin line from the top of the front view, parallel to X–Y, into the development area.`,
+        hl:cut?["cut"]:["lat"],
+        d:()=>{ rollSet([[FX(R),YH(Hk),DX(devW)+14,YH(Hk)]],COL_PROJ,LW_THIN); }});
     } else {
       const lv=uniqLevels(hg.map((h,i)=>({h:h,x:FX(gx[i])})));
       steps.push({text:`Take the heights of the cut points 1′, 2′ … across from the FRONT VIEW: with the roll-and-draw scale draw thin lines from each cut point, parallel to X–Y, into the development area.`,
@@ -1779,20 +2180,24 @@
         d:()=>{ rollSet(lv.map(q=>[q.x,YH(q.h),DX(devW)+14,YH(q.h)]),COL_PROJ,LW_THIN); }});
     }
 
-    steps.push({text:"Erect a perpendicular at every division - these are the 12 GENERATORS of the opened-out surface. Generators are only THIN lines; they are never drawn dark.",
-      hl:["lat"],
-      d:()=>{ const P=[], top=cut?hTop:H;
-        for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(top)-(cut?8:0)]);
-        lineSet(P,COL_THIN,LW_THIN); }});
+    if(div){
+      steps.push({text:"Erect a perpendicular at every division - these are the 12 GENERATORS of the opened-out surface. Generators are only THIN lines; they are never drawn dark.",
+        hl:["lat"],
+        d:()=>{ const P=[];
+          for(let i=0;i<=N;i++) P.push([DX(devW*i/N),REF,DX(devW*i/N),YH(hTop)-8]);
+          lineSet(P,COL_THIN,LW_THIN); }});
+    }
 
-    if(!cut){
-      steps.push({text:`Draw the outline of the development dark: the top edge, the bottom edge and the two end edges. The development is a rectangle πD × H = ${R1(devW)} mm × ${R1(H)} mm.`,
-        hl:["lat","top"],
-        d:()=>{ drawRLine(DX(0),YH(H),DX(devW),YH(H),COL_DEV,LW_THICK);
+    if(!div){
+      steps.push({text:cut
+          ? `Draw the outline of the development dark: the cut edge at the top, the bottom edge and the two end edges. The development of the part kept is a rectangle πD × ${R1(Hk)} = ${R1(devW)} mm × ${R1(Hk)} mm.`
+          : `Draw the outline of the development dark: the top edge, the bottom edge and the two end edges. The development is a rectangle πD × H = ${R1(devW)} mm × ${R1(H)} mm.`,
+        hl:cut?["lat","cut"]:["lat","top"],
+        d:()=>{ drawRLine(DX(0),YH(Hk),DX(devW),YH(Hk),COL_DEV,LW_THICK);
           drawRLine(DX(0),REF,DX(devW),REF,COL_DEV,LW_THICK);
-          drawSLine(DX(0),REF,DX(0),YH(H),COL_DEV,LW_THICK);
-          drawSLine(DX(devW),REF,DX(devW),YH(H),COL_DEV,LW_THICK);
-          drawVerticalDim(DX(devW)+18,YH(H),REF,R1(H)); }});
+          drawSLine(DX(0),REF,DX(0),YH(Hk),COL_DEV,LW_THICK);
+          drawSLine(DX(devW),REF,DX(devW),YH(Hk),COL_DEV,LW_THICK);
+          drawVerticalDim(DX(devW)+18,YH(Hk),REF,R1(Hk)); }});
     } else {
       steps.push({text:"Mark the cut points 1, 2, 3 … 12 where every generator meets its projection line.",
         hl:["cut"],
@@ -1809,16 +2214,23 @@
           drawCurve(curvePts(),COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the truncated cylinder is complete. The shortest generator is ${R1(Math.min.apply(null,hg))} mm and the longest ${R1(Math.max.apply(null,hg))} mm.`,
         hl:["cut","lat"],
-        d:()=>{ drawVerticalDim(DX(0)-15,YH(Math.min.apply(null,hg)),REF,R1(Math.min.apply(null,hg)));
+        d:()=>{ drawVerticalDim(DX(0)+16,YH(Math.min.apply(null,hg)),REF,R1(Math.min.apply(null,hg)));   // inside, clear of the Y
           drawVerticalDim(DX(devW/2)+16,YH(Math.max.apply(null,hg)),REF,R1(Math.max.apply(null,hg))); }});
     }
+    if(cut) steps.push({text:"Finally make DARK, in the front view and the top view, only the part of the cylinder that is KEPT. In the front view: the base, the two extreme sides from the base up to the cutting plane, and the cut edge along the plane. In the top view: the circle - the curved surface is vertical, so the cut face lies right over it. The part above the cutting plane has been removed, so everything there stays THIN.",
+      hl:["cut","lat"],
+      d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+        drawSLine(FX(-R),REF,FX(-R),YH(hAt(-R)),COL_THICK,LW_THICK);
+        drawSLine(FX(R),REF,FX(R),YH(hAt(R)),COL_THICK,LW_THICK);
+        drawSLine(FX(-R),YH(hAt(-R)),FX(R),YH(hAt(R)),COL_THICK,LW_THICK);
+        drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
 
-    const results=cut
+    const results=div
       ? `<b>Result:</b><table>
           <tr><td>Circumference πD</td><td>${R1(devW)} mm</td><td>Divisions</td><td>12</td></tr>
           <tr><td>Shortest generator</td><td>${R1(Math.min.apply(null,hg))} mm</td><td>Longest</td><td>${R1(Math.max.apply(null,hg))} mm</td></tr></table>`
       : `<b>Result:</b><table>
-          <tr><td>Development</td><td colspan="3">rectangle ${R1(devW)} mm × ${R1(H)} mm</td></tr></table>`;
+          <tr><td>Development</td><td colspan="3">rectangle ${R1(devW)} mm × ${R1(Hk)} mm</td></tr></table>`;
 
     return {steps,results,
       given:{type:"3d",title:"Given solid",model:model}};
@@ -1850,7 +2262,7 @@
     const sb=sectorBox(phi0,SEC,TL);
     const kRot=(function(){let k=0;for(let i=1;i<n;i++) if(cz[i]>=-1e-9&&cx[i]>cx[k]) k=i; return k;})();
     const needRot=(R-xMax)>0.5;
-    const f=layoutPL(Math.max(xMax,R)-xMin,H,zMax-zMin,sb.x1-sb.x0,sb.y1-sb.y0);
+    const f=layoutPL(Math.max(xMax,R)-xMin,H,zMax-zMin,sb.x1-sb.x0,sb.y1-sb.y0,!!cut);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x-xMin)*sc;
     const TVY=REF+TVG, TY=z=>TVY+(zMax-z)*sc;
@@ -1864,11 +2276,14 @@
     const ord=Array.from({length:n+1},(_,j)=>(k0+j)%n);
     const apexFV={x:FX(0),y:YH(H)};
     const tlEndFV={x:FX(R),y:REF};                  // o′a₁ = TRUE LENGTH of a slant edge
+    // where the TL label sits along o′a₁: clear of the point where the cutting plane crosses that line
+    const tlT=(()=>{ if(!cut) return 0.55; const tn=cut.type==="horiz"?0:tan, tc=(H-v.hc)/(H+R*tn);
+      return [0.55,0.76,0.3,0.84].find(q=>Math.abs(q-tc)>0.22)||0.55; })();
     const QT=i=>({x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])});
-    const grp=[];
-    for(let i=0;i<n;i++){ let g=grp.find(q=>Math.abs(q.x-cx[i])<1e-6);
-      if(!g){ g={x:cx[i],idx:[],top:1e9}; grp.push(g); }
-      g.idx.push(i); g.top=Math.min(g.top,Pt[i].y); }
+    const grp=frontGroups(n,ph,cx,Pt);              // slant edges that share one line in the FV, seen or hidden
+    const cutFV=i=>({x:FX(cx[i]*(1-tt[i])), y:YH(H*tt[i])});        // cut point on slant edge i, front view
+    const cutTV=i=>({x:FX(cx[i]*(1-tt[i])), y:TY(cz[i]*(1-tt[i]))}); // ... and top view
+    let eraseAt=Infinity;                           // the step that rubs out the slant edges inside the section (top view)
 
     const model=()=>{
       let m=m_pyr(n,s,H,ph);
@@ -1878,8 +2293,27 @@
     };
     const latAll=Array.from({length:n},(_,i)=>"lat"+(i+1));
 
+    const ANY=0.5, ANX=0.16;                        // viewing angle shared by the intro concept animation
     const steps=[];
     const xyEnd=f.devL-16;
+    steps.push({demo:true, text:"Here is the solid whose lateral surface is to be developed. Use the 'Given solid' panel alongside to drag-rotate, scroll to zoom, and double-click to reset the 3-D view.",
+      d:()=>{ wireRender(ctx,CANVAS_W,CANVAS_H,m_pyr(n,s,H,ph),[],ANY,ANX,1,0,0,{fill:0.34,shadeAll:true}); }});
+    if(cut){
+      steps.push(...demoSteps(
+        `The solid is cut by the cutting plane shown earlier. Watch the animation: the plane sweeps down from clear of the top to its final position, and the portion above it is removed.`,
+        sweepCutFrame(()=>m_pyr(n,s,H,ph),cut.type==="horiz"?0:-tan,1,0,v.hc,ANY,ANX,0),1500));
+    }
+    (function(){
+      const k0=faceIndex(A,ANY);
+      const ordDemo=Array.from({length:n+1},(_,j)=>(k0+j)%n);
+      const cutPt=i=>({x:(1-tt[i])*cx[i],y:tt[i]*H,z:(1-tt[i])*cz[i]});
+      const hg=cut
+        ? ringQuadPanels(i=>({x:cx[i],y:0,z:cz[i]}),cutPt,ordDemo)
+        : fanTriPanels({x:0,y:H,z:0},i=>({x:cx[i],y:0,z:cz[i]}),ordDemo);
+      steps.push(...demoSteps(
+        `The lateral surface can be imagined as opening out flat into a fan of triangles about the apex. Watch the animation: each face swings outward about its slant edge until the whole surface lies flat - this flattened shape is the development we are about to draw.`,
+        unfoldFrame(hg.verts,hg.panels,ANY,ANX,CANVAS_W*0.52,CANVAS_H*0.48),1800));
+    })();
     steps.push({text:"Draw the X–Y reference line. The pyramid rests on the HP on its base with the axis vertical, so the front view goes ABOVE X–Y with its base lying ON the X–Y line, and the top view goes below X–Y.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
@@ -1887,26 +2321,31 @@
         drawText(xyEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }});
 
     tvPolySteps(steps,n,s,Pt,sc,()=>{
-      for(let i=0;i<n;i++) drawPoint(Pt[i].x,Pt[i].y,let_[i],radOff(FX(0),TY(0),Pt[i].x,Pt[i].y,13)); });
+      for(let i=0;i<n;i++) drawPoint(Pt[i].x,Pt[i].y,let_[i],radOff(FX(0),TY(0),Pt[i].x,Pt[i].y,13)); },!!cut);
+    const IK=cut?COL_THIN:COL_THICK, IW=cut?LW_THIN:LW_THICK;     // a cut solid: views thin until the part kept is darkened at the end
 
-    steps.push({text:`Mark the centre o of the base and join it to every corner. These lines are the slant edges seen in plan - edges of the solid, so they are DARK (thick).`,
+    steps.push({text:`Mark the centre o of the base and join it to every corner. These lines are the slant edges seen in plan - edges of the solid`
+        +(cut?". The pyramid is to be cut, so the views are drawn in THIN lines for now: only the part that is kept will be made dark, at the very end, after the development.":", so they are DARK (thick)."),
       hl:["base"],
-      d:()=>{ drawPoint(FX(0),TY(0),"o",{x:6,y:12});
-        const Rl=[]; for(let i=0;i<n;i++) Rl.push([FX(0),TY(0),Pt[i].x,Pt[i].y]);
-        lineSet(Rl,COL_THICK,LW_THICK); }});
+      d:()=>{ const gone=SHOWN>eraseAt;             // once rubbed out, only the part from the base corner to the cut point is left
+        if(!gone) drawPoint(FX(0),TY(0),"o",{x:6,y:12});
+        const Rl=[]; for(let i=0;i<n;i++){ const s0=gone?cutTV(i):{x:FX(0),y:TY(0)}; Rl.push([s0.x,s0.y,Pt[i].x,Pt[i].y]); }
+        lineSet(Rl,IK,IW); }});
 
     steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm of the axis. Then project the corners of the top view up to X–Y with thin projection lines (roll-and-draw scale), draw the base ON X–Y and mark the apex o′ on the axis, ${R1(H)} mm above the base.`,
       hl:latAll,
-      d:()=>{ drawVerticalDim(FX(xMin)-16,YH(H),REF,R1(H));
+      d:()=>{ drawVerticalDim(FX(xMin)-(cut?70:16),YH(H),REF,R1(H));
         rollSet(grp.map(g=>[FX(g.x),g.top,FX(g.x),REF]),COL_PROJ,LW_THIN);
-        drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+        drawSLine(FX(xMin),REF,FX(xMax),REF,IK,IW);
         drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12}); }});
 
-    steps.push({text:`Join o′ to every base corner: the front view is complete. Every slant edge is an edge of the solid, so it is drawn DARK (thick).`,
+    const hidP=grp.filter(g=>!g.seen), hidPN=hidP.map(g=>"o′"+g.idx.map(i=>let_[i]+"′").join("")).join(" and ");
+    steps.push({text:`Join o′ to every base corner: the front view is complete. `+(cut?"Draw the slant edges THIN for now - the part kept is darkened at the end.":"Every visible slant edge is an edge of the solid, so it is drawn DARK (thick).")
+        +(hidP.length?` The edges ${hidPN} run to the rear corners of the ${NAMES[n]||"base"}: they lie behind the front faces and do not line up with any front edge, so they are HIDDEN - drawn as thin dashed lines.`:""),
       hl:latAll,
-      d:()=>{ const E=[]; for(let i=0;i<n;i++) E.push([apexFV.x,apexFV.y,FX(cx[i]),REF]);
-        lineSet(E,COL_THICK,LW_THICK);
+      d:()=>{ lineSet(grp.filter(g=>g.seen).map(g=>[apexFV.x,apexFV.y,FX(g.x),REF]),IK,IW);
+        if(hidP.length) lineSet(hidP.map(g=>[apexFV.x,apexFV.y,FX(g.x),REF]),COL_HID,LW_HID,PATTERN_HID);
         grp.forEach(g=>drawPoint(FX(g.x),REF,g.idx.map(i=>let_[i]+"′").join(""),{x:-5*g.idx.length,y:13})); }});
 
     if(needRot){
@@ -1920,26 +2359,27 @@
         d:()=>{ drawLine(FX(R),TY(0),FX(R),REF,COL_PROJ,LW_THIN,SOLID,"mid");
           drawPoint(FX(R),REF,"a₁′",{x:6,y:-12});
           drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
-          drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
+          drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,tlT); }});
     } else {
       steps.push({text:`Find the TRUE LENGTH of a slant edge. Here the extreme edge o′${let_[kRot]}′ of the front view is already parallel to the VP, so it shows the true length directly: TL = √(R² + H²) = ${R1(TL)} mm.`,
         hl:latAll,
         d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
-          drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,0.55); }});
+          drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"TL = "+R1(TL),9,tlT); }});
     }
 
     if(cut){
+      const conv=" It is drawn to convention - a thin chain line, thick at both ends, with arrows at the ends pointing towards the part that is kept.";
       const ct=cut.type==="horiz"
-        ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base. It cuts the slant edges at 1′, 2′, 3′ …`
-        : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′, 3′ … on the slant edges.`;
+        ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base.${conv} It cuts the slant edges at 1′, 2′, 3′ …`
+        : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base.${conv} Mark 1′, 2′, 3′ … on the slant edges.`;
       steps.push({text:ct, hl:["cut"],
         d:()=>{ if(cut.type==="horiz")
-            drawRLine(FX(xMin)-14,YH(v.hc),FX(xMax)+14,YH(v.hc),COL_CUT,LW_THICK);
+            drawCutPlane(FX(xMin)-CP_EXT,YH(v.hc),FX(xMax)+CP_EXT,YH(v.hc));
           else{
-            const eL=xMin-8/sc, eR=xMax+8/sc;
+            const eL=xMin-CP_EXT/sc, eR=xMax+CP_EXT/sc;
             drawLine(FX(xMin),YH(v.hc+xMin*tan),FX(xMin)+58,YH(v.hc+xMin*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(xMin),YH(v.hc+xMin*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK); }
+            drawCutPlane(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan)); }
           for(let i=0;i<n;i++){
             const P={x:FX(cx[i]*(1-tt[i])),y:YH(H*tt[i])};
             drawPoint(P.x,P.y,String(i+1),{x:5,y:-11}); } }});
@@ -2013,6 +2453,43 @@
       steps.push({text:`The development of the lateral surface of the truncated pyramid is complete. O–1 (shortest) = ${R1(Math.min.apply(null,tlCut))} mm and the longest = ${R1(Math.max.apply(null,tlCut))} mm.`,
         hl:["cut"].concat(latAll),
         d:()=>{ }});
+
+      const tvCutPoly=()=>{ const pts=[]; for(let i=0;i<n;i++) pts.push(cutTV(i)); return pts; };
+      const tvCutEdges=col=>{ const P=tvCutPoly(), L=[]; for(let i=0;i<n;i++){ const A=P[i],B=P[(i+1)%n]; L.push([A.x,A.y,B.x,B.y]); } return L; };
+      const onAxis=[]; for(let i=0;i<n;i++) if(Math.abs(cx[i])<1e-6) onAxis.push(i);   // slant edge seen end-on to its projector
+      steps.push({text:"Now the sectional TOP VIEW. Project every cut point down from the front view: from 1′, 2′, 3′ … drop a thin projector to the slant edge of the top view that carries the same letter, and mark 1, 2, 3 … where it meets it."
+          +(onAxis.length?` The edge o${onAxis.map(i=>let_[i]).join(", o")} lies along its own projector in the top view, so a projector cannot fix its point: draw a horizontal line from ${onAxis.map(i=>(i+1)+"′").join(", ")} to the true-length edge o′a₁′ of the front view, project that point down to the horizontal centre line of the top view, and with centre o swing it round onto the edge.`:""),
+        hl:["cut","base"],
+        d:()=>{ const L=[];
+          for(let i=0;i<n;i++){ if(onAxis.indexOf(i)>=0) continue; const P=cutFV(i), Q=cutTV(i); L.push([P.x,P.y,Q.x,Q.y]); }
+          rollSet(L,COL_PROJ,LW_THIN);
+          onAxis.forEach(i=>{ const P=cutFV(i), Q=QT(i), rr=R*(1-tt[i])*sc, T=cutTV(i);
+            drawLine(P.x,P.y,Q.x,Q.y,COL_PROJ,LW_THIN);
+            drawLine(Q.x,Q.y,Q.x,TY(0),COL_PROJ,LW_THIN);
+            drawCut(FX(0),TY(0),rr,Math.atan2(T.y-TY(0),T.x-FX(0)),COL_THIN); });
+          for(let i=0;i<n;i++){ const Q=cutTV(i); drawPoint(Q.x,Q.y,String(i+1),radOff(FX(0),TY(0),Q.x,Q.y,-12)); } }});
+      steps.push({text:"Join the points 1-2-3-… in order with thin lines - the cut face of a pyramid is a plane POLYGON, so straight lines, not a curve.",
+        hl:["cut","base"],
+        d:()=>{ lineSet(tvCutEdges(),COL_THIN,LW_THIN); }});
+      eraseAt=steps.length;
+      steps.push({text:"Rub out the parts of the slant edges that lie INSIDE the section 1-2-3-… - the part of the pyramid above the cutting plane, apex and all, has been cut away. In the top view each slant edge now runs only from its base corner to its cut point.",
+        hl:["cut","base"],
+        d:()=>{}});
+      steps.push({text:"Hatch the cut surface in the top view - it is a true section through solid material, so it is hatched. The band between this polygon and the base is still the intact sloping lateral surface, so it is left plain.",
+        hl:["cut","base"],
+        d:()=>{ lineSet(tvCutEdges(),COL_DEV,LW_THICK);
+          lineSet(hatchPolygonPx(tvCutPoly(),7),COL_THIN,0.9); }});
+      // the cut edge in the front view runs along the plane, between the two outermost cut points
+      const fvCut=()=>{ const P=Array.from({length:n},(_,i)=>cutFV(i)); let a=P[0], b=P[0];
+        P.forEach(p=>{ if(p.x<a.x) a=p; if(p.x>b.x) b=p; }); return [a,b]; };
+      steps.push({text:"Finally make DARK, in the front view and the top view, only the part of the pyramid that is KEPT. In the front view: the base, each visible slant edge from its base corner up to its cut point, and the cut edge along the cutting plane. In the top view: the base outline and each slant edge from its corner to its cut point (the section is already dark). The part above the cutting plane, apex and all, has been removed, so it stays THIN.",
+        hl:["cut"].concat(latAll),
+        d:()=>{ drawSLine(FX(xMin),REF,FX(xMax),REF,COL_THICK,LW_THICK);
+          const E=[]; grp.filter(g=>g.seen).forEach(g=>{ const i=g.idx[0], c=cutFV(i); E.push([FX(g.x),REF,c.x,c.y]); });
+          lineSet(E,COL_THICK,LW_THICK);
+          const C=fvCut(); drawSLine(C[0].x,C[0].y,C[1].x,C[1].y,COL_THICK,LW_THICK);
+          lineSet(Pt.map((p,i)=>[p.x,p.y,Pt[(i+1)%n].x,Pt[(i+1)%n].y]),COL_THICK,LW_THICK);
+          lineSet(Pt.map((p,i)=>{ const c=cutTV(i); return [p.x,p.y,c.x,c.y]; }),COL_THICK,LW_THICK); }});
     }
 
     const results=cut
@@ -2044,7 +2521,7 @@
     const lCut=tt.map(t=>L*(1-t));
     const phi0=Math.atan2(H,R);                     // first generator is PARALLEL to the true-length generator o'1' of the front view
     const sb=sectorBox(phi0,SEC,L);
-    const f=layoutPL(D,H,D,sb.x1-sb.x0,sb.y1-sb.y0);
+    const f=layoutPL(D,H,D,sb.x1-sb.x0,sb.y1-sb.y0,!!cut);
     const sc=f.sc, REF=f.REF;
     const FX=x=>f.fvL+(x+R)*sc;
     const TVY=REF+TVG, TY=z=>TVY+(R-z)*sc;
@@ -2053,9 +2530,17 @@
     const DA=j=>phi0-SEC*j/N;
     const DP=(j,r)=>({x:APX+r*sc*Math.cos(DA(j)),y:APY+r*sc*Math.sin(DA(j))});
     const apexFV={x:FX(0),y:YH(H)}, tlEndFV={x:FX(R),y:REF};
+    // where the TL label sits along o′a₁: clear of the point where the cutting plane crosses that line
+    const tlT=(()=>{ if(!cut) return 0.55; const tn=cut.type==="horiz"?0:tan, tc=(H-v.hc)/(H+R*tn);
+      return [0.55,0.76,0.3,0.84].find(q=>Math.abs(q-tc)>0.22)||0.55; })();
     const QT=i=>({x:apexFV.x+(tlEndFV.x-apexFV.x)*(1-tt[i]), y:apexFV.y+(tlEndFV.y-apexFV.y)*(1-tt[i])});
+    // NOTE: this is the chord on the SECTOR's own arc (radius L) for one 1/N share of theta - it is
+    // deliberately NOT the base circle's chord (radius R): a length taken off the small top-view circle
+    // does not carry over to the much larger sector, since a chord of the same length subtends a smaller
+    // angle at a larger radius. The valid construction divides the CALCULATED angle theta itself into N
+    // equal parts (protractor, or repeated compass bisection), which is what this value represents.
     const chord=2*L*Math.sin(SEC/(2*N));
-    const thetaTxt=R1(SEC*180/Math.PI);
+    const thetaTxt=R1(SEC*180/Math.PI), divTxt=R1(SEC*180/Math.PI/N);
     const rAt=q=>{ const a=Math.PI-TAU*q/N; return L*(1-cutTx(R*Math.cos(a))); };
     const curvePts=()=>{ const pts=[];
       for(let j=0;j<=N*6;j++){ const q=j/6, r=rAt(q), ang=DA(q);
@@ -2069,8 +2554,30 @@
       return m;
     };
 
+    const ANY=0.5, ANX=0.16;                        // viewing angle shared by the intro concept animation
     const steps=[];
     const xyEnd=f.devL-16;
+    steps.push({demo:true, text:"Here is the solid whose lateral surface is to be developed. Use the 'Given solid' panel alongside to drag-rotate, scroll to zoom, and double-click to reset the 3-D view.",
+      d:()=>{ wireRender(ctx,CANVAS_W,CANVAS_H,m_cone(R,H,48),[],ANY,ANX,1,0,0,{fill:0.34,shadeAll:true}); }});
+    if(cut){
+      steps.push(...demoSteps(
+        `The solid is cut by the cutting plane shown earlier. Watch the animation: the plane sweeps down from clear of the top to its final position, and the portion above it is removed.`,
+        sweepCutFrame(()=>m_cone(R,H,48),cut.type==="horiz"?0:-tan,1,0,v.hc,ANY,ANX,0),1500));
+    }
+    (function(){
+      const NF=48;                                  // fine segmentation - a many-sided pyramid rolls out smoothly
+      const FA=Array.from({length:NF},(_,i)=>Math.PI-TAU*i/NF);
+      const fgx=FA.map(a=>R*Math.cos(a)), fgz=FA.map(a=>R*Math.sin(a));
+      const k0=faceIndex(FA,ANY);
+      const ordF=Array.from({length:NF+1},(_,j)=>(k0+j)%NF);
+      const cutPt=i=>{ const t=cutTx(fgx[i]); return {x:(1-t)*fgx[i],y:t*H,z:(1-t)*fgz[i]}; };
+      const hg=cut
+        ? ringQuadPanels(i=>({x:fgx[i],y:0,z:fgz[i]}),cutPt,ordF)
+        : fanTriPanels({x:0,y:H,z:0},i=>({x:fgx[i],y:0,z:fgz[i]}),ordF);
+      steps.push(...demoSteps(
+        `The curved lateral surface can be imagined as opening out flat into a sector, like flattening an ice-cream cone wrapper. Watch the animation: the surface rolls out about the apex until it lies flat - this flattened shape is the development we are about to draw.`,
+        unfoldFrame(hg.verts,hg.panels,ANY,ANX,CANVAS_W*0.52,CANVAS_H*0.48,60,{outline:hg.outline}),1800));
+    })();
     steps.push({text:"Draw the X–Y reference line. The cone rests on the HP on its base with the axis vertical, so the front view is drawn ABOVE X–Y with its base lying ON the X–Y line, and the top view below X–Y.",
       hl:[],
       d:()=>{ drawLine(f.lineStart,REF,xyEnd,REF,COL_AXIS,LW_THIN);
@@ -2083,46 +2590,54 @@
         drawLine(FX(-R),TY(0)-3,FX(-R),yb-5,COL_DIM,LW_THIN);
         drawLine(FX(R),TY(0)-3,FX(R),yb-5,COL_DIM,LW_THIN);
         drawHorizontalDim(yb,FX(-R),FX(R),"Ø "+R1(D));
-        drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
+        drawCircle(FX(0),TY(0),R*sc,cut?COL_THIN:COL_THICK,cut?LW_THIN:LW_THICK); }});
+    const IK=cut?COL_THIN:COL_THICK, IW=cut?LW_THIN:LW_THICK;     // a cut solid: views thin until the part kept is darkened at the end
 
-    steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1 to 12 from the extreme left.",
+    // Generators are needed only to carry the cut round the cone; an uncut cone develops straight into a sector.
+    const div=!!cut;
+    if(div) steps.push({text:"Divide the circle into 12 equal parts with the protractor - 30° apart - and number them 1 to 12 from the extreme left. Join every point to the centre o with a thin line: these are the GENERATORS o1, o2 … o12 as seen from above.",
       hl:["base"],
       d:()=>{ markAngles(FX(0),TY(0),R*sc,A.map(a=>-a));
+        const G=[]; for(let i=0;i<N;i++) G.push([FX(0),TY(0),FX(gx[i]),TY(gz[i])]);
+        lineSet(G,COL_THIN,LW_THIN);
         for(let i=0;i<N;i++)
           drawPoint(FX(gx[i]),TY(gz[i]),String(i+1),radOff(FX(0),TY(0),FX(gx[i]),TY(gz[i]),14)); }});
 
-    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm of the axis. Then project the ends of the base up to X–Y with thin projection lines (roll-and-draw scale), draw the base ON X–Y and mark the apex o′ on the axis, ${R1(H)} mm above it.`,
+    steps.push({text:`Now the front view, which starts ON the X–Y line. First put in the height ${R1(H)} mm of the axis. Then project ${div?"the 12 points":"the ends of the diameter"} of the top view up to X–Y with thin projection lines (roll-and-draw scale), draw the base ON X–Y and mark the apex o′ on the axis, ${R1(H)} mm above it.`,
       hl:["lat"],
-      d:()=>{ drawVerticalDim(FX(-R)-16,YH(H),REF,R1(H));
-        const P=[]; for(let i=0;i<=N/2;i++) P.push([FX(gx[i]),TY(gz[i]),FX(gx[i]),REF]);
+      d:()=>{ drawVerticalDim(FX(-R)-(cut?70:16),YH(H),REF,R1(H));
+        const P=[]; for(let i=0;i<=N/2;i+=(div?1:N/2)) P.push([FX(gx[i]),TY(gz[i]),FX(gx[i]),REF]);
         rollSet(P,COL_PROJ,LW_THIN);
-        drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+        drawSLine(FX(-R),REF,FX(R),REF,IK,IW);
         drawLine(FX(0),REF,FX(0),YH(H),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawPoint(apexFV.x,apexFV.y,"o′",{x:6,y:-12}); }});
 
-    steps.push({text:"Join o′ to the ends of the base: the front view is a triangle. The two extreme generators are the outline, drawn DARK (thick). Join o′ to the other projected points with THIN lines - the generators o′1′ … o′12′ are never dark.",
+    steps.push({text:"Join o′ to the ends of the base: the front view is a triangle. The two extreme generators are the outline"
+        +(cut?" - drawn THIN for now, like the base and the top view circle, because the cone is to be cut: only the part that is kept will be made dark, at the very end, after the development.":", drawn DARK (thick).")
+        +(div?" Join o′ to the other projected points with THIN lines - the generators o′1′ … o′12′ are never dark.":""),
       hl:["lat"],
-      d:()=>{ const G=[]; for(let i=1;i<N/2;i++) G.push([apexFV.x,apexFV.y,FX(gx[i]),REF]);
+      d:()=>{ const G=[]; if(div) for(let i=1;i<N/2;i++) G.push([apexFV.x,apexFV.y,FX(gx[i]),REF]);
         lineSet(G,COL_THIN,LW_THIN);
-        drawSLine(apexFV.x,apexFV.y,FX(-R),REF,COL_THICK,LW_THICK);
-        drawSLine(apexFV.x,apexFV.y,FX(R),REF,COL_THICK,LW_THICK); }});
+        drawSLine(apexFV.x,apexFV.y,FX(-R),REF,IK,IW);
+        drawSLine(apexFV.x,apexFV.y,FX(R),REF,IK,IW); }});
 
-    steps.push({text:`The extreme generator o′${N/2+1}′ is parallel to the VP, so it gives the TRUE slant length directly: L = √(R² + H²) = ${R1(L)} mm. Every generator of a cone is this same length.`,
+    steps.push({text:`The extreme generator ${div?"o′"+(N/2+1)+"′":"at the right"} is parallel to the VP, so it gives the TRUE slant length directly: L = √(R² + H²) = ${R1(L)} mm. Every generator of a cone is this same length.`,
       hl:["lat"],
       d:()=>{ drawLine(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,COL_CUT,LW_THICK);
-        drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"L = "+R1(L),9,0.55); }});
+        drawAlignedLabel(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y,"L = "+R1(L),9,tlT); }});
 
     if(cut){
+      const conv=" It is drawn to convention - a thin chain line, thick at both ends, with arrows at the ends pointing towards the part that is kept.";
       steps.push({text:cut.type==="horiz"
-          ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting all the generators.`
-          : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base. Mark 1′, 2′ … 12′ on the generators.`,
+          ? `Draw the cutting plane: a horizontal line ${R1(v.hc)} mm above the base, cutting all the generators.${conv}`
+          : `Draw the cutting plane at ${R1(v.ang)}° to the HP through a point on the axis ${R1(v.hc)} mm above the base.${conv} Mark 1′, 2′ … 12′ on the generators.`,
         hl:["cut"],
         d:()=>{ if(cut.type==="horiz")
-            drawRLine(FX(-R)-14,YH(v.hc),FX(R)+14,YH(v.hc),COL_CUT,LW_THICK);
-          else{ const eL=-R-8/sc, eR=R+8/sc;
+            drawCutPlane(FX(-R)-CP_EXT,YH(v.hc),FX(R)+CP_EXT,YH(v.hc));
+          else{ const eL=-R-CP_EXT/sc, eR=R+CP_EXT/sc;
             drawLine(FX(-R),YH(v.hc-R*tan),FX(-R)+58,YH(v.hc-R*tan),COL_LOCUS,LW_THIN,PATTERN_LOCUS);
             drawAngleDimOutward(FX(-R),YH(v.hc-R*tan),44,R1(v.ang)+"°",0,-toRad(v.ang),true,true);
-            drawSLine(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan),COL_CUT,LW_THICK); }
+            drawCutPlane(FX(eL),YH(v.hc+eL*tan),FX(eR),YH(v.hc+eR*tan)); }
           for(let i=0;i<N;i++){
             const P={x:FX(gx[i]*(1-tt[i])),y:YH(H*tt[i])};
             drawPoint(P.x,P.y,"",{x:0,y:0}); } }});
@@ -2141,29 +2656,55 @@
       d:()=>{}});
 
     const A0=DP(0,L);
-    steps.push({text:`Start the development. The radius is the true slant length from the FRONT VIEW and the divisions come from the TOP VIEW. Mark the apex O and, with the roll-and-draw scale, draw the FIRST generator O–1 PARALLEL to the true-length generator o′${N/2+1}′ of the front view (inclined at ${R1(phi0*180/Math.PI)}° to the horizontal). Set the compass to L = ${R1(L)} mm from the front view and cut that length on it.`,
+    steps.push({text:`Start the development. The radius is the true slant length from the FRONT VIEW${div?" and the divisions come from the TOP VIEW":""}. Mark the apex O and, with the roll-and-draw scale, draw the FIRST generator ${div?"O–1 ":""}PARALLEL to the true-length generator ${div?"o′"+(N/2+1)+"′ ":""}of the front view (inclined at ${R1(phi0*180/Math.PI)}° to the horizontal). Set the compass to L = ${R1(L)} mm from the front view and cut that length on it.`,
       hl:["lat"],
       d:()=>{ drawPoint(APX,APY,"O",{x:-6,y:-14});
         drawRLine(APX,APY,A0.x,A0.y,COL_THIN,LW_THIN);
         measureSpan(apexFV.x,apexFV.y,tlEndFV.x,tlEndFV.y);
         drawCut(APX,APY,L*sc,DA(0),COL_THIN);
-        drawPoint(A0.x,A0.y,"1",radOff(APX,APY,A0.x,A0.y,14)); }});
+        drawPoint(A0.x,A0.y,div?"1":"",radOff(APX,APY,A0.x,A0.y,14)); }});
 
     steps.push({text:`With centre O and the same compass setting - radius L = ${R1(L)} mm - draw the arc ANTICLOCKWISE (swinging upwards from the marked point) through angle θ = ${thetaTxt}°.`,
       hl:["lat"],
-      d:()=>{ drawArcPlain(APX,APY,L*sc,DA(0),DA(N),true,COL_THIN,LW_THIN); }});
+      d:()=>{ drawArcPlain(APX,APY,L*sc,DA(0),DA(N),true,COL_THIN,LW_THIN);
+        drawAngleDimOutward(APX,APY,L*sc+22,`θ = (r/L)×360° = ${thetaTxt}°`,DA(0),DA(N),true,true,true); }});
 
-    steps.push({text:"Mark all the points with the SAME distance taken from the top view: set the compass to the chord 1–2 of the top view (very nearly the arc 1–2 of the base circle) and, from point 1, cut the arc 12 times anticlockwise, numbering the points 2, 3 … 12 and 1.",
-      hl:["base"],
-      d:()=>{ measureSpan(FX(gx[0]),TY(gz[0]),FX(gx[1]),TY(gz[1]));
-        for(let j=1;j<=N;j++){ const P=DP(j-1,L), Q=DP(j,L);
-          drawCut(P.x,P.y,chord*sc,Math.atan2(Q.y-P.y,Q.x-P.x),COL_THIN);
-          drawPoint(Q.x,Q.y,String(j+1>N?1:j+1),radOff(APX,APY,Q.x,Q.y,14)); } }});
+    if(div){
+      /* dividing the sector: compass BISECTION halves and quarters θ; a quarter holds three divisions, and an angle
+         cannot be trisected with compass and straight edge, so the last split is made with the protractor */
+      const numAt=j=>String(j+1>N?1:j+1);
+      const bisect=(j1,j2,rr)=>{                     // bisect the angle between development generators j1 and j2
+        const a1=DA(j1), a2=DA(j2), am=(a1+a2)/2, hf=Math.abs(a1-a2)/2;
+        const rc=rr*Math.max(0.75,Math.sin(hf)+0.3);
+        const p={x:APX+rr*Math.cos(a1),y:APY+rr*Math.sin(a1)}, q={x:APX+rr*Math.cos(a2),y:APY+rr*Math.sin(a2)};
+        const dist=rr*Math.cos(hf)+Math.sqrt(Math.max(0,rc*rc-Math.pow(rr*Math.sin(hf),2)));
+        const r={x:APX+dist*Math.cos(am),y:APY+dist*Math.sin(am)}, jm=(j1+j2)/2, E=DP(jm,L);
+        drawCut(APX,APY,rr,a1,COL_THIN); drawCut(APX,APY,rr,a2,COL_THIN);
+        drawCut(p.x,p.y,rc,Math.atan2(r.y-p.y,r.x-p.x),COL_THIN);
+        drawCut(q.x,q.y,rc,Math.atan2(r.y-q.y,r.x-q.x),COL_THIN);
+        drawSLine(APX,APY,E.x,E.y,COL_THIN,LW_THIN);
+        drawPoint(E.x,E.y,numAt(jm),radOff(APX,APY,E.x,E.y,14)); };
+      const quarter=R1(SEC*180/Math.PI/4);
+      steps.push({text:`Divide the sector into 12 equal parts, to match the 12 generators. IMPORTANT: you cannot simply pick up the chord 1–2 of the TOP VIEW with the divider and step it round this arc - the sector has a different radius (L, not r), so that length would not close the arc into the correct total angle θ. Divide the angle θ itself. First BISECT it with the compass: with centre O and any convenient radius, cut the two bounding generators; with centres at these two cuts and one radius, draw two arcs crossing each other; the line from O through the crossing halves θ. Where it meets the arc is point ${numAt(N/2)}.`,
+        hl:["lat"],
+        d:()=>{ bisect(0,N,L*sc*0.5);
+          drawPoint(DP(N,L).x,DP(N,L).y,"1",radOff(APX,APY,DP(N,L).x,DP(N,L).y,14)); }});
+      steps.push({text:`Bisect each half in exactly the same way, with a smaller radius. This gives points ${numAt(N/4)} and ${numAt(3*N/4)}: the sector is now in four equal parts of θ/4 = ${quarter}°.`,
+        hl:["lat"],
+        d:()=>{ bisect(0,N/2,L*sc*0.32); bisect(N/2,N,L*sc*0.32); }});
+      steps.push({text:`Each quarter holds THREE divisions, and an angle cannot be trisected with compass and straight edge - bisection only ever halves. So finish with the protractor: set it at O to θ/12 = ${divTxt}° and mark the two remaining points in each quarter on the arc. Number all the points 1, 2, 3 … 12, 1 round the arc.`,
+        hl:["lat"],
+        d:()=>{ const js=[]; for(let j=1;j<N;j++) if(j%(N/4)) js.push(j);
+          markAngles(APX,APY,L*sc,js.map(j=>DA(j)));
+          js.forEach(j=>{ const Q=DP(j,L); drawPoint(Q.x,Q.y,numAt(j),radOff(APX,APY,Q.x,Q.y,14)); }); }});
+    }
 
-    steps.push({text:"Join every division to O with THIN lines. These are the 12 generators of the opened-out surface - generators are never drawn dark.",
-      hl:["lat"],
-      d:()=>{ const Ls=[]; for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
-        lineSet(Ls,COL_THIN,LW_THIN); }});
+    if(cut){
+      steps.push({text:"Join every division to O with THIN lines. These are the 12 generators of the opened-out surface - generators are never drawn dark.",
+        hl:["lat"],
+        d:()=>{ const Ls=[]; for(let j=0;j<=N;j++){ const P=DP(j,L); Ls.push([APX,APY,P.x,P.y]); }
+          lineSet(Ls,COL_THIN,LW_THIN); }});
+    }
 
     if(!cut){
       steps.push({text:`Make the outline dark: the arc and the two end generators. The development of the cone is a sector of radius ${R1(L)} mm and angle ${thetaTxt}°.`,
@@ -2190,6 +2731,42 @@
           drawCurve(curvePts(),COL_DEV,LW_THICK); }});
       steps.push({text:`The development of the truncated cone is complete. The shortest generator is ${R1(Math.min.apply(null,lCut))} mm and the longest ${R1(Math.max.apply(null,lCut))} mm from the apex.`,
         hl:["cut","lat"], d:()=>{ }});
+
+      const tvCutPts=()=>{ const pts=[];
+        for(let j=0;j<=N*6;j++){ const q=j/6, ang=Math.PI-TAU*q/N;
+          const x0=R*Math.cos(ang), z0=R*Math.sin(ang), t=cutTx(x0);
+          pts.push({x:FX(x0*(1-t)), y:TY(z0*(1-t))}); }
+        return pts; };
+      const cFV=i=>({x:FX(gx[i]*(1-tt[i])), y:YH(H*tt[i])});
+      const cTV=i=>({x:FX(gx[i]*(1-tt[i])), y:TY(gz[i]*(1-tt[i]))});
+      const onAx=[]; for(let i=0;i<N;i++) if(Math.abs(gx[i])<1e-6) onAx.push(i);   // generators 4 and 10: seen end-on to their projector
+      steps.push({text:`Now the sectional TOP VIEW. Project every cut point down from the front view: from 1′, 2′ … drop a thin projector to the generator of the top view with the same number (one projector serves the front and the rear generator), and mark the point where it meets it. Generators ${onAx.map(i=>i+1).join(" and ")} lie along their own projector in the top view, so a projector cannot fix their points: draw a horizontal line from the cut point to the true-length generator o′${N/2+1}′, project that point down to the horizontal centre line of the top view, and with centre o swing it round onto generators ${onAx.map(i=>i+1).join(" and ")}.`,
+        hl:["cut","base"],
+        d:()=>{ const L=[], seen={};
+          for(let i=0;i<N;i++){ if(onAx.indexOf(i)>=0) continue; const P=cFV(i), Q=cTV(i), k=Math.round(P.x*10);
+            if(!seen[k]){ seen[k]=1; const Q2=cTV((N-i)%N); L.push([P.x,P.y,P.x,Math.max(Q.y,Q2.y)]); } }
+          rollSet(L,COL_PROJ,LW_THIN);
+          if(onAx.length){ const i=onAx[0], P=cFV(i), Q=QT(i);
+            drawLine(P.x,P.y,Q.x,Q.y,COL_PROJ,LW_THIN);
+            drawLine(Q.x,Q.y,Q.x,TY(0),COL_PROJ,LW_THIN);
+            onAx.forEach(j=>{ const T=cTV(j); drawCut(FX(0),TY(0),R*(1-tt[j])*sc,Math.atan2(T.y-TY(0),T.x-FX(0)),COL_THIN); }); }
+          for(let i=0;i<N;i++){ const Q=cTV(i); drawPoint(Q.x,Q.y,"",{x:0,y:0}); } }});
+      steps.push({text:"Draw a smooth thin curve through the points just found - the true shape of the cut surface seen from above.",
+        hl:["cut","base"],
+        d:()=>{ drawCurve(tvCutPts(),COL_THIN,LW_THIN); }});
+      steps.push({text:"Hatch the cut surface in the top view - it is a true section through solid material, so it is hatched. The ring between this curve and the base circle is still the intact sloping lateral surface, so it is left plain.",
+        hl:["cut","base"],
+        d:()=>{ drawCurve(tvCutPts(),COL_DEV,LW_THICK);
+          lineSet(hatchPolygonPx(tvCutPts(),7),COL_THIN,0.9); }});
+      // the two outline generators are cut at points 1′ (left) and 7′ (right); the cut edge runs between them
+      const oL=cFV(0), oR=cFV(N/2);
+      steps.push({text:"Finally make DARK, in the front view and the top view, only the part of the cone that is KEPT. In the front view: the base, the two outline generators from the base up to the cutting plane, and the cut edge along the plane. In the top view: the base circle (the section is already dark). The part above the cutting plane, apex and all, has been removed, so it stays THIN.",
+        hl:["cut","lat"],
+        d:()=>{ drawSLine(FX(-R),REF,FX(R),REF,COL_THICK,LW_THICK);
+          drawSLine(FX(-R),REF,oL.x,oL.y,COL_THICK,LW_THICK);
+          drawSLine(FX(R),REF,oR.x,oR.y,COL_THICK,LW_THICK);
+          drawSLine(oL.x,oL.y,oR.x,oR.y,COL_THICK,LW_THICK);
+          drawCircle(FX(0),TY(0),R*sc,COL_THICK,LW_THICK); }});
     }
 
     const results=cut
@@ -2359,11 +2936,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 22px Arial";
+    gctx.font="bold 17px Arial";
     const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
     gctx.fillRect(x-w/2,y-14,w,28);
-    gText(x,y,t,color||GINK,"bold 22px Arial");
+    gText(x,y,t,color||GINK,"bold 17px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -2465,6 +3042,21 @@
 
 
   let probIndex=0, values={}, P=null, currentStep=1, started=false;
+
+  /* ---- optional usage tracking (see account.js) - a no-op unless a student is logged in ---- */
+  const EG_APP_KEY="development";
+  let egFurthest=0, egCompleted=false, egViaShowAll=false;
+  if(window.EG) EG.trackDuration(EG_APP_KEY);
+  function egResetAttempt(viaShowAll){
+    egFurthest=0; egCompleted=false; egViaShowAll=!!viaShowAll;
+    if(window.EG) EG.track(EG_APP_KEY,(PROBLEMS[probIndex]||{}).title||"","open");
+  }
+  function egTrackStep(s,N){
+    if(!window.EG) return;
+    const title=(PROBLEMS[probIndex]||{}).title||"";
+    if(!egViaShowAll&&s>egFurthest){ egFurthest=s; EG.track(EG_APP_KEY,title,"progress",{step_num:s}); }
+    if(s>=N&&!egCompleted){ egCompleted=true; EG.track(EG_APP_KEY,title,egViaShowAll?"revealed":"complete"); }
+  }
   let viewZoom=1, viewPanX=0, viewPanY=0;
   const ZOOM_MIN=0.4, ZOOM_MAX=6;
 
@@ -2533,6 +3125,7 @@
   }
   function startDrawing(){
     if(!P) return;
+    egResetAttempt(false);
     started=true; currentStep=1; lastSpoken=-1; compassPose=null; syncStartUI(); drawStep(1,true);
   }
 
@@ -2558,6 +3151,7 @@
     syncStartUI();
     currentStep=Math.min(currentStep,P.steps.length);
     lastSpoken=-1;
+    autoLayout();
     renderStepList();
     resetView();
   }
@@ -2641,6 +3235,7 @@
       clearCanvasWhite();
       return;
     }
+    egTrackStep(s,N);
     speakCurrent();                 // narration and drawing run together
     renderGiven(P.steps[s-1].hl||[]);
 
@@ -2652,8 +3247,8 @@
   function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
     if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
   function prevStep(){ if(P&&started&&currentStep>1){currentStep--; compassPose=null; drawStep(currentStep);} }
-  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
-  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
+  function restartSteps(){ if(P){egResetAttempt(false); started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
+  function showAll(){ if(P){egResetAttempt(true); started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
   const voiceSupported=("speechSynthesis" in window);
@@ -2772,9 +3367,13 @@
   const fsWrap=document.getElementById("canvas-wrapper");
   let fsReal=false;
   function isFs(){ return fsWrap.classList.contains("fs-on"); }
-  function setCanvasSize(w,h){
-    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
-    if(w===CANVAS_W&&h===CANVAS_H) return;
+  // w x h is the room on screen; k (>= 1) is how many drawing units go to one screen pixel.
+  function setCanvasSize(w,h,k){
+    k=k||1;
+    w=Math.max(200,Math.round(w*k)); h=Math.max(160,Math.round(h*k));
+    const hd=Math.min((canvas._hdBase||1)/k, Math.sqrt(12e6/(w*h)));   // screen resolution or better, capped at ~12 megapixels so a big full screen stays quick
+    if(w===CANVAS_W&&h===CANVAS_H&&canvas._hdS===hd) return;
+    canvas._hdS=hd;
     CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none"){
       rebuild(false);
@@ -2782,9 +3381,17 @@
       if(st&&st.demo){ lastSpoken=currentStep; drawStep(currentStep,true); }   // re-laid out mid-animation: play it again instead of jumping to its end
     } else clearCanvasWhite();
   }
-  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
-  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
-  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  // In full screen the drawing area takes exactly the room the layout gives it, in the screen's own proportions,
+  // so nothing is stretched in portrait or landscape. On a small screen (a phone) the drawing is still laid out
+  // on at least the 820 x 540 of the normal view and shown scaled down to fit: drawn at one unit per screen pixel,
+  // the lines would be squeezed into a few hundred pixels while the text kept its size, and the labels would pile
+  // up on the drawing. Outside full screen it returns to 820 x 540.
+  function layoutCanvas(){
+    if(isFs()){
+      const cw=Math.max(1,canvas.clientWidth), ch=Math.max(1,canvas.clientHeight);
+      setCanvasSize(cw,ch,Math.max(1,820/cw,540/ch));
+    } else setCanvasSize(820,540,1);
+  }
   let layoutTimer=0;
   function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
   function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }

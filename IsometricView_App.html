@@ -14,6 +14,7 @@
   <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Isometric Projections - Problems with Stepwise Solutions</title>
+  <script src="account.js"></script>
   <style>
     :root{
       --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
@@ -108,17 +109,23 @@
     #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
     #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:crosshair;}
     #spaceCanvas.dragging{cursor:move;}
-    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
     #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    .fs-only{display:none;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    /* step-navigation controls, relocated here from the left panel so they sit right above the sketch
+       (and so the same controls - not a duplicate set - are still reachable in full screen) */
+    #step-toolbar{display:flex;align-items:center;gap:14px;row-gap:8px;flex-wrap:wrap;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--line);}
+    #step-toolbar .btn-group{margin-bottom:0;flex-wrap:wrap;}
+    #step-toolbar .btn-group button{flex:0 0 auto;padding:7px 14px;}
+    #step-toolbar .speed-row{flex-wrap:nowrap;}
+    #step-toolbar .speed-row select{flex:0 0 auto;width:auto;}
     /* full screen (real or, where the browser has none, a page-filling overlay) */
     #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
     #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on #step-toolbar{flex:0 0 auto;}
     #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
     #canvas-wrapper.fs-on #space-wrap{display:none !important;}
     /* phones and small tablets */
@@ -179,27 +186,6 @@
       </div>
 
       <h4>Step-by-step solution</h4>
-      <div class="btn-group" id="start-row">
-        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
-      </div>
-      <div class="btn-group">
-        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
-        <button id="nextButton" onclick="nextStep()">Next ▶</button>
-      </div>
-      <div class="btn-group">
-        <button onclick="restartSteps()">Restart</button>
-        <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
-      </div>
-      <div class="btn-group speed-row">
-        <label for="speedSel">Drawing speed</label>
-        <select id="speedSel" onchange="setSpeed(this.value)">
-          <option value="1.7">Slow</option>
-          <option value="1" selected>Normal</option>
-          <option value="0.62">Fast</option>
-          <option value="0.35">Very fast</option>
-        </select>
-      </div>
       <div id="stepCounter"></div>
       <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
       <div id="results"></div>
@@ -212,14 +198,30 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
-        <span class="fs-only fs-nav">
-          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
-          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
-          <button class="fs-btn" id="fsRestart" onclick="restartSteps()">↺ Restart</button>
-          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
-        </span>
-
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <div id="step-toolbar">
+        <div class="btn-group" id="start-row">
+          <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+        </div>
+        <div class="btn-group">
+          <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+          <button id="nextButton" onclick="nextStep()">Next ▶</button>
+        </div>
+        <div class="btn-group">
+          <button onclick="restartSteps()">Restart</button>
+          <button onclick="showAll()">Show all</button>
+          <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
+        </div>
+        <div class="btn-group speed-row">
+          <label for="speedSel">Drawing speed</label>
+          <select id="speedSel" onchange="setSpeed(this.value)">
+            <option value="1.7">Slow</option>
+            <option value="1" selected>Normal</option>
+            <option value="0.62">Fast</option>
+            <option value="0.35">Very fast</option>
+          </select>
+        </div>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
 
@@ -241,7 +243,7 @@
      match, so the program still draws in the same units (canvas.width / height keep returning the
      drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
   (function(){
-    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const S=Math.min(4,Math.max(3,Math.ceil(window.devicePixelRatio||1)));   // at least 3x, so labels stay crisp on a projector
     const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
     const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
     const gc=HTMLCanvasElement.prototype.getContext;
@@ -249,12 +251,12 @@
       const cx=gc.call(this,type,opts);
       if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
       const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
-      cv._hdS=S;
+      cv._hdS=S; cv._hdBase=S;   // _hdS drops below S in full screen on a small screen (see layoutCanvas)
       const st=cx.setTransform;
-      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
-      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
-      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
-      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      cx.setTransform=function(a,b,c,d,e,f){ const k=cv._hdS; return (typeof a==="number")?st.call(this,a*k,b*k,c*k,d*k,e*k,f*k):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,cv._hdS,0,0,cv._hdS,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
       PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
       return cx;
     };
@@ -262,8 +264,8 @@
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
-  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
-  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#222", COL_LOCUS="#777", COL_PROJ="#777";
+  const FONT_MAIN="13px Arial", FONT_DIM="15px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -300,7 +302,7 @@
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
+    if(label){ ctx.font="15px Arial"; ctx.fillStyle="#222";
       ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
@@ -414,7 +416,7 @@
 
   const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
               drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
-              drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
+              drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,measureScale,
               drawCut,drawArcPlain,lineSet,drawLeader};
   function execItem(it){ EXEC[it.f].apply(null,it.a); }
 
@@ -499,6 +501,12 @@
     // mark on the drawing - it is rendered live by animMeasure() while the
     // compass is being set, and must NOT persist once that step is behind us
     // (otherwise every later step keeps re-drawing a stray dashed line).
+  }
+  function measureScale(x1,y1,x2,y2){
+    if(REC){REC.push({f:"measureScale",a:Array.from(arguments)});return;}
+    // Setting the compass to a length taken from the SCALE: the scale is laid from (x1,y1) towards (x2,y2) and the
+    // compass opened from its 0 to the length |(x1,y1)-(x2,y2)|. Like measureSpan, a passing instrument cue shown
+    // only by its animation (animMeasureScale) - nothing is left on the sheet.
   }
   function scaleMarks(x1,y1,x2,y2,n){
     if(REC){REC.push({f:"scaleMarks",a:Array.from(arguments)});return;}
@@ -883,6 +891,31 @@
     compassPose={ax:x1,ay:y1,bx:x2,by:y2};
     await sleep(140*SPEED);
   }
+  // the compass set on the scale: the scale comes in along the axis, the compass opens from 0 to the length on it,
+  // and the scale is taken away - the compass keeps that span for the arc that follows
+  async function animMeasureScale(s,items,k,it,myId){
+    const g=scaleGeom(it.a[0],it.a[1],it.a[2],it.a[3],0), p=g.X(0,SC_TOP), q=g.X(g.L,SC_TOP);
+    const ez=t=>t*t*(3-2*t);
+    await animateFrames(420*SPEED,t=>{
+      if(animId!==myId) return false;
+      frameDraw(s-1,items,k,()=>{ drawScale(it.a[0],it.a[1],it.a[2],it.a[3],(1-ez(t))*56,Math.min(1,t*2.4)); });
+    });
+    if(animId!==myId) return;
+    if(!(await compassTransit(s,items,k,myId,p.x,p.y,p.x,p.y))) return;
+    await animateFrames(820*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(Math.min(1,t*1.25));
+      frameDraw(s-1,items,k,()=>{ drawScale(it.a[0],it.a[1],it.a[2],it.a[3],0,1);
+        drawCompass(p.x,p.y,p.x+(q.x-p.x)*e,p.y+(q.y-p.y)*e); });
+    });
+    if(animId!==myId) return;
+    compassPose={ax:p.x,ay:p.y,bx:q.x,by:q.y};
+    await animateFrames(360*SPEED,t=>{
+      if(animId!==myId) return false;
+      const e=ez(t);
+      frameDraw(s-1,items,k,()=>{ drawScale(it.a[0],it.a[1],it.a[2],it.a[3],e*56,1-e*0.92); drawCompass(p.x,p.y,q.x,q.y); });
+    });
+  }
   async function animArc(s,items,k,it,myId){
     const cx=it.a[0],cy=it.a[1],r=it.a[2],a1=it.a[3],a2=it.a[4],ccw=it.a[5],color=it.a[6];
     let sweep=a2-a1;
@@ -907,7 +940,7 @@
 
   async function animProtractor(s,items,k,it,myId){
     const cx=it.a[0],cy=it.a[1],a1=it.a[4],a2=it.a[5];
-    const up=(a2<=a1);
+    const up=Math.sin((a1+a2)/2)<=1e-9;          // the angle lies above its horizontal (either side): the protractor's upper half
     await animateFrames(950*(0.6+0.4*SPEED),t=>{
       if(animId!==myId) return false;
       const op=Math.min(1,t*4)*0.95;
@@ -932,7 +965,7 @@
     if(it.f==="rollSet") return "roller";
     if(it.f==="lineSet") return "scale";
     if(it.f==="scaleMarks") return "scale";
-    if(it.f==="measureSpan") return "compass";
+    if(it.f==="measureSpan"||it.f==="measureScale") return "compass";
     if(it.f==="drawCut"||it.f==="drawArcPlain") return "compass";
     if(it.f==="drawCircle"||it.f==="drawArcWithMidArrow") return "compass";
     if(it.f==="drawArc"&&it.a[2]>=70) return "compass";
@@ -1107,6 +1140,7 @@
       else if(it.f==="lineSet")    await animLineSet(s,items,k,it,myId);
       else if(it.f==="scaleMarks") await animScaleMarks(s,items,k,it,myId);
       else if(it.f==="measureSpan") await animMeasure(s,items,k,it,myId);
+      else if(it.f==="measureScale") await animMeasureScale(s,items,k,it,myId);
       else if(it.f==="drawCircle") await animArc(s,items,k,
                 {a:[it.a[0],it.a[1],it.a[2],0,2*Math.PI,false,it.a[3]||COL_THIN]},myId);
       else if(it.f==="drawCut") await animArc(s,items,k,
@@ -1696,7 +1730,7 @@
         cc.closePath(); cc.fill(); };
       ar(A.x,A.y,ang+Math.PI,on?HL:"#93a2b1"); ar(B.x,B.y,ang,on?HL:"#93a2b1");
       const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-7;
-      cc.font="bold 22px Arial";
+      cc.font="bold 17px Arial";
       const w=cc.measureText(d.text).width+12;
       cc.fillStyle="rgba(255,255,255,0.88)"; cc.fillRect(mx-w/2,my-14,w,28);
       cc.fillStyle=on?HL:INK; cc.textAlign="center"; cc.textBaseline="middle";
@@ -1714,7 +1748,7 @@
       ring.forEach(p=>{ const s=(p.x-pc.x)*u.x+(p.y-pc.y)*u.y; if(s>bd){bd=s;rim=p;} });
       let dx=rim.x-pc.x, dy=rim.y-pc.y; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
       let t=14; while(t<300&&Math.hypot(rim.x+dx*t-C0.x,rim.y+dy*t-C0.y)<lim) t+=2;
-      cc.font="bold 22px Arial";
+      cc.font="bold 17px Arial";
       const txt=ld.text, tw=cc.measureText(txt).width+10, dir=dx>=0?1:-1;
       let ex=rim.x+dx*t, ey=rim.y+dy*t;
       ey=Math.max(14,Math.min(H-14,ey));
@@ -2010,7 +2044,7 @@
       cc.lineTo(x-6*Math.cos(a)+2.2*Math.cos(a+Math.PI/2),y-6*Math.sin(a)+2.2*Math.sin(a+Math.PI/2));
       cc.lineTo(x-6*Math.cos(a)+2.2*Math.cos(a-Math.PI/2),y-6*Math.sin(a)+2.2*Math.sin(a-Math.PI/2)); cc.closePath(); cc.fill(); };
     const txt=(x,y,t,rot)=>{ cc.save(); cc.translate(x,y); if(rot) cc.rotate(-Math.PI/2);
-      cc.font="20px Arial"; const w=cc.measureText(t).width+8; cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(-w/2,-24,w,22);
+      cc.font="15px Arial"; const w=cc.measureText(t).width+8; cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(-w/2,-20,w,18);
       cc.fillStyle="#111"; cc.textAlign="center"; cc.textBaseline="bottom"; cc.fillText(t,0,-4); cc.restore(); };
     (spec.dims||[]).forEach(D=>{ const vn=D.v, b=box[vn]; if(!b) return;
       if(D.h){ const up=(D.side||"T")!=="B", n=nextLv(vn+(up?"T":"B"));
@@ -2031,7 +2065,7 @@
         const ca=Math.cos(a), sa=Math.sin(a), rim={x:c.x+r*ca,y:c.y+r*sa}, tip={x:rim.x+16*ca,y:rim.y+16*sa};
         if(D.dia){ L({x:c.x-r*ca,y:c.y-r*sa},tip,DIMC,0.9); arrow(rim.x,rim.y,a); arrow(c.x-r*ca,c.y-r*sa,a+Math.PI); }
         else { L(c,tip,DIMC,0.9); arrow(rim.x,rim.y,a); }
-        cc.font="20px Arial"; cc.fillStyle="#111"; cc.textAlign=ca>=0?"left":"right"; cc.textBaseline="middle";
+        cc.font="15px Arial"; cc.fillStyle="#111"; cc.textAlign=ca>=0?"left":"right"; cc.textBaseline="middle";
         cc.fillText(D.text,tip.x+(ca>=0?3:-3),tip.y);
       } });
     // the edges belonging to the current step, lit up in every view
@@ -2041,7 +2075,7 @@
       if(Math.hypot(b.x-a.x,b.y-a.y)<0.25){ const p=toS(vn,a); cc.fillStyle=HLC; cc.beginPath(); cc.arc(p.x,p.y,3.2,0,TAU); cc.fill(); return; }
       Pp.runs(sg.A,sg.B).forEach(r=>{ const pa={x:a.x+(b.x-a.x)*r[0],y:a.y+(b.y-a.y)*r[0]}, pb={x:a.x+(b.x-a.x)*r[1],y:a.y+(b.y-a.y)*r[1]};
         L(toS(vn,pa),toS(vn,pb),HLC,r[2]?3:1.6,r[2]?null:[4,3]); }); }); });
-    cc.font="20px Arial"; cc.fillStyle="#44576b"; cc.textAlign="left"; cc.textBaseline="bottom";
+    cc.font="15px Arial"; cc.fillStyle="#44576b"; cc.textAlign="left"; cc.textBaseline="bottom";
     cc.fillText("First-angle projection · all dimensions in mm",6,H-4);
   }
 
@@ -2124,7 +2158,7 @@
       {text:hd+", step 4 of 6 - the FOUR CENTRES. The line A–Q crosses C–P at the point 1, and A–R crosses C–S at the point 2; both lie on the long diagonal B–D. A, C, 1 and 2 are the four centres of the arcs.",
        constr:true,
        d:()=>{ const E0=E(), K=corners(E0);
-         drawLine(K.B.x,K.B.y,K.D.x,K.D.y,COL_CONS,0.8,[3,3]);
+         drawLine(K.B.x,K.B.y,K.D.x,K.D.y,COL_CONS,LW_THIN);
          const m1=E0.centres.m, n1=E0.centres.n;
          drawPoint(m1.x,m1.y,"1",{x:7,y:-8}); drawPoint(n1.x,n1.y,"2",{x:7,y:-8}); }},
       {text:hd+", step 5 of 6 - the two LARGE arcs. Set the compass to A–Q, the distance from the obtuse corner A to a mid-point opposite it, and with centre A draw the arc from Q to R. With the same radius and centre C draw the opposite arc, from S to P.",
@@ -2146,7 +2180,7 @@
        constr:true,
        d:()=>{ const E0=E(), E1=E2();
          const pairs=[[E0.centres.O1,E1.centres.O1],[E0.centres.O2,E1.centres.O2],[E0.centres.m,E1.centres.m],[E0.centres.n,E1.centres.n]];
-         lineSet(pairs.map(p=>[p[0].x,p[0].y,p[1].x,p[1].y]),COL_CONS,0.8,[3,3]);
+         lineSet(pairs.map(p=>[p[0].x,p[0].y,p[1].x,p[1].y]),COL_PROJ,LW_THIN);   // thin continuous projection lines - never dashed
          pairs.forEach((p,i)=>drawPoint(p[1].x,p[1].y,["A′","C′","1′","2′"][i],{x:7,y:-8})); }},
       {text:"With the SAME four radii as before, and the shifted centres A′, C′, 1′ and 2′, draw the four arcs again. "+(after||"Only the part of this curve that can actually be seen will be lined in at the end."),
        d:()=>{ const E1=E2(); E1.arcs.forEach(a=>drawArcPlain(a.cx,a.cy,a.r,a.a1,a.a2,a.ccw,COL_CONS,LW_THIN)); }}];
@@ -2190,7 +2224,10 @@
     (O.cones?O.cones(v):[]).forEach(q=>{ const E=C.ISOC(q.c,"top",q.r), ap=PJ(q.apex), T=C.tangentsFrom(E,ap);
       T.forEach(t2=>{ const P0=back({c:q.c,plane:"top",r:q.r},t2), N=40, pts=[], ok=[];
         for(let i=0;i<=N;i++){ const t=i/N; pts.push({x:ap.x+(t2.x-ap.x)*t,y:ap.y+(t2.y-ap.y)*t});
-          ok.push(vis3({x:q.apex.x+(P0.x-q.apex.x)*t,y:q.apex.y+(P0.y-q.apex.y)*t,z:q.apex.z+(P0.z-q.apex.z)*t})); }
+          // an outline generator lies ON the cone, so its own faceted surface would hide it: test a point just
+          // outside it (pushed out from the axis) - that is hidden only by something else in front
+          const P={x:q.apex.x+(P0.x-q.apex.x)*t,y:q.apex.y+(P0.y-q.apex.y)*t,z:q.apex.z+(P0.z-q.apex.z)*t};
+          ok.push(vis3({x:q.apex.x+(P.x-q.apex.x)*1.04,y:P.y,z:q.apex.z+(P.z-q.apex.z)*1.04})); }
         drawRuns(pts,ok); }); });
     return {hz:hz,rest:rest,curves:curves};
   }
@@ -2207,7 +2244,8 @@
     const O=def(v);
     const L=O.L, B=O.B, H=O.H;
     const wmm=(L+B)*C30, hmm=(L+B)*S30+H;
-    const sc=Math.min((CANVAS_W-PX(190))/wmm,(CANVAS_H-PY(110))/hmm,3.6);
+    const nQD=(O.qd?O.qd(v):[]).filter(D=>D.h||D.vt).length;          // feature dimensions to fit round the view as well
+    const sc=Math.min((CANVAS_W-PX(190)-(nQD?90:0))/wmm,(CANVAS_H-PY(110)-(nQD?70:0))/hmm,3.6);
     SCALE_PXMM=sc;
     const OX2=(CANVAS_W-wmm*sc)/2+60, OY2=(CANVAS_H-hmm*sc)/2+(L*S30+H)*sc;
     const PJ=p=>({x:OX2+(p.x+p.z)*C30*sc, y:OY2-(p.x-p.z)*S30*sc-p.y*sc});
@@ -2220,7 +2258,8 @@
     const BBX=(function(){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
       [0,L].forEach(x=>[0,H].forEach(y=>[0,B].forEach(z=>{ const q=p3(x,y,z); x0=Math.min(x0,q.x); x1=Math.max(x1,q.x); y0=Math.min(y0,q.y); y1=Math.max(y1,q.y); })));
       return {x0,y0,x1,y1}; })();
-    const LDR=(pts,c,label,o)=>leaderDim(pts,c,label,Object.assign({box:BBX},o||{}));
+    const LDRSEEN=new Set();                        // the notes (Ø ..., R ...) some step has already put on
+    const LDR=(pts,c,label,o)=>{ LDRSEEN.add(label); return leaderDim(pts,c,label,Object.assign({box:BBX},o||{})); };
     const MODEL=O.model(v);
     const CTX={L,B,H,PJ,p3,seg,SET,ISOC,LDR,extremeX,tangentsFrom,arcPortion:AP,
                boreVisible:boreVisible,ptInPoly:ptInPoly,sc,EX,EY,EZ,v,PLANE,MODEL};
@@ -2254,18 +2293,283 @@
     const AXO=p3(0,0,B);                            /* the nearest bottom corner */
     const steps=[];
 
-    steps.push({text:"Read the given views first: the front view gives the LENGTH and the HEIGHT, the "+(O.qv&&O.qv!=="tv"?"side view":"top view")+" gives the DEPTH. Then draw the ISOMETRIC AXES. From the nearest bottom corner draw one line vertically upward for the HEIGHT and two lines at 30° to the horizontal - one to the right for the LENGTH and one to the left for the DEPTH. All three axes are 120° apart.",
+    /* ---- the finished view keeps its construction ----
+       The axes, the enclosing box, the four-centre constructions and every thin line stay on the sheet to the
+       end (and for "Show all"), as the steps promise: construction lines are left thin, never rubbed out.
+       FINAL() is kept as the switch for that - it never turns on. */
+    let NSTEP=1e9;
+    const FINAL=()=>false;
+    const thick=w=>(w||0)>LW_THIN+0.05;
+    const keepFinal=it=>{ const f=it.f, a=it.a;
+      if(f==="drawLeader"||f==="drawAlignedLabel"||f==="drawHorizontalDim"||f==="drawVerticalDim") return true;
+      if(f==="drawLine"||f==="drawRLine"||f==="drawSLine") return a[4]===COL_DIM||(a[4]===COL_THICK&&thick(a[5]));
+      if(f==="lineSet"||f==="rollSet") return a[1]===COL_THICK&&thick(a[2]);
+      if(f==="drawCurve") return (a[1]||COL_THICK)!==COL_CONS&&thick(a[2]===undefined?LW_THICK:a[2]);
+      if(f==="drawText") return a[3]!==COL_CONS&&a[3]!==COL_THIN;
+      return false;                                  // points, arcs, cuts, protractor and scale marks ...
+    };
+    const erasable=fn=>function(){
+      if(!FINAL()) return fn.apply(null,arguments);
+      const outer=REC; REC=[];
+      let items; try{ fn.apply(null,arguments); } finally{ items=REC; REC=outer; }
+      items.filter(keepFinal).forEach(it=>{ if(REC) REC.push(it); else execItem(it); });
+    };
+
+    /* ---- isometric dimensions: dimension line parallel to the edge, extension lines along another axis ----
+       A, Bp: the two ends on the object (3-D); dir: the unit axis pointing away from it; off: mm out. */
+    const DOFF=Math.max(10,30/sc), DSTEP=Math.max(8,26/sc), DGAP=1.5, DOVER=Math.max(2.5,8/sc);
+    const add3=(p,d,k)=>({x:p.x+d.x*k,y:p.y+d.y*k,z:p.z+d.z*k});
+    function isoDim(A,Bp,dir,off,text){
+      const a=PJ(add3(A,dir,off)), b=PJ(add3(Bp,dir,off));
+      [A,Bp].forEach(p=>{ const s=PJ(add3(p,dir,DGAP)), e=PJ(add3(p,dir,off+DOVER)); drawLine(s.x,s.y,e.x,e.y,COL_DIM,LW_THIN); });
+      drawLine(a.x,a.y,b.x,b.y,COL_DIM,LW_THIN,SOLID,"both");
+      drawAlignedLabel(a.x,a.y,b.x,b.y,text,7,0.5);
+    }
+    const NX={x:-1,y:0,z:0}, NZ={x:0,y:0,z:-1};
+    // ---- a dimension is worked out once (dimItem, in plan()) and drawn from that on every frame (drawDim) ----
+    const silh=MODEL.faces.map(f=>{ const P=f.v.map(i=>PJ(MODEL.verts[i])); let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+      P.forEach(p=>{ x0=Math.min(x0,p.x); x1=Math.max(x1,p.x); y0=Math.min(y0,p.y); y1=Math.max(y1,p.y); }); return {P:P,x0:x0,x1:x1,y0:y0,y1:y1}; });
+    const pip2=(P,x,y)=>{ let r=false; for(let i=0,j=P.length-1;i<P.length;j=i++){
+      if(((P[i].y>y)!==(P[j].y>y))&&(x<(P[j].x-P[i].x)*(y-P[i].y)/(P[j].y-P[i].y)+P[i].x)) r=!r; } return r; };
+    const covered=(x,y)=>silh.some(f=>x>=f.x0&&x<=f.x1&&y>=f.y0&&y<=f.y1&&pip2(f.P,x,y));   // over the object on the sheet
+    const VPd=viewPrep(MODEL,"iso");
+    const hidden3=p=>{ const q=VPd.pj(p); return VPd.occl(q.x,q.y,q.z); };
+    function dimItem(A,Bp,to,text){
+      const ta=to(A), tb=to(Bp), ext=[];
+      [[A,ta],[Bp,tb]].forEach(q=>{ const p=q[0], t=q[1], dx=t.x-p.x, dy=t.y-p.y, dz=t.z-p.z, n=Math.hypot(dx,dy,dz);
+        if(n<1e-6) return;
+        const u={x:dx/n,y:dy/n,z:dz/n};
+        ext.push({p:p,t:t,s:PJ(add3(p,u,DGAP)),f:PJ(add3(t,u,DOVER))}); });
+      const a=PJ(ta), b=PJ(tb);
+      ctx.save(); ctx.font=FONT_DIM; const tw=ctx.measureText(text).width; ctx.restore();
+      let r=Math.atan2(b.y-a.y,b.x-a.x); if(r>Math.PI/2||r<-Math.PI/2) r+=Math.PI;
+      const nx=Math.sin(r), ny=-Math.cos(r), ux=Math.cos(r), uy=Math.sin(r);
+      const cx=(a.x+b.x)/2+nx*13, cy=(a.y+b.y)/2+ny*13;          // where drawAlignedLabel puts the figure
+      const box=[[-1,-1],[1,-1],[1,1],[-1,1]].map(q=>({x:cx+ux*q[0]*(tw/2+3)+nx*q[1]*8, y:cy+uy*q[0]*(tw/2+3)+ny*q[1]*8}));
+      return {ext:ext,a:a,b:b,text:text,box:box,c:{x:cx,y:cy}};
+    }
+    function drawDim(it){
+      it.ext.forEach(E=>drawLine(E.s.x,E.s.y,E.f.x,E.f.y,COL_DIM,LW_THIN));
+      drawLine(it.a.x,it.a.y,it.b.x,it.b.y,COL_DIM,LW_THIN,SOLID,"both");
+      drawAlignedLabel(it.a.x,it.a.y,it.b.x,it.b.y,it.text,7,0.5);
+    }
+    const segsOf=it=>it.ext.map(E=>[E.s,E.f]).concat([[it.a,it.b]]);
+    const cross=(p,q,r,s)=>{ const d=(q.x-p.x)*(s.y-r.y)-(q.y-p.y)*(s.x-r.x); if(Math.abs(d)<1e-9) return false;
+      const t=((r.x-p.x)*(s.y-r.y)-(r.y-p.y)*(s.x-r.x))/d, u=((r.x-p.x)*(q.y-p.y)-(r.y-p.y)*(q.x-p.x))/d;
+      return t>0.02&&t<0.98&&u>0.02&&u<0.98; };
+    const bb=P=>({x0:Math.min(...P.map(p=>p.x)),x1:Math.max(...P.map(p=>p.x)),y0:Math.min(...P.map(p=>p.y)),y1:Math.max(...P.map(p=>p.y))});
+    const segInBox=(g,R)=>{ for(let k=0;k<=12;k++){ const x=g[0].x+(g[1].x-g[0].x)*k/12, y=g[0].y+(g[1].y-g[0].y)*k/12;
+      if(x>R.x0&&x<R.x1&&y>R.y0&&y<R.y1) return true; } return false; };
+    // two dimension lines along the same line and overlapping
+    const onTop=(p,q,r,s)=>{ const L=Math.hypot(q.x-p.x,q.y-p.y)||1, ux=(q.x-p.x)/L, uy=(q.y-p.y)/L;
+      const dist=z=>Math.abs((z.x-p.x)*uy-(z.y-p.y)*ux); if(dist(r)>10||dist(s)>10) return false;
+      const t1=(r.x-p.x)*ux+(r.y-p.y)*uy, t2=(s.x-p.x)*ux+(s.y-p.y)*uy; return Math.max(t1,t2)>2&&Math.min(t1,t2)<L-2; };
+    function dimCost(it){
+      let c=0;
+      // sampled every 8 px, so a long line over the object costs more than a short one
+      it.ext.forEach(E=>{ const a=PJ(E.p), b=PJ(E.t), len=Math.hypot(b.x-a.x,b.y-a.y), m=Math.max(3,Math.ceil(len/8));
+        for(let k=1;k<=m;k++){ const t=k/m, P3={x:E.p.x+(E.t.x-E.p.x)*t,y:E.p.y+(E.t.y-E.p.y)*t,z:E.p.z+(E.t.z-E.p.z)*t};
+          if(hidden3(P3)) c+=10; const s=PJ(P3); if(t*len>6&&covered(s.x,s.y)) c+=7; } });
+      { const len=Math.hypot(it.b.x-it.a.x,it.b.y-it.a.y), m=Math.max(4,Math.ceil(len/8));
+        for(let k=0;k<=m;k++){ if(covered(it.a.x+(it.b.x-it.a.x)*k/m,it.a.y+(it.b.y-it.a.y)*k/m)) c+=8; } }
+      it.box.concat([it.c]).forEach(p=>{ if(covered(p.x,p.y)) c+=25; });
+      [it.a,it.b].concat(it.box).forEach(p=>{ if(p.x<4||p.x>CANVAS_W-4||p.y<4||p.y>CANVAS_H-26) c+=1000; });
+      const mine=segsOf(it), mb=bb(it.box);
+      PLAN.forEach(o=>{ const theirs=segsOf(o), ob=bb(o.box);
+        mine.forEach(g=>theirs.forEach(h=>{ if(cross(g[0],g[1],h[0],h[1])) c+=150; }));
+        if(mb.x0<ob.x1&&mb.x1>ob.x0&&mb.y0<ob.y1&&mb.y1>ob.y0) c+=200;
+        if(onTop(it.a,it.b,o.a,o.b)) c+=250;                        // dimension lines lying on one another
+        theirs.forEach(h=>{ if(segInBox(h,mb)) c+=100; });
+        mine.forEach(g=>{ if(segInBox(g,ob)) c+=100; });
+      });
+      return c;
+    }
+    let PLAN=null, OVERALL=null, FEAT=null;
+    function plan(){ if(PLAN) return; PLAN=[]; OVERALL=[]; FEAT=[]; overallDims(); featureDims(); }
+    function isoDimTo(A,Bp,to,text){ const it=dimItem(A,Bp,to,text); PLAN.push(it); OVERALL.push(it); }
+    // a diameter or radius of the question that no step has put a leader on: add one to the matching curve
+    function missingLeaders(){
+      (O.qd?O.qd(v):[]).forEach(D=>{ if(!(D.dia||D.rad)||LDRSEEN.has(D.text)) return;
+        const r=(D.dia||D.rad)[2];
+        const cands=(O.circles?O.circles(v):[]).map(q=>({c:q.c,plane:q.plane,r:q.r}))
+          .concat((O.cyls?O.cyls(v):[]).reduce((a,q)=>a.concat([{c:q.c0,plane:q.plane,r:q.r},{c:q.c1,plane:q.plane,r:q.r}]),[]))
+          .filter(q=>Math.abs(q.r-r)<1e-3);
+        if(!cands.length) return;
+        const q=cands.reduce((a,b)=>((b.c.y-b.c.x+b.c.z)>(a.c.y-a.c.x+a.c.z)?b:a));   // the end nearest the viewer / highest
+        LDR(ISOC(q.c,q.plane,q.r).pts,PJ(q.c),D.text);
+      });
+    }
+    // The overall length, depth and height, taken from the solid's own corners (not the enclosing box), so each
+    // extension line starts on the object: length from the left- and right-most points of the base, carried
+    // forward; depth from the rear- and front-most points, carried to the left; height along a vertical edge
+    // where there is one, otherwise from the highest point (an apex) across to the base in the same plane.
+    // A round solid (cylinder, cone) takes its diameter from the Ø note instead of a length and a depth.
+    function overallDims(){
+      const Vt=MODEL.verts, e=1e-6+1e-4*Math.max(L,B,H);
+      const bot=Vt.filter(p=>Math.abs(p.y)<e), top=Vt.filter(p=>Math.abs(p.y-H)<e);
+      const near=(a,b)=>Math.abs(a-b)<e;
+      const pick=(arr,better)=>arr.reduce((a,p)=>better(p,a)?p:a,arr[0]);
+      if(!bot.length||!top.length) return;
+      const minBX=Math.min(...bot.map(p=>p.x)), maxBX=Math.max(...bot.map(p=>p.x));
+      const minBZ=Math.min(...bot.map(p=>p.z)), maxBZ=Math.max(...bot.map(p=>p.z));
+      // a round solid (its base a circle) takes its diameter from the Ø note, not from a length and a depth
+      const bc={x:bot.reduce((s,p)=>s+p.x,0)/bot.length, z:bot.reduce((s,p)=>s+p.z,0)/bot.length};
+      const rr=bot.map(p=>Math.hypot(p.x-bc.x,p.z-bc.z)), rMax=Math.max(...rr);
+      const nOut=rr.filter(r=>r>rMax*0.97).length, round=nOut>=12&&nOut>=bot.length*0.4;
+      const SX=Vt.map(p=>PJ(p).x), minSX=Math.min(...SX), maxSX=Math.max(...SX);
+
+      /* height: along a vertical edge of full height where there is one; otherwise from the highest point (an apex,
+         a boss) across to the base, in the plane through it parallel to the front, on the side where that point is */
+      let hb=null;                                    // bottom end of the height's dimension line (sheet), to keep clear of
+      const cols=top.filter(t=>bot.some(b=>near(b.x,t.x)&&near(b.z,t.z)));
+      if(cols.length){
+        const t=pick(cols,(p,a)=>(p.x+p.z)<(a.x+a.z));
+        isoDimTo({x:t.x,y:0,z:t.z},t,p=>({x:p.x,y:p.y,z:t.z-DOFF}),R1(H));
+      } else {
+        const tc=top.reduce((s,p)=>s+p.x+p.z,0)/top.length, right=tc>(L+B)/2+e;
+        const t=right?pick(top,(p,a)=>(p.x+p.z)>(a.x+a.z)):pick(top,(p,a)=>(p.x+p.z)<(a.x+a.z));
+        const inPlane=bot.filter(p=>near(p.z,t.z));
+        let b, xd;
+        if(!right){
+          b=inPlane.length?pick(inPlane,(p,a)=>p.x<a.x):{x:minBX,y:0,z:t.z};
+          xd=Math.min(Math.min(t.x,b.x)-DOFF,(minSX-0.6*DOFF*sc-OX2)/(C30*sc)-t.z);    // clear of the whole outline
+        } else {
+          b=inPlane.length?pick(inPlane,(p,a)=>p.x>a.x):{x:maxBX,y:0,z:t.z};
+          const nR=(O.qd?O.qd(v):[]).filter(D=>D.v==="fv"&&D.vt&&D.side==="R").length;   // step heights stand there too
+          xd=Math.max(Math.max(t.x,b.x)+DOFF,L+DOFF+(nR+1)*DSTEP,(maxSX+0.6*DOFF*sc-OX2)/(C30*sc)-t.z);   // outside the step heights
+        }
+        isoDimTo(b,t,p=>({x:xd,y:p.y,z:t.z}),R1(H));
+        hb=PJ({x:xd,y:0,z:t.z});
+      }
+      if(round) return;
+
+      // a base dimension line must pass below the foot of the height's dimension line, not through it
+      const clears=(P,Q)=>{ if(!hb) return true; const a=PJ(P), b=PJ(Q);
+        if(hb.x<Math.min(a.x,b.x)-2||hb.x>Math.max(a.x,b.x)+2) return true;
+        const y=a.y+(b.y-a.y)*(hb.x-a.x)/((b.x-a.x)||1e-6); return y>hb.y+48; };
+      // an extension line must not run behind the object (hidden)
+      const VPi=viewPrep(MODEL,"iso");
+      const seen=(p,q)=>{ for(let k=1;k<=6;k++){ const t=k/7, r={x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t,z:p.z+(q.z-p.z)*t}, s=VPi.pj(r); if(VPi.occl(s.x,s.y,s.z)) return false; } return true; };
+      // length: the left- and right-most points of the base, carried forward
+      const A=pick(bot.filter(p=>near(p.x,minBX)),(p,a)=>p.z>a.z), Bq=pick(bot.filter(p=>near(p.x,maxBX)),(p,a)=>p.z>a.z);
+      let zd=maxBZ+DOFF; for(let k=0;k<40&&!clears({x:minBX,y:0,z:zd},{x:maxBX,y:0,z:zd});k++) zd+=2;
+      const toL=p=>({x:p.x,y:0,z:zd});
+      if(seen(A,toL(A))&&seen(Bq,toL(Bq))) isoDimTo(A,Bq,toL,R1(maxBX-minBX));
+      // (otherwise - e.g. across the corners of a hexagon - its extension lines would be hidden: it is left to the question)
+      // depth: the rear- and front-most points of the base, carried to the left
+      const C0=pick(bot.filter(p=>near(p.z,minBZ)),(p,a)=>p.x<a.x), C1=pick(bot.filter(p=>near(p.z,maxBZ)),(p,a)=>p.x<a.x);
+      let xb=minBX-DOFF; for(let k=0;k<40&&!clears({x:xb,y:0,z:minBZ},{x:xb,y:0,z:maxBZ});k++) xb-=2;
+      const toB=p=>({x:xb,y:0,z:p.z});
+      if(seen(C0,toB(C0))&&seen(C1,toB(C1))) isoDimTo(C0,C1,toB,R1(maxBZ-minBZ));
+      // (likewise, when hidden)
+    }
+    // Every dimension of the question, carried onto the isometric view. Each is put on the edge it measures
+    // in the solid, and its dimension line is set out along one of the other two axes - on whichever side,
+    // and at whichever distance, keeps the extension lines visible, the lines off the faces of the object and
+    // clear of the dimensions already placed. Diameters and radii the view does not already carry get a leader.
+    function featureDims(){
+      const Vt=MODEL.verts, e=1e-6+1e-4*Math.max(L,B,H), near=(a,b)=>Math.abs(a-b)<e;
+      const pickMax=(arr,f,dflt)=>arr.length?Math.max(...arr.map(f)):dflt;
+      // the face of the solid at a point: the front-most (z), top-most (y) or left-most (x) flat face covering it
+      const flat=(k)=>MODEL.faces.map(f=>f.v.map(i=>Vt[i])).filter(P=>P.every(p=>near(p[k],P[0][k])));
+      const FZ=flat("z"), FY=flat("y"), FX=flat("x");
+      const inPoly=(P,a,b,ka,kb)=>{ let r=false; for(let i=0,j=P.length-1;i<P.length;j=i++){ const A=P[i], C=P[j];
+        if(((A[kb]>b)!==(C[kb]>b))&&(a<(C[ka]-A[ka])*(b-A[kb])/(C[kb]-A[kb])+A[ka])) r=!r; }
+        if(!r) r=P.some((A,i)=>{ const C=P[(i+1)%P.length], l=Math.hypot(C[ka]-A[ka],C[kb]-A[kb])||1;       // on its edge
+          const t=((a-A[ka])*(C[ka]-A[ka])+(b-A[kb])*(C[kb]-A[kb]))/(l*l);
+          return t>=-1e-6&&t<=1+1e-6&&Math.hypot(A[ka]+(C[ka]-A[ka])*t-a,A[kb]+(C[kb]-A[kb])*t-b)<e*10; });
+        return r; };
+      const zAt=(x,y)=>pickMax(FZ.filter(P=>inPoly(P,x,y,"x","y")),P=>P[0].z,B);
+      const yAt=(x,z)=>pickMax(FY.filter(P=>inPoly(P,x,z,"x","z")),P=>P[0].y,H);
+      const xAt=(y,z)=>{ const a=FX.filter(P=>inPoly(P,z,y,"z","y")); return a.length?Math.min(...a.map(P=>P[0].x)):0; };
+      const out=[];
+      (O.qd?O.qd(v):[]).forEach(D=>{
+        let A=null, Bq=null, u=null;
+        if(D.v==="fv"&&D.h){ const y=D.at!=null?D.at:((D.side||"T")!=="B"?H:0), z=Math.max(zAt(D.h[0],y),zAt(D.h[1],y));
+          A={x:D.h[0],y:y,z:z}; Bq={x:D.h[1],y:y,z:z}; u="x"; }
+        else if(D.v==="fv"&&D.vt){ const x=D.at!=null?D.at:((D.side||"L")==="R"?L:0), z=Math.max(zAt(x,D.vt[0]),zAt(x,D.vt[1]));
+          A={x:x,y:D.vt[0],z:z}; Bq={x:x,y:D.vt[1],z:z}; u="y"; }
+        else if(D.v==="tv"&&D.h){ const d=D.at!=null?D.at:((D.side||"T")!=="B"?0:B), y=Math.max(yAt(D.h[0],d),yAt(D.h[1],d));
+          A={x:D.h[0],y:y,z:d}; Bq={x:D.h[1],y:y,z:d}; u="x"; }
+        else if(D.v==="tv"&&D.vt){ const x=D.at!=null?D.at:((D.side||"L")==="R"?L:0), y=Math.max(yAt(x,D.vt[0]),yAt(x,D.vt[1]));
+          A={x:x,y:y,z:D.vt[0]}; Bq={x:x,y:y,z:D.vt[1]}; u="z"; }
+        else if((D.v==="lsv"||D.v==="rsv")&&D.h){ const y=D.at!=null?D.at:((D.side||"T")!=="B"?H:0), x=Math.min(xAt(y,D.h[0]),xAt(y,D.h[1]));
+          A={x:x,y:y,z:D.h[0]}; Bq={x:x,y:y,z:D.h[1]}; u="z"; }
+        else if((D.v==="lsv"||D.v==="rsv")&&D.vt){ const d=D.at!=null?D.at:0, x=Math.min(xAt(D.vt[0],d),xAt(D.vt[1],d));
+          A={x:x,y:D.vt[0],z:d}; Bq={x:x,y:D.vt[1],z:d}; u="y"; }
+        if(!A) return;
+        const lo=Math.min(A[u],Bq[u]), hi=Math.max(A[u],Bq[u]), full={x:L,y:H,z:B}[u];
+        if(near(lo,0)&&near(hi,full)) return;                       // an overall size - already dimensioned
+        if(out.some(g=>g.u===u&&near(Math.min(g.A[u],g.B[u]),lo)&&near(Math.max(g.A[u],g.B[u]),hi))) return;
+        out.push({A:A,B:Bq,u:u,text:D.text});
+      });
+      const ax={x:{x:1,y:0,z:0},y:{x:0,y:1,z:0},z:{x:0,y:0,z:1}};
+      out.forEach(g=>{
+        let best=null;
+        ["x","y","z"].filter(w=>w!==g.u).forEach(w=>[1,-1].forEach(sg=>{
+          const ext0={x:[0,L],y:[0,H],z:[0,B]}[w];
+          for(let k=0;k<12;k++){                                     // measured from the feature itself, or (k>=6) from the outside of the object
+            const kk=k%6, off=DOFF+kk*DSTEP, from=k<6?(sg>0?Math.max(g.A[w],g.B[w]):Math.min(g.A[w],g.B[w])):(sg>0?ext0[1]:ext0[0]);
+            if(k>=6&&Math.abs(from-(sg>0?Math.max(g.A[w],g.B[w]):Math.min(g.A[w],g.B[w])))<1e-6) continue;
+            const lvl=from+sg*off;
+            const to=p=>{ const q={x:p.x,y:p.y,z:p.z}; q[w]=lvl; return q; };
+            const it=dimItem(g.A,g.B,to,g.text,ax[w],sg);
+            const extLen=Math.abs(lvl-g.A[w])+Math.abs(lvl-g.B[w]);        // short extension lines read best
+            const sc0=dimCost(it)+off*0.4+extLen*0.3+(kk?4:0);
+            if(!best||sc0<best.sc){ best={sc:sc0,it:it}; }
+          }
+        }));
+        if(best){ PLAN.push(best.it); FEAT.push(best.it); }
+      });
+    }
+
+    /* the directions of the three axes are set out with the protractor first, from a horizontal line through O */
+    steps.push({text:"Read the given views first: the front view gives the LENGTH and the HEIGHT, the "+(O.qv&&O.qv!=="tv"?"side view":"top view")+" gives the DEPTH. Before any axis is drawn, set out its direction with the PROTRACTOR. Mark the starting point O - the nearest bottom corner of the object - and draw a thin HORIZONTAL line through it. Hold the protractor with its base on this line and its centre on O, and mark: 30° above the horizontal on the RIGHT, for the length axis; 30° above the horizontal on the LEFT, for the depth axis; and 90° - straight up - for the height axis.",
       hl:[], nohl:true,
-      d:()=>{ const up=p3(0,H*1.30,B), rt=p3(L*1.18,0,B), lf=p3(0,0,B-B*1.18);
+      d:()=>{ const hw=Math.max(80,Math.min(L,B)*0.5*sc);
+        drawLine(AXO.x-hw,AXO.y,AXO.x+hw,AXO.y,COL_CONS,LW_THIN);
+        drawPoint(AXO.x,AXO.y,"O",{x:-16,y:12});
+        drawAngleDimOutward(AXO.x,AXO.y,52,"30°",0,-toRad(30),true,true);
+        drawAngleDimOutward(AXO.x,AXO.y,52,"30°",-Math.PI,-Math.PI+toRad(30),false,true);
+        drawAngleDimOutward(AXO.x,AXO.y,96,"90°",0,-Math.PI/2,true,true); }});
+
+    steps.push({text:"Now draw the ISOMETRIC AXES along the three marked directions: from O one line vertically upward for the HEIGHT and two lines at 30° to the horizontal - one to the right for the LENGTH and one to the left for the DEPTH. All three axes are 120° apart.",
+      hl:[], nohl:true,
+      d:()=>{ if(FINAL()) return;                     /* the axes are construction: gone from the finished view */
+        const up=p3(0,H*1.30,B), rt=p3(L*1.18,0,B), lf=p3(0,0,B-B*1.18);
         SET([[AXO,up],[AXO,rt],[AXO,lf]],COL_THIN,LW_THIN);   /* axes are construction, not outline */
         drawText(AXO.x-14,AXO.y-46,"height",COL_CONS,FONT_DIM,"right","middle");
         const rl=p3(L*1.02,0,B), ll=p3(0,0,B-B*1.02);   /* captions sit BELOW the axes, clear of the solid */
         drawText(rl.x+6,rl.y+18,"length (30°)",COL_CONS,FONT_DIM,"left","middle");
-        drawText(ll.x-6,ll.y+18,"depth (30°)",COL_CONS,FONT_DIM,"right","middle");
-        drawPoint(AXO.x,AXO.y,"O",{x:-16,y:12});
-        drawAngleDimOutward(AXO.x,AXO.y,32,"30°",0,-toRad(30),true,true); }});
+        drawText(ll.x-6,ll.y+18,"depth (30°)",COL_CONS,FONT_DIM,"right","middle"); }});
 
-    steps.push({text:`Mark the three overall sizes along the axes - length ${R1(L)} mm to the right, depth ${R1(B)} mm to the left and height ${R1(H)} mm upwards - and complete the ISOMETRIC BOX that just encloses the object. Draw it in thin construction lines.`,
+    /* ---- the ISOMETRIC BOX, corner by corner, with the compass ----
+       The three overall sizes are set on the compass from the SCALE and cut on the axes from O; every other
+       corner is then cut with the compass set to a line already on the sheet - the same length along a parallel. */
+    const cPt=(x,y,z)=>p3(x,y,z);
+    const cutFrom=(a,b)=>{ const P=cPt(a[0],a[1],a[2]), Q=cPt(b[0],b[1],b[2]);
+      drawCut(P.x,P.y,Math.hypot(Q.x-P.x,Q.y-P.y),Math.atan2(Q.y-P.y,Q.x-P.x),COL_CONS); drawPoint(Q.x,Q.y,"",{x:0,y:0}); };
+    const scaleTo=b=>{ const Q=cPt(b[0],b[1],b[2]); measureScale(AXO.x,AXO.y,Q.x,Q.y); };
+    const spanOf=(a,b)=>{ const P=cPt(a[0],a[1],a[2]), Q=cPt(b[0],b[1],b[2]); measureSpan(P.x,P.y,Q.x,Q.y); };
+    const O3=[0,0,B], PL3=[L,0,B], PD3=[0,0,0], PH3=[0,H,B];
+    const par=(a,d,k)=>{ const P=cPt(a[0],a[1],a[2]), Q=cPt(a[0]+d[0]*k,a[1]+d[1]*k,a[2]+d[2]*k); return [P,Q]; };
+    steps.push({text:`Mark the LENGTH on the length axis with the compass. Set the compass to ${R1(L)} mm on the scale - needle on 0, pencil on ${R1(L)} - and with the needle at O cut an arc across the length axis. That point is a corner of the isometric box.`,
+      hl:O.hlAll||[],
+      d:()=>{ scaleTo(PL3); cutFrom(O3,PL3); }});
+    steps.push({text:`In the same way set the compass to the DEPTH, ${R1(B)} mm, on the scale and with the needle at O cut the depth axis; then set it to the HEIGHT, ${R1(H)} mm, and cut the height axis. Three corners of the box are now fixed on the axes.`,
+      hl:O.hlAll||[],
+      d:()=>{ scaleTo(PD3); cutFrom(O3,PD3); scaleTo(PH3); cutFrom(O3,PH3); }});
+    steps.push({text:"Through these three points draw thin lines parallel to the other two axes: vertical lines through the length and the depth points, and through the height point lines parallel to the length and the depth axes. Draw also a line through the depth point parallel to the length axis.",
+      hl:O.hlAll||[],
+      d:()=>{ SET([par(PL3,[0,1,0],H*1.12),par(PD3,[0,1,0],H*1.12),par(PH3,[1,0,0],L*1.1),par(PH3,[0,0,-1],B*1.1),par(PD3,[1,0,0],L*1.1)],COL_CONS,LW_THIN); }});
+    steps.push({text:`Now the remaining corners, each cut with the compass set to a line ALREADY on the sheet. Take the height ${R1(H)} mm straight off the height axis (O to the height point) and cut the vertical lines through the length point and the depth point: two more top corners.`,
+      hl:O.hlAll||[],
+      d:()=>{ spanOf(O3,PH3); cutFrom(PL3,[L,H,B]); cutFrom(PD3,[0,H,0]); }});
+    steps.push({text:`Through the new top corner over the depth point draw a line parallel to the length axis. Take the length ${R1(L)} mm off the length axis (O to the length point) and cut this line and the line through the depth point: the two rear corners of the box.`,
+      hl:O.hlAll||[],
+      d:()=>{ SET([par([0,H,0],[1,0,0],L*1.1)],COL_CONS,LW_THIN);
+        spanOf(O3,PL3); cutFrom(PD3,[L,0,0]); cutFrom([0,H,0],[L,H,0]); }});
+    steps.push({text:`Join the corners to complete the ISOMETRIC BOX, ${R1(L)} × ${R1(B)} × ${R1(H)} mm, that just encloses the object. Draw it in thin construction lines, and put in the three overall sizes, dimensioned the isometric way.`,
       hl:O.hlAll||[],
       d:()=>{ const C=[];
         [[0,0,0],[L,0,0],[L,0,B],[0,0,B]].forEach((a,i,arr)=>{
@@ -2273,10 +2577,9 @@
           C.push([p3(a[0],0,a[2]),p3(b[0],0,b[2])]);
           C.push([p3(a[0],H,a[2]),p3(b[0],H,b[2])]);
           C.push([p3(a[0],0,a[2]),p3(a[0],H,a[2])]); });
-        SET(C,COL_CONS,LW_THIN);
-        drawAlignedLabel(AXO.x,AXO.y,p3(L,0,B).x,p3(L,0,B).y,R1(L),-12,0.66);
-        drawAlignedLabel(AXO.x,AXO.y,p3(0,0,0).x,p3(0,0,0).y,R1(B),-12,0.66);
-        drawAlignedLabel(p3(0,0,0).x,p3(0,0,0).y,p3(0,H,0).x,p3(0,H,0).y,R1(H),10,0.5); }});
+        if(!FINAL()) SET(C,COL_CONS,LW_THIN);
+        // the three overall sizes, dimensioned in the isometric way, about 10 mm clear of the object
+        plan(); OVERALL.forEach(drawDim); }});
 
     steps.push({text:"Remember the golden rule of isometric drawing: distances are marked TRUE LENGTH only along the three isometric axes, or along lines parallel to them. Any line NOT parallel to an axis - a slope, a diagonal - must be found by locating its two end points first.",
       hl:O.hlAll||[], d:()=>{ }});
@@ -2284,16 +2587,10 @@
     // groups may be given as a list, or as a function of the construction context (for the four-centre steps)
     const flat=a=>a.reduce((o,g)=>o.concat(Array.isArray(g)?flat(g):[g]),[]);
     const groupItems=flat(typeof O.groups==="function"?O.groups(CTX):(O.groups||[]));
-    // four-centre / centre-shift steps marked constr:true are throwaway construction (centre lines,
-    // the rhombus, its diagonals) - keep them while any circle is still being built, but once every
-    // circle in this problem is finished (and for "Show all") they are no longer drawn, so the later
-    // steps and the completed view show only the finished curves, not the scaffolding behind them.
-    const circlesFinishIdx=steps.length+groupItems.length;
+    // four-centre / centre-shift construction (centre lines, the rhombus, its diagonals, the shifted centres)
+    // stays on the sheet with every other thin construction line, right to the finished view
     groupItems.forEach(g=>{
-      steps.push({text:g.text, hl:g.hl||[], nohl:!!g.nohl, d:()=>{
-        if(g.constr&&currentStep>circlesFinishIdx) return;
-        g.d(CTX);
-      }});
+      steps.push({text:g.text, hl:g.hl||[], nohl:!!g.nohl, d:erasable(()=>{ g.d(CTX); })});
     });
 
     steps.push({text:"Line in the finished isometric view with the full DARK line. Only the edges that can actually be SEEN are drawn - in an isometric view hidden edges are left out altogether"+(O.circles||O.cyls?"; of each isometric circle only the part that can be seen is lined in, and the outlines of a curved surface are drawn as TANGENTS to its two end curves":"")+". Leave the construction lines thin.",
@@ -2301,7 +2598,8 @@
       d:()=>isoLineIn(CTX,O,v)});
 
     steps.push({text:"The isometric view is complete. Check it against the given orthographic views: every length is measured along the length axis, every depth along the depth axis and every height vertically - and only those three directions carry true lengths. Now turn the 3-D model below into the isometric position and compare.",
-      hl:O.hlAll||[], nohl:true, d:()=>{ }});
+      hl:O.hlAll||[], nohl:true, d:()=>{ plan(); FEAT.forEach(drawDim); missingLeaders(); } });
+    NSTEP=steps.length;
 
     const results=`<b>Isometric data:</b>
       <table>
@@ -2625,8 +2923,14 @@
       return mergeM(base,m_holeY(eh,eh,dh/2,0,T),m_holeY(eh,B-eh,dh/2,0,T),arm,boss,m_holeY(xc,zc,r,yb,Hb)); },
     qd:()=>[{v:"fv",h:[0,Lb],side:"B",at:0,text:R1(Lb)},{v:"fv",h:[0,xa0],side:"T",at:T,text:R1(xa0)},{v:"fv",vt:[yb,Hb],side:"R",at:L,text:R1(hb)},
             {v:"fv",vt:[0,T],side:"R",at:Lb,text:R1(T)},
-            {v:"tv",dia:[xc,zc,R],ang:-0.8,text:"Ø "+R1(D)},{v:"tv",dia:[xc,zc,r],ang:2.3,text:"Ø "+R1(d)},{v:"tv",dia:[eh,B-eh,dh/2],ang:2.4,text:"Ø "+R1(dh)},
-            {v:"tv",h:[0,xc],side:"B",at:zc,text:R1(xc)},{v:"tv",vt:[a0,a1],side:"R",at:Lb,text:R1(ta)}],
+            {v:"tv",dia:[xc,zc,R],ang:-0.8,text:"Ø "+R1(D)},{v:"tv",dia:[xc,zc,r],ang:2.3,text:"Ø "+R1(d)},{v:"tv",dia:[eh,B-eh,dh/2],ang:0.9,text:"2 × Ø "+R1(dh)},
+            // the two holes in the plate: their centres from the left-hand end (along the front edge), and from the
+            // front and rear faces (along the left-hand end)
+            {v:"tv",h:[0,eh],side:"B",at:B,text:R1(eh)},{v:"tv",vt:[B-eh,B],side:"L",at:0,text:R1(eh)},{v:"tv",vt:[0,eh],side:"L",at:0,text:R1(eh)},
+            {v:"tv",h:[0,xc],side:"B",at:zc,text:R1(xc)},
+            // the arm thickness is taken on the edge where the arm's upper face starts on the plate, so on the isometric
+            // view it goes out at the front-left, in line with the hole centres - not down on the plate below the arm
+            {v:"tv",vt:[a0,a1],side:"R",at:xa0,text:R1(ta)}],
     axes:()=>[{a:bB,b:bT,r:R},{a:P3(eh,0,eh),b:hR,r:dh/2},{a:P3(eh,0,B-eh),b:hF,r:dh/2}],
     circles:()=>[{c:hF,plane:"top",r:dh/2},{c:hR,plane:"top",r:dh/2},{c:P3(eh,0,B-eh),plane:"top",r:dh/2},{c:P3(eh,0,eh),plane:"top",r:dh/2},
                  {c:bT,plane:"top",r:R},{c:bT,plane:"top",r:r},{c:bB,plane:"top",r:R},{c:bB,plane:"top",r:r}],
@@ -2869,11 +3173,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 22px Arial";
+    gctx.font="bold 17px Arial";
     const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
     gctx.fillRect(x-w/2,y-14,w,28);
-    gText(x,y,t,color||GINK,"bold 22px Arial");
+    gText(x,y,t,color||GINK,"bold 17px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -2989,6 +3293,21 @@
 
 
   let probIndex=0, values={}, P=null, currentStep=1, started=false;
+
+  /* ---- optional usage tracking (see account.js) - a no-op unless a student is logged in ---- */
+  const EG_APP_KEY="isometric";
+  let egFurthest=0, egCompleted=false, egViaShowAll=false;
+  if(window.EG) EG.trackDuration(EG_APP_KEY);
+  function egResetAttempt(viaShowAll){
+    egFurthest=0; egCompleted=false; egViaShowAll=!!viaShowAll;
+    if(window.EG) EG.track(EG_APP_KEY,(PROBLEMS[probIndex]||{}).title||"","open");
+  }
+  function egTrackStep(s,N){
+    if(!window.EG) return;
+    const title=(PROBLEMS[probIndex]||{}).title||"";
+    if(!egViaShowAll&&s>egFurthest){ egFurthest=s; EG.track(EG_APP_KEY,title,"progress",{step_num:s}); }
+    if(s>=N&&!egCompleted){ egCompleted=true; EG.track(EG_APP_KEY,title,egViaShowAll?"revealed":"complete"); }
+  }
   let viewZoom=1, viewPanX=0, viewPanY=0;
   const ZOOM_MIN=0.4, ZOOM_MAX=6;
 
@@ -3061,6 +3380,7 @@
   }
   function startDrawing(){
     if(!P) return;
+    egResetAttempt(false);
     started=true; currentStep=1; lastSpoken=-1; compassPose=null; syncStartUI(); drawStep(1,true);
   }
 
@@ -3181,6 +3501,7 @@
       clearCanvasWhite();
       return;
     }
+    egTrackStep(s,N);
     speakCurrent();                 // narration and drawing run together
     HL_SEQ=stepHL(P.steps[s-1]);
     renderGiven(animate?[]:HL_SEQ); // when animating, the edges light up one by one
@@ -3193,8 +3514,8 @@
   function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
     if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
   function prevStep(){ if(P&&started&&currentStep>1){currentStep--; compassPose=null; drawStep(currentStep);} }
-  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
-  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
+  function restartSteps(){ if(P){egResetAttempt(false); started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
+  function showAll(){ if(P){egResetAttempt(true); started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
   const voiceSupported=("speechSynthesis" in window);
@@ -3313,9 +3634,13 @@
   const fsWrap=document.getElementById("canvas-wrapper");
   let fsReal=false;
   function isFs(){ return fsWrap.classList.contains("fs-on"); }
-  function setCanvasSize(w,h){
-    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
-    if(w===CANVAS_W&&h===CANVAS_H) return;
+  // w x h is the room on screen; k (>= 1) is how many drawing units go to one screen pixel.
+  function setCanvasSize(w,h,k){
+    k=k||1;
+    w=Math.max(200,Math.round(w*k)); h=Math.max(160,Math.round(h*k));
+    const hd=Math.min((canvas._hdBase||1)/k, Math.sqrt(12e6/(w*h)));   // screen resolution or better, capped at ~12 megapixels so a big full screen stays quick
+    if(w===CANVAS_W&&h===CANVAS_H&&canvas._hdS===hd) return;
+    canvas._hdS=hd;
     CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none"){
       rebuild(false);
@@ -3323,9 +3648,17 @@
       if(st&&st.demo){ lastSpoken=currentStep; drawStep(currentStep,true); }   // re-laid out mid-animation: play it again instead of jumping to its end
     } else clearCanvasWhite();
   }
-  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
-  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
-  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  // In full screen the drawing area takes exactly the room the layout gives it, in the screen's own proportions,
+  // so nothing is stretched in portrait or landscape. On a small screen (a phone) the drawing is still laid out
+  // on at least the 820 x 540 of the normal view and shown scaled down to fit: drawn at one unit per screen pixel,
+  // the lines would be squeezed into a few hundred pixels while the text kept its size, and the labels would pile
+  // up on the drawing. Outside full screen it returns to 820 x 540.
+  function layoutCanvas(){
+    if(isFs()){
+      const cw=Math.max(1,canvas.clientWidth), ch=Math.max(1,canvas.clientHeight);
+      setCanvasSize(cw,ch,Math.max(1,820/cw,540/ch));
+    } else setCanvasSize(820,540,1);
+  }
   let layoutTimer=0;
   function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
   function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }

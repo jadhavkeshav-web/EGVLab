@@ -14,6 +14,7 @@
   <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Projection of Line - Problem with Stepwise Solutions</title>
+  <script src="account.js"></script>
   <style>
     :root{
       --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
@@ -81,17 +82,23 @@
     #space-title{font-weight:700;color:var(--ink);font-size:.95rem;}
     #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
     #spaceCanvas{touch-action:none;}
-    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
     #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    .fs-only{display:none;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    /* step-navigation controls, relocated here from the left panel so they sit right above the sketch
+       (and so the same controls - not a duplicate set - are still reachable in full screen) */
+    #step-toolbar{display:flex;align-items:center;gap:14px;row-gap:8px;flex-wrap:wrap;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--line);}
+    #step-toolbar .btn-group{margin-bottom:0;flex-wrap:wrap;}
+    #step-toolbar .btn-group button{flex:0 0 auto;padding:7px 14px;}
+    #step-toolbar .speed-row{flex-wrap:nowrap;}
+    #step-toolbar .speed-row select{flex:0 0 auto;width:auto;}
     /* full screen (real or, where the browser has none, a page-filling overlay) */
     #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
     #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on #step-toolbar{flex:0 0 auto;}
     #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
     #canvas-wrapper.fs-on #space-wrap{display:none !important;}
     /* phones and small tablets */
@@ -133,27 +140,6 @@
       <div id="validation"></div>
 
       <h4>Step-by-step solution</h4>
-      <div class="btn-group" id="start-row">
-        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
-      </div>
-      <div class="btn-group">
-        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
-        <button id="nextButton" onclick="nextStep()">Next ▶</button>
-      </div>
-      <div class="btn-group">
-        <button onclick="restartSteps()">Restart</button>
-        <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
-      </div>
-      <div class="btn-group speed-row">
-        <label for="speedSel">Drawing speed</label>
-        <select id="speedSel" onchange="setSpeed(this.value)">
-          <option value="1.7">Slow</option>
-          <option value="1" selected>Normal</option>
-          <option value="0.62">Fast</option>
-          <option value="0.35">Very fast</option>
-        </select>
-      </div>
       <div id="stepCounter"></div>
       <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
       <div id="results"></div>
@@ -166,14 +152,30 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
-        <span class="fs-only fs-nav">
-          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
-          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
-          <button class="fs-btn" id="fsRestart" onclick="restartSteps()">↺ Restart</button>
-          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
-        </span>
-
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <div id="step-toolbar">
+        <div class="btn-group" id="start-row">
+          <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+        </div>
+        <div class="btn-group">
+          <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+          <button id="nextButton" onclick="nextStep()">Next ▶</button>
+        </div>
+        <div class="btn-group">
+          <button onclick="restartSteps()">Restart</button>
+          <button onclick="showAll()">Show all</button>
+          <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
+        </div>
+        <div class="btn-group speed-row">
+          <label for="speedSel">Drawing speed</label>
+          <select id="speedSel" onchange="setSpeed(this.value)">
+            <option value="1.7">Slow</option>
+            <option value="1" selected>Normal</option>
+            <option value="0.62">Fast</option>
+            <option value="0.35">Very fast</option>
+          </select>
+        </div>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
 
@@ -194,7 +196,7 @@
      match, so the program still draws in the same units (canvas.width / height keep returning the
      drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
   (function(){
-    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const S=Math.min(4,Math.max(3,Math.ceil(window.devicePixelRatio||1)));   // at least 3x, so labels stay crisp on a projector
     const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
     const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
     const gc=HTMLCanvasElement.prototype.getContext;
@@ -202,12 +204,12 @@
       const cx=gc.call(this,type,opts);
       if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
       const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
-      cv._hdS=S;
+      cv._hdS=S; cv._hdBase=S;   // _hdS drops below S in full screen on a small screen (see layoutCanvas)
       const st=cx.setTransform;
-      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
-      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
-      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
-      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      cx.setTransform=function(a,b,c,d,e,f){ const k=cv._hdS; return (typeof a==="number")?st.call(this,a*k,b*k,c*k,d*k,e*k,f*k):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,cv._hdS,0,0,cv._hdS,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
       PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
       return cx;
     };
@@ -215,8 +217,9 @@
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
-  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#222", COL_LOCUS="#777", COL_PROJ="#777";
   const FONT_MAIN="13px Arial", FONT_DIM="9.5px Arial";
+  const FONT_VAL="bold 11.9px Arial";   // dimension values (TL = .., θ = .., 25 ...): 1.25 x FONT_DIM, bold
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   let SCALE_PXMM=0;
   const ARROW_HALF_W=3, ARROW_LEN=9;
@@ -248,11 +251,301 @@
     else if(arrow==="end") drawArrowhead(x2,y2,a,color);
     else if(arrow==="both"){ drawArrowhead(x2,y2,a,color); drawArrowhead(x1,y1,a+Math.PI,color); }
   }
+  /* ---- point names and dimension values placed clear of the drawing ----
+     When a problem is (re)built, its finished drawing is rendered once with no text on it (autoLayout).
+     Every point name and every dimension value (TL / EL / PL along a line, θ / φ / α / β at an angle arc, the
+     value of a linear dimension) is then put at the spot nearest its usual position that keeps clear of the
+     lines, the arcs and the texts already placed - and nearer its own line / arc / point than any other one,
+     so a value can never read as belonging to the wrong line. Every step, animated or not, uses that spot. */
+  const LBL_FONT="bold 12px Arial", LBL_H=11, DIM_H=12.5;
+  let LBL=null, LBL_REQ=null;
+  const lblKey=(x,y,t)=>t+"@"+Math.round(x)+","+Math.round(y);
+  function putText(t,font,p){          // p = centre of the text {x,y} and its slope ang
+    ctx.save(); ctx.translate(p.x,p.y); if(p.ang) ctx.rotate(p.ang);
+    ctx.font=font; ctx.fillStyle="#111"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(t,0,0);
+    ctx.restore();
+  }
+  function drawLabel(x,y,label,off={x:6,y:6}){
+    if(REC){REC.push({f:"drawLabel",a:Array.from(arguments)});return;}
+    const key="P:"+lblKey(x,y,label);
+    if(LBL_REQ){ LBL_REQ.push({kind:"pt",key:key,x:x,y:y,txt:label,off:off,font:LBL_FONT,h:LBL_H}); return; }
+    ctx.font=LBL_FONT;
+    putText(label,LBL_FONT,(LBL&&LBL.get(key))||{x:x+off.x+ctx.measureText(label).width/2, y:y+off.y});
+  }
+  function dimText(r){                 // a dimension value; r carries its own geometry and its usual spot (def)
+    if(LBL_REQ){ r.font=FONT_VAL; r.h=DIM_H; LBL_REQ.push(r); return; }
+    const p=(LBL&&LBL.get(r.key))||r.def;
+    if(p.lead){                        // moved out into clear space: a thin leader back to its own arc / line
+      const l=p.lead;
+      ctx.strokeStyle=COL_DIM; ctx.lineWidth=0.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(l.x1,l.y1); ctx.lineTo(l.x2,l.y2); ctx.stroke();
+      ctx.fillStyle=COL_DIM; ctx.beginPath(); ctx.arc(l.x1,l.y1,1.8,0,2*Math.PI); ctx.fill();
+    }
+    putText(r.txt,FONT_VAL,p);
+  }
+  function leadEnd(c,w,h){             // where a leader from c.lead meets the edge of the text box c
+    const dx=c.lead.x-c.x, dy=c.lead.y-c.y, ca=Math.cos(c.ang||0), sa=Math.sin(c.ang||0);
+    const du=Math.abs(dx*ca+dy*sa), dv=Math.abs(-dx*sa+dy*ca);
+    const t=Math.min(1, du>1e-6?(w/2+2)/du:1e9, dv>1e-6?(h/2+2)/dv:1e9);
+    return {x:c.x+dx*t, y:c.y+dy*t};
+  }
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="bold 12px Arial"; ctx.fillStyle="#111";
-      ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
+    if(label) drawLabel(x,y,label,off);
+  }
+  function segDist(p,x1,y1,x2,y2){
+    const dx=x2-x1, dy=y2-y1, L2=dx*dx+dy*dy;
+    const t=L2>0?Math.max(0,Math.min(1,((p.x-x1)*dx+(p.y-y1)*dy)/L2)):0;
+    return Math.hypot(p.x-x1-dx*t,p.y-y1-dy*t);
+  }
+  function arcSweep(a1,a2,ccw){ let s=a2-a1; if(ccw&&s>0) s-=2*Math.PI; if(!ccw&&s<0) s+=2*Math.PI; return s; }
+  function arcDist(p,r){                       // distance from p to the arc of an angle dimension r
+    const S=arcSweep(r.a1,r.a2,r.ccw), T=2*Math.PI;
+    let d=(Math.atan2(p.y-r.cy,p.x-r.cx)-r.a1)*(S<0?-1:1);
+    d=((d%T)+T)%T;
+    if(d<=Math.abs(S)) return Math.abs(Math.hypot(p.x-r.cx,p.y-r.cy)-r.r);
+    const e=a=>Math.hypot(p.x-r.cx-r.r*Math.cos(a),p.y-r.cy-r.r*Math.sin(a));
+    return Math.min(e(r.a1),e(r.a1+S));
+  }
+  function geomDist(r,p){                      // distance from p to what the text r belongs to
+    switch(r.kind){
+      case "pt":  return Math.hypot(p.x-r.x,p.y-r.y);
+      case "al":  return segDist(p,r.x1,r.y1,r.x2,r.y2);
+      case "ang": return arcDist(p,r);
+      case "vd":  return segDist(p,r.x,r.yT,r.x,r.yB);
+      case "hd":  return segDist(p,r.x1,r.y,r.x2,r.y);
+    }
+    return 1e9;
+  }
+  const GRP={pt:"pt", al:"al", ang:"ang", vd:"lin", hd:"lin"};
+  function rectPts(c,w,h,pad,step){            // sample points covering a (possibly sloping) text box, as x,y,x,y...
+    const pts=[], ca=Math.cos(c.ang||0), sa=Math.sin(c.ang||0);
+    for(let u=-w/2-pad;u<=w/2+pad+1e-6;u+=step) for(let v=-h/2-pad;v<=h/2+pad+1e-6;v+=step)
+      pts.push(c.x+u*ca-v*sa, c.y+u*sa+v*ca);
+    return pts;
+  }
+  function textCands(r,w,h){                   // the spots a text may take, each with the cost of moving it there
+    const out=[], add=(x,y,ang,cost)=>out.push({x:x,y:y,ang:ang||0,cost:cost});
+    if(r.kind==="pt"){
+      const pc={x:r.x+r.off.x+w/2, y:r.y+r.off.y};
+      add(pc.x,pc.y,0,0);
+      for(const g of [3,6,10,15,21]) for(let a=0;a<24;a++){
+        const c=Math.cos(a*Math.PI/12), s=Math.sin(a*Math.PI/12), d=g+w/2*Math.abs(c)+h/2*Math.abs(s);
+        const x=r.x+c*d, y=r.y+s*d;
+        add(x,y,0,Math.hypot(x-pc.x,y-pc.y)*0.8+g*0.4);
+      }
+    }
+    else if(r.kind==="al"){                    // above its own line (the side the text reads upright from), anywhere along it
+      const L=Math.hypot(r.x2-r.x1,r.y2-r.y1)||1, ux=(r.x2-r.x1)/L, uy=(r.y2-r.y1)/L;
+      const nx=Math.sin(r.ang), ny=-Math.cos(r.ang);
+      add(r.def.x,r.def.y,r.ang,0);
+      // (below the line only as a last resort - where every spot above it would sit on another line)
+      for(let t=0.1;t<0.91;t+=0.05) for(const side of [1,-1]) for(const g of [3,6,10,15]){
+        const d=side*(g+h/2), over=Math.max(0,w/2-t*L,w/2-(1-t)*L);
+        add(r.x1+ux*L*t+nx*d, r.y1+uy*L*t+ny*d, r.ang,
+            Math.abs(t-r.t0)*L*0.5+(g-3)*0.8+(side<0?220:0)+over*3);
+      }
+      // when the line is crowded all along: pulled out into clear space, with a leader back to the line
+      for(let t=0.25;t<0.76;t+=0.125) for(const side of [1]) for(const g of [24,36,50]){
+        const ax=r.x1+ux*L*t, ay=r.y1+uy*L*t, d=side*(g+h/2);
+        out.push({x:ax+nx*d, y:ay+ny*d, ang:r.ang, lead:{x:ax,y:ay}, cost:40+g*0.6+Math.abs(t-r.t0)*L*0.3});
+      }
+    }
+    else if(r.kind==="ang"){                   // outside (or just inside) its own arc, or just past either end of it
+      add(r.def.x,r.def.y,0,0);
+      const S=arcSweep(r.a1,r.a2,r.ccw), mid=r.a1+S/2, sg=S<0?-1:1;
+      const ext=a=>w/2*Math.abs(Math.cos(a))+h/2*Math.abs(Math.sin(a));
+      const angs=[];
+      for(let i=0;i<=8;i++) angs.push({a:r.a1+S*i/8, x:0});
+      for(const e of [0.14,0.28]){ angs.push({a:r.a1-sg*e, x:10}); angs.push({a:r.a1+S+sg*e, x:10}); }
+      angs.forEach(q=>{
+        const c=Math.cos(q.a), s=Math.sin(q.a), base=Math.abs(q.a-mid)*r.r*0.35+q.x;
+        for(const g of (q.x?[3,7,12]:[3,7,12,18,26])){ const d=r.r+g+ext(q.a); add(r.cx+c*d,r.cy+s*d,0,base+g*0.8); }
+        for(const g of [3,7]){ const d=r.r-g-ext(q.a); if(d>12) add(r.cx+c*d,r.cy+s*d,0,base+g*0.8+6); }
+      });
+      // when the angle is crowded: out in clear space, with a leader back to the arc
+      for(let i=-4;i<=12;i++){
+        const a=r.a1+S*i/8, ac=r.a1+S*Math.max(0,Math.min(1,i/8));
+        const c=Math.cos(a), s=Math.sin(a);
+        for(const g of [18,28,40,54,70]){ const d=r.r+g+ext(a);
+          out.push({x:r.cx+c*d, y:r.cy+s*d, ang:0, lead:{x:r.cx+r.r*Math.cos(ac), y:r.cy+r.r*Math.sin(ac)},
+                    cost:40+g*1.0+Math.abs(a-mid)*r.r*0.2}); }
+      }
+    }
+    // A linear dimension's value is written ABOVE its dimension line (for a vertical one, on the left - the text
+    // reads upward), between the arrows. Only when it cannot sit there clear of the drawing does it go beyond an
+    // arrowhead, still above the line; below the line is the very last resort.
+    else if(r.kind==="vd"){
+      const yt=Math.min(r.yT,r.yB), yb=Math.max(r.yT,r.yB), L=yb-yt;
+      const room=L-2*ARROW_LEN-4;                         // clear length between the arrowheads
+      add(r.def.x,r.def.y,-Math.PI/2,0);
+      for(const t of [0.5,0.4,0.6,0.3,0.7,0.2,0.8]) for(const side of [-1,1]) for(const g of [2,4,7])
+        add(r.x+side*(g+h/2), yt+L*t, -Math.PI/2,
+            Math.abs(t-0.5)*L*0.5+g*0.8+(side>0?220:0)+Math.max(0,w/2-L*Math.min(t,1-t))*3+(w>room?40:0));
+      for(const g of [2,4]){
+        add(r.x-(g+h/2), yt-ARROW_LEN-4-w/2, -Math.PI/2, 60+g);
+        add(r.x-(g+h/2), yb+ARROW_LEN+4+w/2, -Math.PI/2, 60+g);
+      }
+    }
+    else if(r.kind==="hd"){
+      const xl=Math.min(r.x1,r.x2), xr=Math.max(r.x1,r.x2), L=xr-xl;
+      const room=L-2*ARROW_LEN-4;
+      add(r.def.x,r.def.y,0,0);
+      for(const t of [0.5,0.4,0.6,0.3,0.7,0.2,0.8]) for(const side of [-1,1]) for(const g of [2,4,7])
+        add(xl+L*t, r.y+side*(g+h/2), 0,
+            Math.abs(t-0.5)*L*0.5+g*0.8+(side>0?220:0)+Math.max(0,w/2-L*Math.min(t,1-t))*3+(w>room?40:0));
+      for(const g of [2,4]){
+        add(xl-ARROW_LEN-4-w/2, r.y-(g+h/2), 0, 60+g);
+        add(xr+ARROW_LEN+4+w/2, r.y-(g+h/2), 0, 60+g);
+      }
+    }
+    // and, for a value on a line or an angle, anywhere in the clear space around it, with a leader back to the
+    // nearest point of its own line / arc
+    if(r.kind==="al"||r.kind==="ang"){
+      let cx,cy;
+      if(r.kind==="al"){ cx=(r.x1+r.x2)/2; cy=(r.y1+r.y2)/2; }
+      else { const S=arcSweep(r.a1,r.a2,r.ccw), m=r.a1+S/2; cx=r.cx+r.r*Math.cos(m); cy=r.cy+r.r*Math.sin(m); }
+      for(let dx=-120;dx<=120;dx+=12) for(let dy=-96;dy<=96;dy+=12){
+        const p={x:cx+dx, y:cy+dy}, a=nearestOn(r,p), L=Math.hypot(p.x-a.x,p.y-a.y);
+        if(L<18+w/2*0.5||L>120) continue;
+        if(r.kind==="al"&&(p.x-a.x)*Math.sin(r.ang)-(p.y-a.y)*Math.cos(r.ang)<h) continue;   // lengths stay above their line
+        out.push({x:p.x, y:p.y, ang:r.kind==="al"?r.ang:0, lead:a, cost:48+L*0.8});
+      }
+    }
+    return out;
+  }
+  function nearestOn(r,p){             // the point of a value's own line / arc nearest p (not right at its ends)
+    if(r.kind==="al"){
+      const dx=r.x2-r.x1, dy=r.y2-r.y1, L2=dx*dx+dy*dy||1;
+      const t=Math.max(0.15,Math.min(0.85,((p.x-r.x1)*dx+(p.y-r.y1)*dy)/L2));
+      return {x:r.x1+dx*t, y:r.y1+dy*t};
+    }
+    const S=arcSweep(r.a1,r.a2,r.ccw), T=2*Math.PI;
+    let d=(Math.atan2(p.y-r.cy,p.x-r.cx)-r.a1)*(S<0?-1:1); d=((d%T)+T)%T;
+    let f=d/Math.abs(S); if(f>1) f=(d-Math.abs(S)<T-d)?1:0;
+    f=Math.max(0.12,Math.min(0.88,f));
+    const a=r.a1+S*f;
+    return {x:r.cx+r.r*Math.cos(a), y:r.cy+r.r*Math.sin(a)};
+  }
+  function autoLayout(){
+    LBL=null;
+    if(!P) return;
+    LBL_REQ=[];
+    clearCanvasWhite();
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    try{ P.steps.forEach(st=>{ if(!st.demo) st.d(); }); }catch(e){ console.warn(e); }
+    ctx.restore();
+    const seen=new Set(), req=LBL_REQ.filter(r=>!seen.has(r.key)&&seen.add(r.key));
+    LBL_REQ=null;
+    // darkness of the text-free drawing per canvas unit, widened by one unit so thin lines are never missed
+    const W=Math.ceil(CANVAS_W), H=Math.ceil(CANVAS_H), k=canvas._hdS||1;
+    const bw=Math.round(CANVAS_W*k), bh=Math.round(CANVAS_H*k);
+    const px=ctx.getImageData(0,0,bw,bh).data;
+    const D0=new Float32Array(W*H), D=new Float32Array(W*H), OCC=new Uint16Array(W*H);
+    for(let y=0;y<H;y++){
+      const y0=Math.floor(y*k), y1=Math.max(y0+1,Math.floor((y+1)*k));
+      for(let x=0;x<W;x++){
+        const x0=Math.floor(x*k), x1=Math.max(x0+1,Math.floor((x+1)*k));
+        let m=0;
+        for(let yy=y0;yy<y1&&yy<bh;yy++) for(let xx=x0;xx<x1&&xx<bw;xx++){
+          const i=(yy*bw+xx)*4, d=255-Math.min(px[i],px[i+1],px[i+2]);
+          if(d>m) m=d;
+        }
+        D0[y*W+x]=m>30?m/255:0;
+      }
+    }
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      let m=0;
+      for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+1);yy++) for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+1);xx++){
+        const v=D0[yy*W+xx]; if(v>m) m=v; }
+      D[y*W+x]=m;
+    }
+    const idx=(x,y)=>{ x=Math.round(x); y=Math.round(y); return (x<1||y<1||x>=W-1||y>=H-1)?-1:y*W+x; };
+    const nine=(c,w,h)=>{ const ca=Math.cos(c.ang), sa=Math.sin(c.ang), o=[];
+      for(const u of [-w/2,0,w/2]) for(const v of [-h/2,0,h/2]) o.push({x:c.x+u*ca-v*sa, y:c.y+u*sa+v*ca});
+      return o; };
+    const near=(r,pts)=>{ let m=1e9; pts.forEach(p=>{ const d=geomDist(r,p); if(d<m) m=d; }); return m; };
+    ctx.save();
+    req.forEach(r=>{
+      ctx.font=r.font; const w=ctx.measureText(r.txt).width, h=r.h;
+      r.w=w;
+      r.cands=textCands(r,w,h);
+      r.cands.forEach(c=>{                     // the drawing under each spot never changes - score it once
+        const pts=rectPts(c,w,h,1,2);
+        let ink=0, off=false;
+        for(let i=0;i<pts.length;i+=2){ const j=idx(pts[i],pts[i+1]); if(j<0){ off=true; break; } ink+=D[j]; }
+        c.pts=pts;
+        c.base=off?1e9:c.cost+ink*45;
+        if(c.lead){                            // a leader may cross a line, but should not run along one
+          c.end=leadEnd(c,w,h);
+          const L=Math.hypot(c.end.x-c.lead.x,c.end.y-c.lead.y), lp=[];
+          let li=0;
+          for(let q=5;q<L;q+=2){ const x=c.lead.x+(c.end.x-c.lead.x)*q/L, y=c.lead.y+(c.end.y-c.lead.y)*q/L;
+            lp.push(x,y); const j=idx(x,y), v=j<0?1:D[j]; li+=v>0.9?v*2:v; }   // across a thick view line costs double
+          c.lpts=lp; c.base+=li*(r.kind==="al"?45:20);   // (a leader says whose value it is, so the doubt test below goes easier on it)
+          if(r.kind==="al"){                   // a length pulled out above its crowded line: the leader alone names its line,
+            if(L>60) c.base+=(L-60)*6;         // so long as it is short and crosses next to nothing
+            return;
+          }
+        }
+        else if(r.kind==="ang"){               // an angle value must not be cut off from its own arc by a thick view line
+          const a=nearestOn(r,c), L=Math.hypot(c.x-a.x,c.y-a.y);
+          let cut=0;
+          for(let q=4;q<L;q+=1.5){ const j=idx(a.x+(c.x-a.x)*q/L,a.y+(c.y-a.y)*q/L); if(j>=0&&D0[j]>0.85) cut++; }
+          c.base+=cut*60;
+        }
+        // a text must sit nearer its own point / line / arc than any other of the same sort, or it reads as the
+        // wrong one's (a "θ = " beside a TL line cannot be misread; a "PL = " beside it, or a bare 25 beside
+        // another dimension line, can)
+        // (a value along a line is judged by its centre - two lines meeting at a vertex are both close to any
+        // text's edge there, yet only one of them runs beside it; names and angle values by their nearest edge)
+        const pt=r.kind==="pt", nb=(pt||r.kind==="ang")?nine(c,w,h):[c], own=near(r,nb);
+        req.forEach(o=>{
+          if(o===r||GRP[o.kind]!==GRP[r.kind]) return;
+          if(pt&&Math.abs(o.x-r.x)<1&&Math.abs(o.y-r.y)<1) return;
+          const d=near(o,nb), m=pt?5:c.lead?0:6;
+          if(d<own+m) c.base+=(own+m-d)*(pt?8:20);
+        });
+      });
+    });
+    const mark=(r,c,dv)=>{ const pts=rectPts(c,r.w,r.h,2,1);
+      for(let i=0;i<pts.length;i+=2){ const j=idx(pts[i],pts[i+1]); if(j>=0) OCC[j]+=dv; }
+      if(c.lpts) for(let i=0;i<c.lpts.length;i+=2) for(let e=-1;e<=1;e++) for(let f=-1;f<=1;f++){
+        const j=idx(c.lpts[i]+e,c.lpts[i+1]+f); if(j>=0) OCC[j]+=dv; } };
+    const choose=r=>{
+      if(r.pick) mark(r,r.pick,-1);
+      let best=r.cands[0], bs=Infinity;
+      r.cands.forEach(c=>{
+        if(c.base>=bs) return;
+        let sc=c.base;
+        for(let i=0;i<c.pts.length&&sc<bs;i+=2){ const j=idx(c.pts[i],c.pts[i+1]); if(j>=0&&OCC[j]) sc+=80; }
+        if(c.lpts) for(let i=0;i<c.lpts.length&&sc<bs;i+=2){ const j=idx(c.lpts[i],c.lpts[i+1]); if(j>=0&&OCC[j]) sc+=40; }
+        if(sc<bs){ bs=sc; best=c; }
+      });
+      r.pick=best; r.score=bs; mark(r,best,1);
+    };
+    // Texts are placed one at a time, so the first one to a crowded spot wins it. Try a few orders and keep the
+    // layout whose texts, all together, sit worst the least.
+    const dims=req.filter(r=>r.kind!=="pt"), names=req.filter(r=>r.kind==="pt");
+    const orders=[req, req.slice().reverse(), dims.concat(names), dims.slice().reverse().concat(names),
+                  dims.filter(r=>r.kind==="al").concat(dims.filter(r=>r.kind!=="al"),names)];
+    let seed=12345;                                       // a few shuffled orders too - seeded, so a drawing always lays out the same
+    const rnd=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
+    for(let k=0;k<12;k++){ const o=req.slice();
+      for(let i=o.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=o[i]; o[i]=o[j]; o[j]=t; }
+      orders.push(o); }
+    let best=null, bestTot=Infinity;
+    orders.forEach(ord=>{
+      OCC.fill(0); req.forEach(r=>{ r.pick=null; });
+      ord.forEach(choose);
+      for(let pass=0;pass<2;pass++) ord.forEach(choose);   // let each text move again, knowing where all the others went
+      const tot=req.reduce((t,r)=>t+r.score,0);
+      if(tot<bestTot){ bestTot=tot; best=new Map(req.map(r=>[r.key,{x:r.pick.x, y:r.pick.y, ang:r.pick.ang,
+        lead:r.pick.lead?{x1:r.pick.lead.x, y1:r.pick.lead.y, x2:r.pick.end.x, y2:r.pick.end.y}:null}])); }
+    });
+    ctx.restore();
+    LBL=best;
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
     if(REC){REC.push({f:"drawText",a:Array.from(arguments)});return;}
@@ -276,29 +569,31 @@
     drawArrowhead(cx+r*Math.cos(a1),cy+r*Math.sin(a1),st+Math.PI,COL_DIM);
     drawArrowhead(cx+r*Math.cos(a2),cy+r*Math.sin(a2),et,COL_DIM);
     const m=(a1+a2)/2;
-    drawText(cx+(r+13)*Math.cos(m), cy+(r+13)*Math.sin(m)+(above?-6:6), text,"#111",FONT_DIM,"center","middle");
+    dimText({kind:"ang", key:"A:"+lblKey(cx,cy,text)+"r"+Math.round(r), txt:text, cx:cx, cy:cy, r:r, a1:a1, a2:a2, ccw:ccw,
+      def:{x:cx+(r+13)*Math.cos(m), y:cy+(r+13)*Math.sin(m)+(above?-6:6)}});
   }
   function drawVerticalDim(x,yT,yB,label){
     if(REC){REC.push({f:"drawVerticalDim",a:Array.from(arguments)});return;}
     drawLine(x,yT,x,yB,COL_DIM,LW_THIN);
     drawArrowhead(x,yT,-Math.PI/2,COL_DIM); drawArrowhead(x,yB,Math.PI/2,COL_DIM);
-    ctx.save(); ctx.translate(x-6,(yT+yB)/2); ctx.rotate(-Math.PI/2);
-    drawText(0,0,label,"#111",FONT_DIM,"center","middle"); ctx.restore();
+    dimText({kind:"vd", key:"V:"+lblKey(x,yT,label)+","+Math.round(yB), txt:label, x:x, yT:yT, yB:yB,
+      def:{x:x-3-DIM_H/2, y:(yT+yB)/2, ang:-Math.PI/2}});
   }
   function drawHorizontalDim(y,x1,x2,label){
     if(REC){REC.push({f:"drawHorizontalDim",a:Array.from(arguments)});return;}
     drawLine(x1,y,x2,y,COL_DIM,LW_THIN);
     drawArrowhead(x1,y,Math.PI,COL_DIM); drawArrowhead(x2,y,0,COL_DIM);
-    drawText((x1+x2)/2,y-6,label,"#111",FONT_DIM,"center","bottom");
+    dimText({kind:"hd", key:"H:"+lblKey(x1,y,label)+","+Math.round(x2), txt:label, x1:x1, x2:x2, y:y,
+      def:{x:(x1+x2)/2, y:y-3-DIM_H/2}});
   }
   function drawAlignedLabel(x1,y1,x2,y2,text,off=8,t=0.5){
     if(REC){REC.push({f:"drawAlignedLabel",a:Array.from(arguments)});return;}
-    const mx=x1+(x2-x1)*t,my=y1+(y2-y1)*t,a=Math.atan2(y2-y1,x2-x1);
-    ctx.save(); ctx.translate(mx,my);
-    let r=a; if(r>Math.PI/2||r<-Math.PI/2)r+=Math.PI; ctx.rotate(r);
-    if(off>=0) drawText(0,-off,text,"#111",FONT_DIM,"center","bottom");
-    else       drawText(0,-off,text,"#111",FONT_DIM,"center","top");
-    ctx.restore();
+    const mx=x1+(x2-x1)*t, my=y1+(y2-y1)*t;
+    let r=Math.atan2(y2-y1,x2-x1); if(r>Math.PI/2-1e-9) r-=Math.PI; else if(r<-Math.PI/2-1e-9) r+=Math.PI;   // keep the text upright
+    const side=1, d=Math.abs(off)+DIM_H/2;     // a length is always written ABOVE its own line
+    dimText({kind:"al", key:"L:"+lblKey(x1,y1,text)+","+Math.round(x2)+","+Math.round(y2), txt:text,
+      x1:x1, y1:y1, x2:x2, y2:y2, t0:t, side:side, ang:r,
+      def:{x:mx+Math.sin(r)*d, y:my-Math.cos(r)*d, ang:r}});
   }
   function frame(topH,botH,maxW){
     const sc=Math.min((CANVAS_H-PY(140))/(topH+botH),(CANVAS_W-PX(330))/(maxW+40),3.2);
@@ -311,19 +606,50 @@
   let REC=null;
   let animId=0;
 
-  const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
+  const EXEC={drawLine,drawPoint,drawLabel,drawText,drawArc,drawArcWithMidArrow,
               drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
-              drawRLine,drawSLine};
+              drawRLine,drawSLine,compassSet};
   function execItem(it){ EXEC[it.f].apply(null,it.a); }
 
+  let LIVE=false;              // true while drawing the step that is on screen now (its passing instrument cues show)
   function frameDraw(baseCount,items,k,partial){
     clearCanvasWhite();
     ctx.save();
     ctx.setTransform(viewZoom,0,0,viewZoom,viewPanX,viewPanY);
-    for(let i=0;i<baseCount;i++) P.steps[i].d();
+    for(let i=0;i<baseCount;i++){ LIVE=(i===baseCount-1&&baseCount===currentStep); P.steps[i].d(); }
+    LIVE=true;
     for(let i=0;i<k;i++) execItem(items[i]);
+    LIVE=false;
     if(partial) partial();
     ctx.restore();
+  }
+
+  /* ---- setting the compass ----
+     Before any arc is struck, a step of its own sets the compass: to the length of a line already on the drawing
+     (that line is highlighted and the compass opened across it), or, for a length that is only given, on the scale
+     (laid from the arc's centre, the compass opened from 0 to the value). The compass and highlight are a passing
+     cue - shown while that step is the current one, gone once the arc is struck in the next step. */
+  function compassSet(x1,y1,x2,y2,onScale){
+    if(REC){REC.push({f:"compassSet",a:Array.from(arguments)});return;}
+    if(LIVE) paintCompassSet(x1,y1,x2,y2,onScale,1,1);
+  }
+  function paintCompassSet(x1,y1,x2,y2,onScale,e,sa){     // e: how far the compass has opened; sa: scale opacity
+    let p={x:x1,y:y1}, q={x:x1+(x2-x1)*e, y:y1+(y2-y1)*e};
+    if(onScale){ const g=scaleGeom(x1,y1,x2,y2,0); scaleBody(g,sa); p=g.X(0,SC_TOP); q=g.X(g.L*e,SC_TOP); }
+    ctx.save(); ctx.setLineDash([]); ctx.lineCap="round";
+    ctx.strokeStyle="rgba(232,120,30,0.5)"; ctx.lineWidth=7;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+    ctx.restore();
+    drawCompass(p.x,p.y,q.x,q.y);
+  }
+  /* a step that only sets the compass, from a line on the drawing or from the scale */
+  function cLine(name,len,why,x1,y1,x2,y2){
+    return {text:`Set the compass to ${name} = ${R1(len)} mm${why?" - "+why:""}. Take the span straight off ${name} on the drawing: needle point at one end, pencil point at the other.`,
+            d:()=>compassSet(x1,y1,x2,y2,false)};
+  }
+  function cScale(len,why,x1,y1,x2,y2){
+    return {text:`Set the compass to ${R1(len)} mm${why?" - "+why:""}. There is no line of this length on the drawing yet, so take it from the scale: needle point on 0, pencil point on ${R1(len)}.`,
+            d:()=>compassSet(x1,y1,x2,y2,true)};
   }
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -599,6 +925,15 @@
     });
   }
 
+  async function animCompassSet(s,items,k,it,myId){
+    const a=it.a, ez=t=>t*t*(3-2*t);
+    await animateFrames(1100*SPEED,t=>{
+      if(animId!==myId) return false;
+      const sa=a[4]?Math.min(1,t*4):1, e=ez(Math.max(0,Math.min(1,(t-0.25)/0.65)));
+      frameDraw(s-1,items,k,()=>paintCompassSet(a[0],a[1],a[2],a[3],a[4],Math.max(0.03,e),sa));
+    });
+  }
+
   async function animProtractor(s,items,k,it,myId){
     const cx=it.a[0],cy=it.a[1],a1=it.a[4],a2=it.a[5];
     const up=(a2<=a1);
@@ -622,8 +957,7 @@
       return rollerFor(it,mode)?"roller":"scale";
     }
     if(it.f==="drawAngleDimOutward") return "protractor";
-    if(it.f==="drawArcWithMidArrow") return "compass";
-    if(it.f==="drawArc"&&it.a[2]>=70) return "compass";
+    if(it.f==="drawArcWithMidArrow"||it.f==="drawArc"||it.f==="compassSet") return "compass";
     return null;
   }
 
@@ -651,8 +985,8 @@
           k+=ex;
         }
       }
-      else if(it.f==="drawArcWithMidArrow") await animArc(s,items,k,it,myId);
-      else if(it.f==="drawArc"&&it.a[2]>=70) await animArc(s,items,k,it,myId);
+      else if(it.f==="drawArcWithMidArrow"||it.f==="drawArc") await animArc(s,items,k,it,myId);
+      else if(it.f==="compassSet") await animCompassSet(s,items,k,it,myId);
       else if(it.f==="drawAngleDimOutward") await animProtractor(s,items,k,it,myId);
       else { frameDraw(s-1,items,k+1,null); await sleep(90*SPEED); continue; }
       if(animId!==myId) return;
@@ -716,6 +1050,7 @@
      {text:`Project b1′ down to the locus of a to get b1. a b1 = plan length = ${R1(PL)} mm.`,
       d:()=>{ drawLine(b1p.x,b1p.y,b1p.x,ay,COL_PROJ,LW_THIN,SOLID,"mid");
         drawPoint(b1p.x,ay,"b1",{x:8,y:16}); }},
+     cLine("a b1",PL,"the plan length",AX,ay,b1p.x,ay),
      {text:"With centre a and radius a b1, rotate b1 to the locus of b."+(special?" Since θ + φ = 90°, the arc lands exactly below a.":""),
       d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,0,beta,false,COL_THIN); }},
      {text:`Mark b and draw the final Top View a–b (thick). TV = ${R1(PL)} mm.`,
@@ -724,6 +1059,7 @@
      {text:"Project b2 up to the locus of a′ to get b2′.",
       d:()=>{ drawLine(b2.x,b2.y,b2.x,apy,COL_PROJ,LW_THIN,SOLID,"mid");
         drawPoint(b2.x,apy,"b2′",{x:8,y:-12}); }},
+     cLine("a′b2′",EL,"the elevation length",AX,apy,b2.x,apy),
      {text:"With centre a′ and radius a′ b2′, rotate b2′ to the locus of b′."+(special?" The arc lands exactly above a′.":""),
       d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,0,-alpha,true,COL_THIN); }},
      {text:`Mark b′ and draw the final Front View a′–b′ (thick). FV = ${R1(EL)} mm. Join the final projector b–b′.`,
@@ -768,9 +1104,10 @@
      {text:"Mark a′ ON X–Y - end A is in the HP, so its front view lies on X–Y.",
       d:()=>{ drawPoint(AX,REF,"a′",{x:-20,y:-10}); }},
      {text:`Measure ${R1(PLen)} mm from a′ along X–Y (the plan length) and erect a perpendicular there.`,
-      d:()=>{ drawHorizontalDim(REF+18,AX,m.x,R1(PLen));
+      d:()=>{ drawHorizontalDim(REF+24,AX,m.x,R1(PLen));
         drawLine(m.x,REF,m.x,b1p.y-12,COL_THIN,LW_THIN);
-        drawPoint(m.x,REF); }},
+        drawPoint(m.x,REF,"m",{x:6,y:12}); }},
+     cScale(TL,"the true length",AX,REF,b1p.x,b1p.y),
      {text:`With centre a′ and radius ${R1(TL)} mm (TL), cut the perpendicular at b1′. Draw a′b1′.`,
       d:()=>{ const a0=Math.atan2(rise,PLen);
         drawArc(AX,REF,TL*s,-a0+toRad(14),-a0-toRad(14),true,COL_THIN);
@@ -779,13 +1116,14 @@
         drawAlignedLabel(AX,REF,b1p.x,b1p.y,"TL = "+R1(TL),8,0.62); }},
      {text:`The angle at a′ is θ = ${R1(th*180/Math.PI)}°. b1′ is ${R1(rise)} mm above X–Y - the height of B above HP → draw the locus of b′ through b1′.`,
       d:()=>{ drawAngleDimOutward(AX,REF,45,"θ = "+R1(th*180/Math.PI)+"°",0,-Math.atan2(rise,PLen),true,true);
-        drawVerticalDim(m.x+18,b1p.y,REF,R1(rise));
+        drawVerticalDim(m.x+26,b1p.y,REF,R1(rise));
         drawLine(f.lineStart,b1p.y,f.lineEnd,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
      {text:`Measure ${R1(ELen)} mm from a′ along X–Y (the elevation length) and erect a perpendicular below X–Y there.`,
-      d:()=>{ drawHorizontalDim(REF+34,AX,n.x,R1(ELen));
+      d:()=>{ drawHorizontalDim(REF+50,AX,n.x,R1(ELen));
         drawLine(n.x,REF,n.x,b2.y+12,COL_THIN,LW_THIN);
-        drawPoint(n.x,REF); }},
+        drawPoint(n.x,REF,"n",{x:6,y:12}); }},
+     cLine("a′b1′",TL,"the true length again",AX,REF,b1p.x,b1p.y),
      {text:`With centre a′ and radius ${R1(TL)} mm (TL), cut this perpendicular at b2. The angle at a′ is φ = ${R1(ph*180/Math.PI)}°.`,
       d:()=>{ const a0=Math.atan2(depth,ELen);
         drawArc(AX,REF,TL*s,a0-toRad(14),a0+toRad(14),false,COL_THIN);
@@ -794,23 +1132,26 @@
         drawAlignedLabel(AX,REF,b2.x,b2.y,"TL = "+R1(TL),8,0.62);
         drawAngleDimOutward(AX,REF,45,"φ = "+R1(ph*180/Math.PI)+"°",0,Math.atan2(depth,ELen),false,false); }},
      {text:`b2 is ${R1(depth)} mm below X–Y - the distance of A in front of VP → draw the locus of a and mark a below a′.`,
-      d:()=>{ drawVerticalDim(n.x+18,REF,b2.y,R1(depth));
+      d:()=>{ drawVerticalDim(n.x+26,REF,b2.y,R1(depth));
         drawLine(f.lineStart,ay,f.lineEnd,ay,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,ay,"Locus of a",COL_LOCUS,FONT_DIM,"left","middle");
         drawLine(AX,REF,AX,ay,COL_PROJ,LW_THIN,SOLID,"mid");
         drawPoint(AX,ay,"a",{x:-16,y:16}); }},
      {text:"The locus of b is X–Y itself - end B is in the VP, so its top view lies on X–Y.",
       d:()=>{ drawText(f.lineEnd+8,REF+14,"Locus of b = X–Y",COL_LOCUS,FONT_DIM,"left","middle"); }},
-     {text:`FV: with centre a′ and radius ${R1(ELen)} mm (elevation length), cut the locus of b′ at b′. Draw a′b′ thick; α = ${R1(alpha*180/Math.PI)}°.`,
+     cLine("a′n",ELen,"the elevation length",AX,REF,n.x,REF),
+     {text:`FV: with centre a′ and radius a′n (${R1(ELen)} mm, the elevation length), swing n up to cut the locus of b′ at b′. Draw a′b′ thick; α = ${R1(alpha*180/Math.PI)}°.`,
       d:()=>{ drawArcWithMidArrow(AX,REF,ELen*s,0,-alpha,true,COL_THIN);
         drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
         drawLine(AX,REF,bp.x,bp.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,REF,bp.x,bp.y,"EL = "+R1(ELen),8,0.52);
         drawAngleDimOutward(AX,REF,80,"α = "+R1(alpha*180/Math.PI)+"°",0,-alpha,true,true); }},
-     {text:`Project b1′ down to the locus of a to get b1. TV: with centre a and radius a–b1, strike an arc to cut X–Y at b. Draw ab thick; β = ${R1(beta*180/Math.PI)}°.`,
+     {text:`Project b1′ down to the locus of a to get b1. a b1 is the plan length.`,
       d:()=>{ drawLine(m.x,m.y,b1p.x,ay,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(b1p.x,ay,"b1",{x:8,y:16});
-        drawArcWithMidArrow(AX,ay,PLen*s,0,-beta,true,COL_THIN);
+        drawPoint(b1p.x,ay,"b1",{x:8,y:16}); }},
+     cLine("a b1",PLen,"the plan length",AX,ay,b1p.x,ay),
+     {text:`TV: with centre a and radius a b1, swing b1 up to cut X–Y at b. Draw ab thick; β = ${R1(beta*180/Math.PI)}°.`,
+      d:()=>{ drawArcWithMidArrow(AX,ay,PLen*s,0,-beta,true,COL_THIN);
         drawPoint(b.x,b.y,"b",{x:8,y:14});
         drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PLen),8,0.52);
@@ -859,13 +1200,15 @@
         drawLine(AX,apy,AX,ay,COL_PROJ,LW_THIN,SOLID,"mid");
         drawPoint(AX,ay,"a",{x:-16,y:16}); }},
      {text:`Draw projector 2 at ${R1(PD)} mm to the right - the given distance between the projectors of A and B.`,
-      d:()=>{ drawHorizontalDim(REF+16,AX,P2x,R1(PD));
+      d:()=>{ drawHorizontalDim(REF+24,AX,P2x,R1(PD));
         drawLine(P2x,bpy-18,P2x,by+18,COL_THIN,LW_THIN); }},
+     cScale(EL,"the given elevation length",AX,apy,P2x,bpy),
      {text:`FV: with centre a′ and radius ${R1(EL)} mm (elevation length), cut projector 2 at b′ above (first quadrant). Draw a′b′ thick.`,
       d:()=>{ drawArc(AX,apy,EL*s,-alpha+toRad(12),-alpha-toRad(12),true,COL_THIN);
         drawPoint(P2x,bpy,"b′",{x:10,y:-12});
         drawLine(AX,apy,P2x,bpy,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,apy,P2x,bpy,"EL = "+R1(EL),8,0.62); }},
+     cScale(PL,"the given plan length",AX,ay,P2x,by),
      {text:`TV: with centre a and radius ${R1(PL)} mm (plan length), cut projector 2 at b below (B farther from VP). Draw ab thick.`,
       d:()=>{ drawArc(AX,ay,PL*s,gamma+toRad(12),gamma-toRad(12),true,COL_THIN);
         drawPoint(P2x,by,"b",{x:10,y:14});
@@ -876,6 +1219,7 @@
         drawText(f.lineEnd+8,bpy,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle");
         drawLine(f.lineStart,by,f.lineEnd,by,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,by,"Locus of b",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     cLine("a b",PL,"the plan length",AX,ay,P2x,by),
      {text:"Rotate the plan: with centre a and radius ab, swing b parallel to X–Y to b1 on the locus of a.",
       d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,gamma,0,true,COL_THIN);
         drawPoint(b1x,ay,"b1",{x:8,y:16}); }},
@@ -887,6 +1231,7 @@
         drawAlignedLabel(AX,apy,b1x,bpy,"TL = "+R1(TL),8,0.68); }},
      {text:`The angle of a′b1′ with the locus of a′ is θ = ${R1(th*180/Math.PI)}°.`,
       d:()=>{ drawAngleDimOutward(AX,apy,45,"θ = "+R1(th*180/Math.PI)+"°",0,-th,true,true); }},
+     cLine("a′b′",EL,"the elevation length",AX,apy,P2x,bpy),
      {text:"Rotate the elevation: with centre a′ and radius a′b′, swing b′ parallel to X–Y to b2′ on the locus of a′.",
       d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,-alpha,0,false,COL_THIN);
         drawPoint(b2x,apy,"b2′",{x:8,y:-12}); }},
@@ -950,7 +1295,7 @@
      {text:`Draw the TV a–b (thick), parallel to X–Y. PL = TL·cos θ = ${R1(PL)} mm and β = 0°.`,
       d:()=>{ drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PL),8,0.62);
-        drawText(AX+64,ay+26,"φ = 0°    β = 0°",COL_DIM,FONT_DIM,"left","middle"); }}
+        drawText(AX+64,ay+26,"φ = 0°    β = 0°","#111",FONT_VAL,"left","middle"); }}
     ];
 
     const results=`<b>Final Results:</b>
@@ -1002,7 +1347,7 @@
      {text:`Draw the FV a′–b′ (thick), parallel to X–Y. EL = TL·cos φ = ${R1(EL)} mm and α = 0°.`,
       d:()=>{ drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(EL),8,0.62);
-        drawText(AX+64,apy-26,"θ = 0°    α = 0°",COL_DIM,FONT_DIM,"left","middle"); }}
+        drawText(AX+64,apy-26,"θ = 0°    α = 0°","#111",FONT_VAL,"left","middle"); }}
     ];
 
     const results=`<b>Final Results:</b>
@@ -1046,10 +1391,10 @@
         drawLine(AX,apy,AX,ay,COL_PROJ,LW_THIN,SOLID,"mid");
         drawPoint(AX,ay,"a",{x:-16,y:16}); }},
      {text:`Draw projector 2 at ${R1(PD)} mm. On it mark b′ ${R1(bh)} mm above X–Y and b ${R1(bf)} mm below X–Y. Draw the loci of b′ and b.`,
-      d:()=>{ drawHorizontalDim(REF+16,AX,P2x,R1(PD));
+      d:()=>{ drawHorizontalDim(REF+24,AX,P2x,R1(PD));
         drawLine(P2x,bpy-18,P2x,by+18,COL_THIN,LW_THIN);
-        drawVerticalDim(P2x+18,bpy,REF,R1(bh));
-        drawVerticalDim(P2x+34,REF,by,R1(bf));
+        drawVerticalDim(Math.max(P2x,b1x,b2x)+28,bpy,REF,R1(bh));
+        drawVerticalDim(Math.max(P2x,b1x,b2x)+28,REF,by,R1(bf));
         drawLine(f.lineStart,bpy,f.lineEnd,bpy,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,bpy,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle");
         drawLine(f.lineStart,by,f.lineEnd,by,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
@@ -1061,6 +1406,7 @@
         drawAlignedLabel(AX,apy,P2x,bpy,"EL = "+R1(EL),8,0.62);
         drawLine(AX,ay,P2x,by,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,ay,P2x,by,"PL = "+R1(PL),8,0.62); }},
+     cLine("a b",PL,"the plan length",AX,ay,P2x,by),
      {text:"Rotate the plan: with centre a and radius ab, swing b parallel to X–Y to b1 on the locus of a.",
       d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,gamma,0,true,COL_THIN);
         drawPoint(b1x,ay,"b1",{x:8,y:16}); }},
@@ -1071,6 +1417,7 @@
         drawAlignedLabel(AX,apy,b1x,bpy,"TL = "+R1(TL),8,0.68); }},
      {text:`The angle of a′b1′ with the locus of a′ is θ = ${R1(th*180/Math.PI)}°.`,
       d:()=>{ drawAngleDimOutward(AX,apy,45,"θ = "+R1(th*180/Math.PI)+"°",0,-th,true,true); }},
+     cLine("a′b′",EL,"the elevation length",AX,apy,P2x,bpy),
      {text:"Rotate the elevation: with centre a′ and radius a′b′, swing b′ parallel to X–Y to b2′ on the locus of a′.",
       d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,-alpha,0,false,COL_THIN);
         drawPoint(b2x,apy,"b2′",{x:8,y:-12}); }},
@@ -1092,6 +1439,124 @@
         <tr><td>PL (ab)</td><td>${R1(PL)}</td><td>β</td><td>${R1(beta*180/Math.PI)}°</td><td></td><td></td></tr>
       </table>`;
     return {steps,results,space:{ah:ah, af:af, bh:bh, bf:bf, PD:PD, TL:TL, th:th*180/Math.PI, ph:ph*180/Math.PI}};
+  }
+
+  /* ================= Same "both ends given" data as Problem 7, solved by the AUXILIARY PLANE METHOD =================
+     Instead of rotating the line, a new reference line (X1Y1, parallel to one view) sets up an auxiliary plane
+     parallel to the line itself; re-projecting onto it shows the true length (and the matching true inclination)
+     directly, with no foreshortening and no rotation arcs. Done once from each view, as a mutual self-check. */
+  function buildAuxPlaneEnds(v){
+    const ah=v.ah, af=v.af, bh=v.bh, bf=v.bf, PD=v.pd;
+    const rise=bh-ah, adv=bf-af;
+    const EL=Math.sqrt(PD*PD+rise*rise);
+    const PL=Math.sqrt(PD*PD+adv*adv);
+    const TL=Math.sqrt(PD*PD+rise*rise+adv*adv);
+    const th=Math.asin(rise/TL), ph=Math.asin(adv/TL);
+    const thD=th*180/Math.PI, phD=ph*180/Math.PI;
+
+    // The whole construction in mm first (x along X–Y from the projector of A, y downward from X–Y), so the
+    // drawing can be scaled to fit whatever room the two auxiliary views need.
+    const gap=20;                                        // mm - clearance of X1Y1 / X2Y2 from the views
+    const ext=10;                                        // mm - X1Y1 / X2Y2 run this far past the end projectors
+    const Ap={x:0,y:-ah}, A={x:0,y:af}, Bp={x:PD,y:-bh}, B={x:PD,y:bf};
+    const u1={x:PD/PL, y:adv/PL}, n1={x:-adv/PL, y:PD/PL};          // along a-b, and square to it away from X–Y
+    const u2={x:PD/EL, y:-rise/EL}, n2={x:-rise/EL, y:-PD/EL};      // along a′-b′, and square to it away from X–Y
+    const add=(p,d,k)=>({x:p.x+d.x*k, y:p.y+d.y*k});
+    const X1=add(add(A,n1,gap),u1,-ext), Y1=add(add(B,n1,gap),u1,ext);
+    const A1=add(A,n1,gap+ah), B1=add(B,n1,gap+bh);                 // a1′ and b1′: heights above the HP, from X1Y1
+    const X2=add(add(Ap,n2,gap),u2,-ext), Y2=add(add(Bp,n2,gap),u2,ext);
+    const A2=add(Ap,n2,gap+af), B2=add(Bp,n2,gap+bf);               // a1 and b1 (second view): distances in front of the VP, from X2Y2
+    const all=[Ap,A,Bp,B,X1,Y1,A1,B1,X2,Y2,A2,B2];
+    const minX=Math.min(...all.map(p=>p.x)), maxX=Math.max(...all.map(p=>p.x));
+    const minY=Math.min(...all.map(p=>p.y)), maxY=Math.max(...all.map(p=>p.y));
+
+    const f=frame(-minY+6, maxY+6, maxX-minX);
+    const s=f.sc, OX=f.AX-minX*s, REF=f.REF;
+    const P=p=>({x:OX+p.x*s, y:REF+p.y*s});
+    const ap=P(Ap), a=P(A), bp=P(Bp), b=P(B), x1=P(X1), y1=P(Y1), a1=P(A1), b1=P(B1), x2=P(X2), y2=P(Y2), a2=P(A2), b2=P(B2);
+    const AX=ap.x, dimX=AX-24;
+    const lineStart=Math.min(dimX,x1.x,x2.x,a1.x,a2.x)-40, lineEnd=Math.max(b.x,y1.x,y2.x,b1.x,b2.x)+70;
+    // reference lines through a1′ and a2, parallel to X1Y1 and X2Y2, to measure θ and φ against
+    const r1=add(a1,u1,(PL+8)*s), r2=add(a2,u2,(EL+8)*s);
+    const ang=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);
+    const turn=(from,to)=>{ let d=to-from; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; return d; };
+    const base1=ang(a1,r1), tl1=ang(a1,b1), base2=ang(a2,r2), tl2=ang(a2,b2);
+    // where each new projector meets its reference line - the compass needle goes there to transfer a distance
+    const fa1=P(add(A,n1,gap)), fb1=P(add(B,n1,gap)), fa2=P(add(Ap,n2,gap)), fb2=P(add(Bp,n2,gap));
+    const an1=Math.atan2(n1.y,n1.x), an2=Math.atan2(n2.y,n2.x);
+
+    const steps=[
+     {text:"Draw the X–Y reference line.",
+      d:()=>{ drawLine(lineStart,REF,lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }},
+     {text:`Mark a′ ${R1(ah)} mm above and a ${R1(af)} mm below X–Y on projector 1.`,
+      d:()=>{ drawVerticalDim(dimX,ap.y,REF,R1(ah));
+        drawVerticalDim(dimX,REF,a.y,R1(af));
+        drawLine(dimX-6,ap.y,AX-5,ap.y,COL_THIN,LW_THIN);
+        drawLine(dimX-6,a.y,AX-5,a.y,COL_THIN,LW_THIN);
+        drawPoint(ap.x,ap.y,"a′",{x:-20,y:-10});
+        drawLine(ap.x,ap.y,a.x,a.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(a.x,a.y,"a",{x:-16,y:16}); }},
+     {text:`Draw projector 2 at ${R1(PD)} mm. Mark b′ ${R1(bh)} mm above and b ${R1(bf)} mm below X–Y.`,
+      d:()=>{ drawHorizontalDim(REF+24,AX,b.x,R1(PD));
+        drawLine(b.x,bp.y-12,b.x,b.y+12,COL_THIN,LW_THIN);
+        drawVerticalDim(b.x+28,bp.y,REF,R1(bh));
+        drawVerticalDim(b.x+28,REF,b.y,R1(bf));
+        drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
+        drawPoint(b.x,b.y,"b",{x:10,y:14}); }},
+     {text:`Join a′–b′ (thick): the front view, EL = ${R1(EL)} mm. Join a–b (thick): the top view, PL = ${R1(PL)} mm. Both are shorter than the line - now find TL, θ and φ by the AUXILIARY PLANE METHOD.`,
+      d:()=>{ drawLine(ap.x,ap.y,bp.x,bp.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(ap.x,ap.y,bp.x,bp.y,"EL = "+R1(EL),8,0.5);
+        drawLine(a.x,a.y,b.x,b.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(a.x,a.y,b.x,b.y,"PL = "+R1(PL),-8,0.5); }},
+     {text:`For θ, set up an auxiliary vertical plane parallel to the line: draw a new reference line X1–Y1 PARALLEL to the top view a–b, ${R1(gap)} mm away from it.`,
+      d:()=>{ drawLine(x1.x,x1.y,y1.x,y1.y,COL_AXIS,LW_THIN);
+        drawText(x1.x-4,x1.y-4,"X1","#111",FONT_MAIN,"right","bottom");
+        drawText(y1.x+4,y1.y+4,"Y1","#111",FONT_MAIN,"left","top"); }},
+     {text:"From a and b draw projectors perpendicular to X1–Y1, and extend them beyond it.",
+      d:()=>{ drawLine(a.x,a.y,a1.x+n1.x*12,a1.y+n1.y*12,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawLine(b.x,b.y,b1.x+n1.x*12,b1.y+n1.y*12,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     {text:`Set the compass to the height of a′ above X–Y, ${R1(ah)} mm (A's height above the HP): needle point where the projector of a′ meets X–Y, pencil point on a′.`,
+      d:()=>compassSet(AX,REF,ap.x,ap.y,false)},
+     {text:`With the needle point where the projector from a meets X1–Y1, cut that projector beyond X1–Y1 to mark a1′ - a1′ is as far from X1–Y1 as a′ is from X–Y.`,
+      d:()=>{ drawArc(fa1.x,fa1.y,ah*s,an1-toRad(8),an1+toRad(8),false,COL_THIN);
+        drawPoint(a1.x,a1.y,"a1′",{x:-22,y:6}); }},
+     {text:`Set the compass to the height of b′ above X–Y, ${R1(bh)} mm (B's height above the HP): needle point where projector 2 meets X–Y, pencil point on b′.`,
+      d:()=>compassSet(b.x,REF,bp.x,bp.y,false)},
+     {text:`With the needle point where the projector from b meets X1–Y1, cut that projector to mark b1′. Join a1′–b1′ thick.`,
+      d:()=>{ drawArc(fb1.x,fb1.y,bh*s,an1-toRad(6),an1+toRad(6),false,COL_THIN);
+        drawPoint(b1.x,b1.y,"b1′",{x:10,y:8});
+        drawLine(a1.x,a1.y,b1.x,b1.y,COL_THICK,LW_THICK); }},
+     {text:`The auxiliary plane is parallel to the line, so a1′–b1′ is its TRUE LENGTH, TL = ${R1(TL)} mm. Draw a line through a1′ parallel to X1–Y1: the angle between them is the true inclination to the HP, θ = ${R1(thD)}°.`,
+      d:()=>{ drawAlignedLabel(a1.x,a1.y,b1.x,b1.y,"TL = "+R1(TL),8,0.55);
+        drawLine(a1.x,a1.y,r1.x,r1.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawAngleDimOutward(a1.x,a1.y,50,"θ = "+R1(thD)+"°",base1,tl1,turn(base1,tl1)<0,false); }},
+     {text:`For φ, as a check: draw a second reference line X2–Y2 PARALLEL to the front view a′–b′, ${R1(gap)} mm away from it (an auxiliary inclined plane).`,
+      d:()=>{ drawLine(x2.x,x2.y,y2.x,y2.y,COL_AXIS,LW_THIN);
+        drawText(x2.x-4,x2.y+4,"X2","#111",FONT_MAIN,"right","top");
+        drawText(y2.x+4,y2.y-4,"Y2","#111",FONT_MAIN,"left","bottom"); }},
+     {text:"From a′ and b′ draw projectors perpendicular to X2–Y2, and extend them beyond it.",
+      d:()=>{ drawLine(ap.x,ap.y,a2.x+n2.x*12,a2.y+n2.y*12,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawLine(bp.x,bp.y,b2.x+n2.x*12,b2.y+n2.y*12,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     {text:`Set the compass to the distance of a below X–Y, ${R1(af)} mm (A's distance in front of the VP): needle point where the projector of a meets X–Y, pencil point on a.`,
+      d:()=>compassSet(AX,REF,a.x,a.y,false)},
+     {text:`With the needle point where the projector from a′ meets X2–Y2, cut that projector beyond X2–Y2 to mark a1 - a1 is as far from X2–Y2 as a is from X–Y.`,
+      d:()=>{ drawArc(fa2.x,fa2.y,af*s,an2-toRad(8),an2+toRad(8),false,COL_THIN);
+        drawPoint(a2.x,a2.y,"a1",{x:-20,y:-8}); }},
+     {text:`Set the compass to the distance of b below X–Y, ${R1(bf)} mm (B's distance in front of the VP): needle point where projector 2 meets X–Y, pencil point on b.`,
+      d:()=>compassSet(b.x,REF,b.x,b.y,false)},
+     {text:`With the needle point where the projector from b′ meets X2–Y2, cut that projector to mark b1. Join a1–b1 thick.`,
+      d:()=>{ drawArc(fb2.x,fb2.y,bf*s,an2-toRad(6),an2+toRad(6),false,COL_THIN);
+        drawPoint(b2.x,b2.y,"b1",{x:10,y:-10});
+        drawLine(a2.x,a2.y,b2.x,b2.y,COL_THICK,LW_THICK); }},
+     {text:`a1–b1 is the true length again, TL = ${R1(TL)} mm - the check on the first construction. Through a1 draw a line parallel to X2–Y2: the angle between them is the true inclination to the VP, φ = ${R1(phD)}°.`,
+      d:()=>{ drawAlignedLabel(a2.x,a2.y,b2.x,b2.y,"TL = "+R1(TL),8,0.55);
+        drawLine(a2.x,a2.y,r2.x,r2.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawAngleDimOutward(a2.x,a2.y,50,"φ = "+R1(phD)+"°",base2,tl2,turn(base2,tl2)<0,false); }}
+    ];
+
+    return {steps,results:"",space:{ah:ah, af:af, bh:bh, bf:bf, PD:PD, TL:TL, th:thD, ph:phD}};
   }
 
   function buildApparent(v){
@@ -1152,6 +1617,7 @@
         drawLine(f.lineStart,my,f.lineEnd,my,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,my,"Locus of m (trial)",COL_LOCUS,FONT_DIM,"left","middle");
         drawLine(P1x,mpy,P1x,my,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     cLine("a m",PLt,"the trial plan length",AX,ay,P1x,my),
      {text:"Rotate the trial plan: with centre a and radius a–m, swing m parallel to X–Y to m1 on the locus of a.",
       d:()=>{ drawArcWithMidArrow(AX,ay,PLt*s,beta,0,true,COL_THIN);
         drawPoint(M1X,ay,"m1",{x:8,y:16}); }},
@@ -1160,6 +1626,7 @@
         drawPoint(M1X,mpy,"m1′",{x:10,y:-12});
         drawLine(AX,apy,M1X,mpy,COL_THIN,LW_THIN);
         drawAngleDimOutward(AX,apy,70,"θ = "+R1(th*180/Math.PI)+"°",0,-th,true,true); }},
+     cLine("a′m′",ELt,"the trial elevation length",AX,apy,P1x,mpy),
      {text:"Rotate the trial elevation: with centre a′ and radius a′–m′, swing m′ parallel to X–Y to m2′ on the locus of a′.",
       d:()=>{ drawArcWithMidArrow(AX,apy,ELt*s,-alpha,0,false,COL_THIN);
         drawPoint(M2X,apy,"m2′",{x:8,y:-12}); }},
@@ -1168,14 +1635,18 @@
         drawPoint(M2X,my,"m2",{x:8,y:16});
         drawLine(AX,ay,M2X,my,COL_THIN,LW_THIN);
         drawAngleDimOutward(AX,ay,70,"φ = "+R1(ph*180/Math.PI)+"°",0,ph,false,false); }},
-     {text:`With centre a′, compass radius = the actual TL (${R1(TL)} mm), and the protractor set to θ, strike an arc to mark b1′ - this simply extends a′m1′ further out along the same ray. Draw the locus of b′ through b1′.`,
+     cScale(TL,"the actual true length",AX,apy,b1p.x,b1p.y),
+     {text:`With centre a′ and the compass at TL, strike an arc across a′m1′ produced to mark b1′ - it simply extends a′m1′ further out along the same ray, at θ. Draw the locus of b′ through b1′.`,
       d:()=>{ drawLine(M1X,mpy,b1p.x,b1p.y,COL_THIN,LW_THIN);
+        drawArc(AX,apy,TL*s,-th+toRad(8),-th-toRad(8),true,COL_THIN);
         drawPoint(b1p.x,b1p.y,"b1′",{x:12,y:-14});
         drawAlignedLabel(AX,apy,b1p.x,b1p.y,"TL = "+R1(TL),8,0.78);
         drawLine(f.lineStart,b1p.y,f.lineEnd,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
-     {text:`With centre a, the same radius TL, and the protractor set to φ, strike an arc to mark b2 - extending a m2 further out along the same ray. Draw the locus of b through b2.`,
+     cLine("a′b1′",TL,"the true length again",AX,apy,b1p.x,b1p.y),
+     {text:`With centre a and the compass at TL, strike an arc across a m2 produced to mark b2 - it extends a m2 further out along the same ray, at φ. Draw the locus of b through b2.`,
       d:()=>{ drawLine(M2X,my,b2.x,b2.y,COL_THIN,LW_THIN);
+        drawArc(AX,ay,TL*s,ph-toRad(8),ph+toRad(8),false,COL_THIN);
         drawPoint(b2.x,b2.y,"b2",{x:12,y:14});
         drawAlignedLabel(AX,ay,b2.x,b2.y,"TL = "+R1(TL),8,0.78);
         drawLine(f.lineStart,b2.y,f.lineEnd,b2.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
@@ -1190,7 +1661,7 @@
         drawAlignedLabel(AX,ay,fb.x,fb.y,"PL = "+R1(PL),8,0.85);
         drawLine(fb.x,fb.y,fbp.x,fbp.y,COL_PROJ,LW_THIN,SOLID,"mid"); }},
      {text:`Result: TL = ${R1(TL)} mm, true inclination with HP θ = ${R1(th*180/Math.PI)}°, true inclination with VP φ = ${R1(ph*180/Math.PI)}°. The drawn FV and TV still make the given α = ${R1(v.alpha)}° and β = ${R1(v.beta)}° with X–Y.`,
-      d:()=>{ drawText(f.lineEnd+8,b2.y+30,"Check: α = "+R1(v.alpha)+"°   β = "+R1(v.beta)+"°",COL_DIM,FONT_DIM,"left","middle"); }}
+      d:()=>{ drawText(f.lineEnd+8,b2.y+30,"Check: α = "+R1(v.alpha)+"°   β = "+R1(v.beta)+"°","#111",FONT_VAL,"left","middle"); }}
     ];
 
     const results=`<b>Final Results:</b>
@@ -1241,6 +1712,7 @@
       d:()=>{ drawHorizontalDim(apy-16,AX,m.x,R1(PLen));
         drawLine(m.x,apy,m.x,b1p.y-12,COL_THIN,LW_THIN);
         drawPoint(m.x,apy); }},
+     cScale(TL,"the true length",AX,apy,b1p.x,b1p.y),
      {text:`With centre a′ and radius = the actual TL (${R1(TL)} mm), cut this perpendicular at b1′. b1′ is ${R1(rise)} mm higher than a′ - how much higher B is than A; the angle a′b1′ makes with the locus of a′, read off the protractor, is the TRUE inclination with HP, θ = ${R1(th*180/Math.PI)}°. Draw the locus of b′ through b1′.`,
       d:()=>{ drawArc(AX,apy,TL*s,-th+toRad(12),-th-toRad(12),true,COL_THIN);
         drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
@@ -1250,9 +1722,10 @@
         drawLine(f.lineStart,b1p.y,f.lineEnd,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
      {text:`Along the locus of a, measure ${R1(ELen)} mm from a - the given elevation length - and erect a perpendicular there.`,
-      d:()=>{ drawHorizontalDim(ay+16,AX,n.x,R1(ELen));
+      d:()=>{ drawHorizontalDim(ay+30,AX,n.x,R1(ELen));
         drawLine(n.x,ay,n.x,b2.y+12,COL_THIN,LW_THIN);
         drawPoint(n.x,ay); }},
+     cLine("a′b1′",TL,"the true length again",AX,apy,b1p.x,b1p.y),
      {text:`With centre a and radius = the actual TL (${R1(TL)} mm), cut this perpendicular at b2. b2 is ${R1(adv)} mm farther in front of the VP than a - how much farther B is than A; the angle ab2 makes with the locus of a is the TRUE inclination with VP, φ = ${R1(ph*180/Math.PI)}°. Draw the locus of b through b2.`,
       d:()=>{ drawArc(AX,ay,TL*s,ph-toRad(12),ph+toRad(12),false,COL_THIN);
         drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
@@ -1261,17 +1734,21 @@
         drawAngleDimOutward(AX,ay,45,"φ = "+R1(ph*180/Math.PI)+"°",0,ph,false,false);
         drawLine(f.lineStart,b2.y,f.lineEnd,b2.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,b2.y,"Locus of b",COL_LOCUS,FONT_DIM,"left","middle"); }},
-     {text:`Project b2 up to the locus of a′ to get b2′. FV: with centre a′ and radius a′–b2′, strike an arc to cut the locus of b′ at b′. Draw a′b′ thick.`,
+     {text:`Project b2 up to the locus of a′ to get b2′. a′b2′ is the elevation length.`,
       d:()=>{ drawLine(b2.x,b2.y,b2.x,apy,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(b2.x,apy,"b2′",{x:8,y:-12});
-        drawArcWithMidArrow(AX,apy,ELen*s,0,-alpha,true,COL_THIN);
+        drawPoint(b2.x,apy,"b2′",{x:8,y:-12}); }},
+     cLine("a′b2′",ELen,"the elevation length",AX,apy,b2.x,apy),
+     {text:`FV: with centre a′ and radius a′b2′, swing b2′ up to cut the locus of b′ at b′. Draw a′b′ thick.`,
+      d:()=>{ drawArcWithMidArrow(AX,apy,ELen*s,0,-alpha,true,COL_THIN);
         drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
         drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(ELen),8,0.55); }},
-     {text:`Project b1′ down to the locus of a to get b1. TV: with centre a and radius a–b1, strike an arc to cut the locus of b at b. Draw ab thick. Join the final projector b–b′.`,
+     {text:`Project b1′ down to the locus of a to get b1. a b1 is the plan length.`,
       d:()=>{ drawLine(b1p.x,b1p.y,b1p.x,ay,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(b1p.x,ay,"b1",{x:8,y:16});
-        drawArcWithMidArrow(AX,ay,PLen*s,0,beta,false,COL_THIN);
+        drawPoint(b1p.x,ay,"b1",{x:8,y:16}); }},
+     cLine("a b1",PLen,"the plan length",AX,ay,b1p.x,ay),
+     {text:`TV: with centre a and radius a b1, swing b1 down to cut the locus of b at b. Draw ab thick. Join the final projector b–b′.`,
+      d:()=>{ drawArcWithMidArrow(AX,ay,PLen*s,0,beta,false,COL_THIN);
         drawPoint(b.x,b.y,"b",{x:10,y:14});
         drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PLen),8,0.55);
@@ -1315,24 +1792,26 @@
         drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }},
      {text:"Since end A is in the HP, mark a′ on X–Y.",
       d:()=>{ drawPoint(AX,REF,"a′",{x:-20,y:-10}); }},
-     {text:`Set the protractor at θ = ${R1(thD)}° to X–Y at a′, then with compass span = the actual TL = ${R1(TL)} mm, strike an arc to mark helper point b1′. Drop a perpendicular from b1′ down to X–Y (this foot marks the plan length, a′ to that point). Draw the locus of b′ through b1′ - this fixes how far B lies above the HP.`,
+     cScale(TL,"the true length",AX,REF,b1p.x,b1p.y),
+     {text:`Set the protractor at θ = ${R1(thD)}° to X–Y at a′ and draw the line; with the compass at TL, strike an arc across it to mark helper point b1′. Drop a perpendicular from b1′ down to X–Y at m (a′m is the plan length). Draw the locus of b′ through b1′ - this fixes how far B lies above the HP.`,
       d:()=>{ drawAngleDimOutward(AX,REF,45,"θ = "+R1(thD)+"°",0,-th,true,true);
         drawLine(AX,REF,b1p.x,b1p.y,COL_THIN,LW_THIN);
         drawArc(AX,REF,TL*s,-th+toRad(10),-th-toRad(10),true,COL_THIN);
         drawAlignedLabel(AX,REF,b1p.x,b1p.y,"TL = "+R1(TL),8,0.6);
         drawPoint(b1p.x,b1p.y,"b1′",{x:10,y:-12});
         drawLine(b1p.x,b1p.y,m.x,m.y,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(m.x,m.y);
+        drawPoint(m.x,m.y,"m",{x:6,y:12});
         drawLine(f.lineStart,b1p.y,f.lineEnd,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
-     {text:`Set the protractor at φ = ${R1(phD)}° to X–Y at a′ on the other side, then with the same compass span (TL = ${R1(TL)} mm), strike an arc to mark helper point b2. Drop a perpendicular from b2 down to X–Y (this foot marks the elevation length, a′ to that point).`,
+     cLine("a′b1′",TL,"the true length again",AX,REF,b1p.x,b1p.y),
+     {text:`Set the protractor at φ = ${R1(phD)}° to X–Y at a′ on the other side and draw the line; with the compass at TL, strike an arc across it to mark helper point b2. Drop a perpendicular from b2 up to X–Y at n (a′n is the elevation length).`,
       d:()=>{ drawAngleDimOutward(AX,REF,45,"φ = "+R1(phD)+"°",0,ph,false,false);
         drawLine(AX,REF,b2.x,b2.y,COL_THIN,LW_THIN);
         drawArc(AX,REF,TL*s,ph-toRad(10),ph+toRad(10),false,COL_THIN);
         drawAlignedLabel(AX,REF,b2.x,b2.y,"TL = "+R1(TL),8,0.6);
         drawPoint(b2.x,b2.y,"b2",{x:10,y:12});
         drawLine(b2.x,b2.y,n.x,n.y,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(n.x,n.y); }},
+        drawPoint(n.x,n.y,"n",{x:6,y:-12}); }},
      {text:"The depth of b2 below X–Y is how far A lies in front of the VP. Draw the locus of a at this depth and mark a directly below a′.",
       d:()=>{ drawLine(f.lineStart,ay,f.lineEnd,ay,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(f.lineEnd+8,ay,"Locus of a",COL_LOCUS,FONT_DIM,"left","middle");
@@ -1340,15 +1819,18 @@
         drawPoint(AX,ay,"a",{x:-16,y:16}); }},
      {text:"Since end B is in the VP, the locus of b is X–Y itself.",
       d:()=>{ drawText(f.lineEnd+8,REF+14,"Locus of b = X–Y",COL_LOCUS,FONT_DIM,"left","middle"); }},
-     {text:"FV: with centre a′ and the compass span a′–n, strike an arc to cut the locus of b′ at b′. Draw a′b′ thick.",
+     cLine("a′n",EL,"the elevation length",AX,REF,n.x,REF),
+     {text:"FV: with centre a′ and radius a′n, swing n up to cut the locus of b′ at b′. Draw a′b′ thick.",
       d:()=>{ drawArcWithMidArrow(AX,REF,EL*s,0,-alpha,true,COL_THIN);
         drawPoint(fbp.x,fbp.y,"b′",{x:10,y:-12});
         drawLine(AX,REF,fbp.x,fbp.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,REF,fbp.x,fbp.y,"EL = "+R1(EL),8,0.55); }},
-     {text:"Project b1′ down to the locus of a to get b1. TV: with centre a and radius a–b1, strike an arc to cut X–Y at b. Draw ab thick. Join the final projector b–b′.",
+     {text:"Project m down to the locus of a to get b1. a b1 is the plan length.",
       d:()=>{ drawLine(m.x,m.y,b1.x,b1.y,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(b1.x,b1.y,"b1",{x:8,y:16});
-        drawArcWithMidArrow(AX,ay,PL*s,0,-beta,true,COL_THIN);
+        drawPoint(b1.x,b1.y,"b1",{x:8,y:16}); }},
+     cLine("a b1",PL,"the plan length",AX,ay,b1.x,b1.y),
+     {text:"TV: with centre a and radius a b1, swing b1 up to cut X–Y at b. Draw ab thick. Join the final projector b–b′.",
+      d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,0,-beta,true,COL_THIN);
         drawPoint(fb.x,fb.y,"b",{x:10,y:14});
         drawLine(AX,ay,fb.x,fb.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,ay,fb.x,fb.y,"PL = "+R1(PL),8,0.55);
@@ -1376,8 +1858,13 @@
     const bh=ah+rise, bf=af+adv;
     const alpha=Math.atan2(rise,PD), beta=Math.atan2(adv,PD);
 
-    const f=frame(bh+8, bf+8, Math.max(PLen,EL));
-    const s=f.sc, AX=f.AX, REF=f.REF, dimX=AX-52;
+    // Both traces lie behind A along the extension of the line - the frame makes room for them on the left.
+    const tHT=-ah/rise, tVT=-af/adv;
+    const tExt=Math.min(tHT,tVT,0)-0.05;
+    const back=-tExt*PD+12;                              // mm left of a′ taken by the traces and A's dimensions
+
+    const f=frame(bh+8, bf+8, Math.max(PLen,EL)+back);
+    const s=f.sc, AX=f.AX+back*s, REF=f.REF;
     const apy=REF-ah*s, ay=REF+af*s;
 
     const m  ={x:AX+PLen*s, y:apy};
@@ -1385,10 +1872,6 @@
     const b2 ={x:AX+EL*s,   y:ay+adv*s};
     const bp ={x:AX+PD*s,   y:b1p.y};
     const b  ={x:AX+PD*s,   y:b2.y};
-
-    // Both traces lie behind A along the extension of the line.
-    const tHT=-ah/rise, tVT=-af/adv;
-    const tExt=Math.min(tHT,tVT,0)-0.05;
     const fvExt={x:AX+tExt*PD*s, y:apy-tExt*rise*s};
     const tvExt={x:AX+tExt*PD*s, y:ay+tExt*adv*s};
     const hPt ={x:AX+tHT*PD*s, y:REF};
@@ -1396,8 +1879,9 @@
     const vPt ={x:AX+tVT*PD*s, y:REF};
     const VT  ={x:AX+tVT*PD*s, y:apy-tVT*rise*s};
 
-    // X–Y and the loci must reach at least as far left as the traces.
-    const LS=Math.min(f.lineStart, fvExt.x, tvExt.x)-25;
+    // A's dimensions go to the left of the traces (not through them); X–Y and the loci reach past both.
+    const dimX=Math.min(AX-52, fvExt.x-30, tvExt.x-30);
+    const LS=Math.min(f.lineStart, dimX-30);
     const LE=f.lineEnd;
 
     const steps=[
@@ -1419,6 +1903,7 @@
       d:()=>{ drawHorizontalDim(apy-16,AX,m.x,R1(PLen));
         drawLine(m.x,apy,m.x,b1p.y-12,COL_THIN,LW_THIN);
         drawPoint(m.x,apy); }},
+     cScale(TL,"the true length",AX,apy,b1p.x,b1p.y),
      {text:`With centre a′ and radius = the actual TL (${R1(TL)} mm), cut this perpendicular at b1′. b1′ is ${R1(rise)} mm higher than a′ - how much higher B is than A; the angle a′b1′ makes with the locus of a′, read off the protractor, is the TRUE inclination with HP, θ = ${R1(th*180/Math.PI)}°. Draw the locus of b′ through b1′.`,
       d:()=>{ drawArc(AX,apy,TL*s,-th+toRad(12),-th-toRad(12),true,COL_THIN);
         drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
@@ -1427,6 +1912,7 @@
         drawAngleDimOutward(AX,apy,45,"θ = "+R1(th*180/Math.PI)+"°",0,-th,true,true);
         drawLine(LS,b1p.y,LE,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(LE+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     cLine("a′b1′",TL,"the true length again",AX,apy,b1p.x,b1p.y),
      {text:`At a, set the protractor to φ = ${R1(phD)}° to the locus of a - the given inclination to the VP - then with compass span = the actual TL (${R1(TL)} mm), draw a–b2 and strike an arc to mark helper point b2. Draw the locus of b through b2.`,
       d:()=>{ drawAngleDimOutward(AX,ay,45,"φ = "+R1(phD)+"°",0,ph,false,false);
         drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
@@ -1435,17 +1921,21 @@
         drawPoint(b2.x,b2.y,"b2",{x:10,y:12});
         drawLine(LS,b2.y,LE,b2.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
         drawText(LE+8,b2.y,"Locus of b",COL_LOCUS,FONT_DIM,"left","middle"); }},
-     {text:`Project b2 up to the locus of a′ to get b2′. FV: with centre a′ and radius a′–b2′, strike an arc to cut the locus of b′ at b′. Draw a′b′ thick.`,
+     {text:`Project b2 up to the locus of a′ to get b2′. a′b2′ is the elevation length.`,
       d:()=>{ drawLine(b2.x,b2.y,b2.x,apy,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(b2.x,apy,"b2′",{x:8,y:-12});
-        drawArcWithMidArrow(AX,apy,EL*s,0,-alpha,true,COL_THIN);
+        drawPoint(b2.x,apy,"b2′",{x:8,y:-12}); }},
+     cLine("a′b2′",EL,"the elevation length",AX,apy,b2.x,apy),
+     {text:`FV: with centre a′ and radius a′b2′, swing b2′ up to cut the locus of b′ at b′. Draw a′b′ thick.`,
+      d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,0,-alpha,true,COL_THIN);
         drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
         drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(EL),8,0.55); }},
-     {text:`Project b1′ down to the locus of a to get b1. TV: with centre a and radius a–b1, strike an arc to cut the locus of b at b. Draw ab thick. Join the final projector b–b′.`,
+     {text:`Project b1′ down to the locus of a to get b1. a b1 is the plan length.`,
       d:()=>{ drawLine(b1p.x,b1p.y,b1p.x,ay,COL_PROJ,LW_THIN,SOLID,"mid");
-        drawPoint(b1p.x,ay,"b1",{x:8,y:16});
-        drawArcWithMidArrow(AX,ay,PLen*s,0,beta,false,COL_THIN);
+        drawPoint(b1p.x,ay,"b1",{x:8,y:16}); }},
+     cLine("a b1",PLen,"the plan length",AX,ay,b1p.x,ay),
+     {text:`TV: with centre a and radius a b1, swing b1 down to cut the locus of b at b. Draw ab thick. Join the final projector b–b′.`,
+      d:()=>{ drawArcWithMidArrow(AX,ay,PLen*s,0,beta,false,COL_THIN);
         drawPoint(b.x,b.y,"b",{x:10,y:14});
         drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
         drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PLen),8,0.55);
@@ -1474,6 +1964,391 @@
       fourQuadrant:true,
       HT:{x:tHT*PD, y:0, z:af+tHT*adv},
       VT:{x:tVT*PD, y:ah+tVT*rise, z:0}}};
+  }
+
+  /* ================= TL, θ, φ given; position split between A's height and B's front distance ================= */
+  /* B's own front distance is usually the SMALLER of the two here (A ends up the farther point) - unlike the
+     other TL/θ/φ problems above, where A's own full position is given and happens to be the nearer point. So the
+     φ-side construction below is deliberately the mirror image of those: it opens "upward" (toward XY), exactly
+     like the θ-side already does, instead of "downward". */
+  function buildMixedEnds(v){
+    const TL=v.tl, th=v.th, ph=v.ph, ah=v.ah, bf=v.bf;
+    const rise=TL*Math.sin(toRad(th)), adv=TL*Math.sin(toRad(ph));
+    const PL=TL*Math.cos(toRad(th)),  EL=TL*Math.cos(toRad(ph));
+    const af=bf+adv;                                    // A is adv farther from the VP than B
+    const PDf=Math.sqrt(Math.max(0,EL*EL-rise*rise));
+    const alpha=Math.atan2(rise,PDf), beta=Math.atan2(adv,PDf);
+
+    const f=frame(ah+rise, af, Math.max(PL,EL));
+    const s=f.sc, AX=f.AX, REF=f.REF, dimX=AX-52;
+    const apy=REF-ah*s, ay=REF+af*s;
+    const b1p={x:AX+PL*s,y:apy-rise*s};
+    const b2 ={x:AX+EL*s,y:ay-adv*s};
+    const fb ={x:AX+PDf*s,y:b2.y};
+    const fbp={x:AX+PDf*s,y:b1p.y};
+
+    const steps=[
+     {text:"Draw the X–Y reference line.",
+      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }},
+     {text:`Here A's front distance is not given directly - only B's. Since θ and φ fix the shape of the line, A is TL·sinφ = ${R1(TL)} × sin${R1(ph)}° = ${R1(adv)} mm farther in front of the VP than B. So A is ${R1(bf)} + ${R1(adv)} = ${R1(af)} mm in front of the VP.`,
+      d:()=>{}},
+     {text:`Mark a′ ${R1(ah)} mm above X–Y (A is ${R1(ah)} mm above the HP) and draw the locus of a′.`,
+      d:()=>{ drawVerticalDim(dimX,apy,REF,R1(ah));
+        drawLine(f.lineStart,apy,f.lineEnd,apy,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,apy,"Locus of a′",COL_LOCUS,FONT_DIM,"left","middle");
+        drawPoint(AX,apy,"a′",{x:-20,y:-10}); }},
+     {text:`Mark a ${R1(af)} mm below X–Y (the value just found) on the same projector. Draw the locus of a.`,
+      d:()=>{ drawVerticalDim(dimX,REF,ay,R1(af));
+        drawLine(f.lineStart,ay,f.lineEnd,ay,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,ay,"Locus of a",COL_LOCUS,FONT_DIM,"left","middle");
+        drawLine(AX,apy,AX,ay,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(AX,ay,"a",{x:-16,y:16}); }},
+     {text:`Set the angle θ = ${R1(th)}° at a′, measured from the locus of a′.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,45,"θ = "+R1(th)+"°",0,-toRad(th),true,true); }},
+     {text:`From a′ draw a′b1′ = ${R1(TL)} mm (true length) at ${R1(th)}°. Mark b1′.`,
+      d:()=>{ drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
+        drawPoint(b1p.x,b1p.y,"b1′",{x:12,y:-12});
+        drawAlignedLabel(AX,apy,b1p.x,b1p.y,"TL = "+R1(TL),8,0.68); }},
+     {text:`Draw the locus of b′ through b1′. b1′ is ${R1(rise)} mm above the locus of a′ - the height of B above A.`,
+      d:()=>{ drawLine(f.lineStart,b1p.y,f.lineEnd,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     {text:`Set the angle φ = ${R1(ph)}° at a, measured from the locus of a - opening toward X–Y, since B is nearer the VP than A here.`,
+      d:()=>{ drawAngleDimOutward(AX,ay,45,"φ = "+R1(ph)+"°",0,-toRad(ph),true,true); }},
+     {text:`From a draw a b2 = ${R1(TL)} mm (true length) at ${R1(ph)}°. Mark b2.`,
+      d:()=>{ drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
+        drawPoint(b2.x,b2.y,"b2",{x:12,y:-12});
+        drawAlignedLabel(AX,ay,b2.x,b2.y,"TL = "+R1(TL),8,0.68); }},
+     {text:`Draw the locus of b through b2 - this should land ${R1(bf)} mm in front of the VP, matching the given data.`,
+      d:()=>{ drawLine(f.lineStart,b2.y,f.lineEnd,b2.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,b2.y,"Locus of b",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     {text:`Project b1′ down to the locus of a to get b1. a b1 = plan length = ${R1(PL)} mm.`,
+      d:()=>{ drawLine(b1p.x,b1p.y,b1p.x,ay,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b1p.x,ay,"b1",{x:8,y:16}); }},
+     cLine("a b1",PL,"the plan length",AX,ay,b1p.x,ay),
+     {text:"With centre a and radius a b1, rotate b1 to the locus of b.",
+      d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,0,-beta,true,COL_THIN); }},
+     {text:`Mark b and draw the final Top View a–b (thick). TV = ${R1(PL)} mm.`,
+      d:()=>{ drawLine(AX,ay,fb.x,fb.y,COL_THICK,LW_THICK);
+        drawPoint(fb.x,fb.y,"b",{x:10,y:-14}); }},
+     {text:"Project b2 up to the locus of a′ to get b2′.",
+      d:()=>{ drawLine(b2.x,b2.y,b2.x,apy,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b2.x,apy,"b2′",{x:8,y:-12}); }},
+     cLine("a′b2′",EL,"the elevation length",AX,apy,b2.x,apy),
+     {text:"With centre a′ and radius a′ b2′, rotate b2′ to the locus of b′.",
+      d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,0,-alpha,true,COL_THIN); }},
+     {text:`Mark b′ and draw the final Front View a′–b′ (thick). FV = ${R1(EL)} mm. Join the final projector b–b′.`,
+      d:()=>{ drawLine(AX,apy,fbp.x,fbp.y,COL_THICK,LW_THICK);
+        drawPoint(fbp.x,fbp.y,"b′",{x:10,y:-12});
+        drawLine(fb.x,fb.y,fbp.x,fbp.y,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     {text:`Measure the apparent angles: α = ${R1(alpha*180/Math.PI)}° and β = ${R1(beta*180/Math.PI)}°.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,78,"α = "+R1(alpha*180/Math.PI)+"°",0,-alpha,true,true);
+        drawAngleDimOutward(AX,ay,78,"β = "+R1(beta*180/Math.PI)+"°",0,-beta,true,true);
+        drawAlignedLabel(AX,apy,fbp.x,fbp.y,"EL = "+R1(EL),8,0.38);
+        drawAlignedLabel(AX,ay,fb.x,fb.y,"PL = "+R1(PL),-8,0.38); }}
+    ];
+
+    const results=`<b>Final Results:</b>
+      <table>
+        <tr><td>TL</td><td>${R1(TL)}</td><td>θ</td><td>${R1(th)}°</td><td>φ</td><td>${R1(ph)}°</td></tr>
+        <tr><td>EL (a′b′)</td><td>${R1(EL)}</td><td>α</td><td>${R1(alpha*180/Math.PI)}°</td><td>A in front of VP</td><td>${R1(af)}</td></tr>
+        <tr><td>PL (ab)</td><td>${R1(PL)}</td><td>β</td><td>${R1(beta*180/Math.PI)}°</td><td>B above HP</td><td>${R1(ah+rise)}</td></tr>
+      </table>`;
+    return {steps,results,space:{ah:ah, af:af, bh:ah+rise, bf:bf, PD:PDf, TL:TL, th:th, ph:ph}};
+  }
+
+  /* ================= θ (to HP) given, A's height given, B fixed in VP, elevation length given (φ derived) ================= */
+  function buildFixedVPElev(v){
+    const TL=v.tl, th=v.th, ah=v.ah, EL=v.el;
+    const thr=toRad(th);
+    const rise=TL*Math.sin(thr), PL=TL*Math.cos(thr);
+    const ph=Math.acos(Math.min(1,Math.max(-1,EL/TL)));
+    const adv=TL*Math.sin(ph);
+    const af=adv;                                        // B is in the VP, so A is the whole TL·sinφ in front of it
+    const bh=ah+rise;
+    const PD=Math.sqrt(Math.max(0,EL*EL-rise*rise));
+    const alpha=Math.atan2(rise,PD), beta=Math.atan2(adv,PD);
+    const phD=ph*180/Math.PI;
+
+    const f=frame(bh+8, af+8, Math.max(PL,EL));
+    const s=f.sc, AX=f.AX, REF=f.REF, dimX=AX-52;
+    const apy=REF-ah*s, ay=REF+af*s;
+    const b1p={x:AX+PL*s, y:apy-rise*s};                 // a′b1′ = TL at θ
+    const m  ={x:AX+PL*s, y:apy};                        // foot of b1′ on the locus of a′: a′m = plan length
+    const bp ={x:AX+PD*s, y:b1p.y};                      // final b′
+    const b  ={x:AX+PD*s, y:REF};                        // final b - on X–Y, since B is in the VP
+    const b2p={x:AX+EL*s, y:apy};                        // b′ swung down to the locus of a′
+    const b2 ={x:AX+EL*s, y:REF};                        // ... and projected to the locus of b (X–Y)
+    const toA=Math.atan2(ay-REF,AX-b.x);                 // direction b → a, for the short arc that fixes a
+
+    const steps=[
+     {text:"Draw the X–Y reference line.",
+      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }},
+     {text:`Mark a′ ${R1(ah)} mm above X–Y (A is ${R1(ah)} mm above the HP) and draw the locus of a′. A's distance in front of the VP is not given - it is found later.`,
+      d:()=>{ drawVerticalDim(dimX,apy,REF,R1(ah));
+        drawLine(f.lineStart,apy,f.lineEnd,apy,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,apy,"Locus of a′",COL_LOCUS,FONT_DIM,"left","middle");
+        drawPoint(AX,apy,"a′",{x:-20,y:-10}); }},
+     {text:`θ is a true angle, so it is set with the true length: at a′ set θ = ${R1(th)}° to the locus of a′ and draw a′b1′ = TL = ${R1(TL)} mm. Draw the locus of b′ through b1′ - B is ${R1(rise)} mm higher than A.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,45,"θ = "+R1(th)+"°",0,-thr,true,true);
+        drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
+        drawPoint(b1p.x,b1p.y,"b1′",{x:12,y:-12});
+        drawAlignedLabel(AX,apy,b1p.x,b1p.y,"TL = "+R1(TL),8,0.6);
+        drawLine(f.lineStart,b1p.y,f.lineEnd,b1p.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,b1p.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     {text:`Drop a perpendicular from b1′ to the locus of a′ at m. a′m is the plan length of the line: PL = TL·cos θ = ${R1(PL)} mm.`,
+      d:()=>{ drawLine(b1p.x,b1p.y,m.x,m.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(m.x,m.y,"m",{x:8,y:12});
+        drawHorizontalDim(apy+Math.min(28,(REF-apy)*0.7),AX,m.x,"PL = "+R1(PL)); }},
+     {text:"End B is in the VP, so its top view b lies on X–Y: the locus of b is X–Y itself.",
+      d:()=>{ drawText(f.lineEnd+8,REF+14,"Locus of b = X–Y",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     cScale(EL,"the given elevation length",AX,apy,bp.x,bp.y),
+     {text:`With centre a′ and radius = the given elevation length, ${R1(EL)} mm, cut the locus of b′ at b′. Draw a′b′ thick - the front view. Its angle with the locus of a′ is α = ${R1(alpha*180/Math.PI)}°.`,
+      d:()=>{ drawArc(AX,apy,EL*s,-alpha+toRad(9),-alpha-toRad(9),true,COL_THIN);
+        drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
+        drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(EL),8,0.55);
+        drawAngleDimOutward(AX,apy,75,"α = "+R1(alpha*180/Math.PI)+"°",0,-alpha,true,true); }},
+     {text:"Project b′ straight down to X–Y to get b - the top view of B, on X–Y because B is in the VP.",
+      d:()=>{ drawLine(bp.x,bp.y,b.x,b.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b.x,b.y,"b",{x:10,y:-14}); }},
+     {text:"Produce the projector of a′ down below X–Y - end a of the top view lies somewhere on it.",
+      d:()=>{ drawLine(AX,apy,AX,ay+14,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     cLine("a′m",PL,"the plan length",AX,apy,m.x,m.y),
+     {text:`With centre b and radius a′m (the plan length, ${R1(PL)} mm), cut the produced projector at a. Draw the locus of a through a: A is ${R1(af)} mm in front of the VP.`,
+      d:()=>{ drawArc(b.x,b.y,PL*s,toA-toRad(8),toA+toRad(8),false,COL_THIN);
+        drawPoint(AX,ay,"a",{x:-16,y:16});
+        drawLine(f.lineStart,ay,f.lineEnd,ay,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,ay,"Locus of a",COL_LOCUS,FONT_DIM,"left","middle");
+        drawVerticalDim(dimX,REF,ay,R1(af)); }},
+     {text:`Join a–b thick - the top view, PL = ${R1(PL)} mm. Its angle with the locus of a is β = ${R1(beta*180/Math.PI)}°.`,
+      d:()=>{ drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PL),8,0.55);
+        drawAngleDimOutward(AX,ay,75,"β = "+R1(beta*180/Math.PI)+"°",0,-beta,true,true); }},
+     cLine("a′b′",EL,"the elevation length",AX,apy,bp.x,bp.y),
+     {text:"To find φ, rotate the front view: with centre a′ and radius a′b′, swing b′ down to the locus of a′ at b2′. Project b2′ down to the locus of b (X–Y) at b2.",
+      d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,-alpha,0,false,COL_THIN);
+        drawPoint(b2p.x,b2p.y,"b2′",{x:8,y:-12});
+        drawLine(b2p.x,b2p.y,b2.x,b2.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b2.x,b2.y,"b2",{x:8,y:-12}); }},
+     {text:`Join a–b2: it is the true length again, TL = ${R1(TL)} mm, and its angle with the locus of a is the true inclination to the VP, φ = ${R1(phD)}°.`,
+      d:()=>{ drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
+        drawAlignedLabel(AX,ay,b2.x,b2.y,"TL = "+R1(TL),-8,0.65);
+        drawAngleDimOutward(AX,ay,45,"φ = "+R1(phD)+"°",0,-ph,true,true); }}
+    ];
+
+    return {steps,results:"",space:{ah:ah, af:af, bh:bh, bf:0, PD:PD, TL:TL, th:th, ph:phD}};
+  }
+
+  /* ================= TL, one TRUE angle + A's position + the apparent angle of the FV given ================= */
+  /* whichTrue: "ph" (true angle given is to the VP, user's variant #8) or "th" (true angle given is to the HP, variant #9) */
+  function buildTrueAndApparent(v,whichTrue){
+    const TL=v.tl, ah=v.ah, af=v.af, alphaD=v.alpha;
+    const alpha=toRad(alphaD);
+    let th,ph,rise,adv,EL,PL,PD;
+    if(whichTrue==="ph"){
+      ph=toRad(v.ph); adv=TL*Math.sin(ph); EL=TL*Math.cos(ph);
+      rise=EL*Math.sin(alpha); PD=EL*Math.cos(alpha);
+      th=Math.asin(Math.min(1,rise/TL));
+      PL=Math.sqrt(PD*PD+adv*adv);
+    } else {
+      th=toRad(v.th); rise=TL*Math.sin(th); PL=TL*Math.cos(th);
+      PD=rise/Math.tan(alpha); EL=Math.sqrt(PD*PD+rise*rise);
+      adv=Math.sqrt(Math.max(0,PL*PL-PD*PD));
+      ph=Math.asin(Math.min(1,adv/TL));
+    }
+    const bh=ah+rise, bf=af+adv;
+    const beta=Math.atan2(adv,PD);
+    const thD=th*180/Math.PI, phD=ph*180/Math.PI, betaD=beta*180/Math.PI;
+
+    const f=frame(bh+8, bf+8, Math.max(PL,EL));
+    const s=f.sc, AX=f.AX, REF=f.REF, dimX=AX-52;
+    const apy=REF-ah*s, ay=REF+af*s;
+    const bp ={x:AX+PD*s, y:apy-rise*s};                 // final b′
+    const b  ={x:AX+PD*s, y:ay+adv*s};                   // final b
+    const b1p={x:AX+PL*s, y:bp.y};                       // TL at θ from a′, on the locus of b′
+    const b1 ={x:AX+PL*s, y:ay};                         // ... projected to the locus of a: a b1 = plan length
+    const b2p={x:AX+EL*s, y:apy};                        // on the locus of a′: a′ b2′ = elevation length
+    const b2 ={x:AX+EL*s, y:b.y};                        // TL at φ from a, on the locus of b
+    const aLen=EL*s+Math.min(40,EL*s*0.25);              // the α line runs a little past b′
+
+    const steps=[
+     {text:"Draw the X–Y reference line.",
+      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }},
+     {text:`Mark a′ ${R1(ah)} mm above X–Y and a ${R1(af)} mm below X–Y on the same projector. Draw the loci of a′ and a.`,
+      d:()=>{ drawVerticalDim(dimX,apy,REF,R1(ah));
+        drawVerticalDim(dimX,REF,ay,R1(af));
+        drawLine(f.lineStart,apy,f.lineEnd,apy,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,apy,"Locus of a′",COL_LOCUS,FONT_DIM,"left","middle");
+        drawLine(f.lineStart,ay,f.lineEnd,ay,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,ay,"Locus of a",COL_LOCUS,FONT_DIM,"left","middle");
+        drawPoint(AX,apy,"a′",{x:-20,y:-10});
+        drawLine(AX,apy,AX,ay,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(AX,ay,"a",{x:-16,y:16}); }}
+    ];
+    const locusBp=()=>{ drawLine(f.lineStart,bp.y,f.lineEnd,bp.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+      drawText(f.lineEnd+8,bp.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); };
+    const locusB=()=>{ drawLine(f.lineStart,b.y,f.lineEnd,b.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+      drawText(f.lineEnd+8,b.y,"Locus of b",COL_LOCUS,FONT_DIM,"left","middle"); };
+
+    if(whichTrue==="ph") steps.push(
+     {text:`φ is a true angle, so it is set with the true length, in the top view: at a set φ = ${R1(v.ph)}° to the locus of a and draw a b2 = TL = ${R1(TL)} mm. Draw the locus of b through b2 - B is ${R1(adv)} mm farther in front of the VP than A.`,
+      d:()=>{ drawAngleDimOutward(AX,ay,45,"φ = "+R1(v.ph)+"°",0,ph,false,false);
+        drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
+        drawPoint(b2.x,b2.y,"b2",{x:10,y:12});
+        drawAlignedLabel(AX,ay,b2.x,b2.y,"TL = "+R1(TL),8,0.6);
+        locusB(); }},
+     {text:`Project b2 up to the locus of a′ at b2′. a′b2′ is the length of the front view: EL = TL·cos φ = ${R1(EL)} mm.`,
+      d:()=>{ drawLine(b2.x,b2.y,b2p.x,b2p.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b2p.x,b2p.y,"b2′",{x:8,y:-12}); }},
+     {text:`At a′ set the protractor to the given α = ${R1(alphaD)}° and draw a line at α to the locus of a′ - the front view lies along it.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,75,"α = "+R1(alphaD)+"°",0,-alpha,true,true);
+        drawLine(AX,apy,AX+aLen*Math.cos(alpha),apy-aLen*Math.sin(alpha),COL_THIN,LW_THIN); }},
+     cLine("a′b2′",EL,"the elevation length",AX,apy,b2p.x,b2p.y),
+     {text:`With centre a′ and radius a′b2′, swing b2′ up to cut the α line at b′. Draw a′b′ thick - the front view - and the locus of b′ through b′.`,
+      d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,0,-alpha,true,COL_THIN);
+        drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
+        drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(EL),8,0.5);
+        locusBp(); }},
+     {text:`Project b′ down to the locus of b to get b. Draw a–b thick - the top view, PL = ${R1(PL)} mm, at β = ${R1(betaD)}° to the locus of a.`,
+      d:()=>{ drawLine(bp.x,bp.y,b.x,b.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b.x,b.y,"b",{x:10,y:14});
+        drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PL),-8,0.5);
+        drawAngleDimOutward(AX,ay,75,"β = "+R1(betaD)+"°",0,beta,false,false); }},
+     cLine("a b2",TL,"the true length, already drawn in the top view",AX,ay,b2.x,b2.y),
+     {text:`To find θ: with centre a′ and radius TL = ${R1(TL)} mm, cut the locus of b′ at b1′. Join a′b1′ - the true length; its angle with the locus of a′ is the true inclination to the HP, θ = ${R1(thD)}°.`,
+      d:()=>{ drawArc(AX,apy,TL*s,-th+toRad(8),-th-toRad(8),true,COL_THIN);
+        drawPoint(b1p.x,b1p.y,"b1′",{x:12,y:-12});
+        drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
+        drawAlignedLabel(AX,apy,b1p.x,b1p.y,"TL = "+R1(TL),8,0.7);
+        drawAngleDimOutward(AX,apy,45,"θ = "+R1(thD)+"°",0,-th,true,true); }},
+     {text:`Check: project b1′ down to the locus of a at b1. a b1 is the plan length.`,
+      d:()=>{ drawLine(b1p.x,b1p.y,b1.x,b1.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b1.x,b1.y,"b1",{x:8,y:-12}); }},
+     cLine("a b",PL,"the plan length",AX,ay,b.x,b.y),
+     {text:`With centre a and radius a b, swing b up to the locus of a: it lands exactly on b1, confirming the construction.`,
+      d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,beta,0,true,COL_THIN); }}
+    );
+    else steps.push(
+     {text:`θ is a true angle, so it is set with the true length, in the front view: at a′ set θ = ${R1(v.th)}° to the locus of a′ and draw a′b1′ = TL = ${R1(TL)} mm. Draw the locus of b′ through b1′ - B is ${R1(rise)} mm higher than A.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,45,"θ = "+R1(v.th)+"°",0,-th,true,true);
+        drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
+        drawPoint(b1p.x,b1p.y,"b1′",{x:12,y:-12});
+        drawAlignedLabel(AX,apy,b1p.x,b1p.y,"TL = "+R1(TL),8,0.7);
+        locusBp(); }},
+     {text:`At a′ draw a line at the given α = ${R1(alphaD)}° to the locus of a′; it cuts the locus of b′ at b′. Draw a′b′ thick - the front view, EL = ${R1(EL)} mm.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,75,"α = "+R1(alphaD)+"°",0,-alpha,true,true);
+        drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
+        drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(EL),8,0.5); }},
+     {text:`Project b1′ down to the locus of a at b1. a b1 is the plan length: PL = TL·cos θ = ${R1(PL)} mm.`,
+      d:()=>{ drawLine(b1p.x,b1p.y,b1.x,b1.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b1.x,b1.y,"b1",{x:8,y:-12}); }},
+     {text:"Project b′ down below X–Y - end b of the top view lies somewhere on this projector.",
+      d:()=>{ drawLine(bp.x,bp.y,b.x,b.y+14,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     cLine("a b1",PL,"the plan length",AX,ay,b1.x,b1.y),
+     {text:`With centre a and radius a b1, swing b1 to cut the projector at b. Draw a–b thick - the top view, at β = ${R1(betaD)}° to the locus of a - and the locus of b through b.`,
+      d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,0,beta,false,COL_THIN);
+        drawPoint(b.x,b.y,"b",{x:10,y:14});
+        drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
+        drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PL),-8,0.5);
+        drawAngleDimOutward(AX,ay,75,"β = "+R1(betaD)+"°",0,beta,false,false);
+        locusB(); }},
+     cLine("a′b′",EL,"the elevation length",AX,apy,bp.x,bp.y),
+     {text:"To find φ, rotate the front view: with centre a′ and radius a′b′, swing b′ down to the locus of a′ at b2′. Project b2′ down to the locus of b at b2.",
+      d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,-alpha,0,false,COL_THIN);
+        drawPoint(b2p.x,b2p.y,"b2′",{x:8,y:-12});
+        drawLine(b2p.x,b2p.y,b2.x,b2.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b2.x,b2.y,"b2",{x:10,y:12}); }},
+     {text:`Join a–b2: the true length again, TL = ${R1(TL)} mm - the self check. Its angle with the locus of a is the true inclination to the VP, φ = ${R1(phD)}°.`,
+      d:()=>{ drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
+        drawAlignedLabel(AX,ay,b2.x,b2.y,"TL = "+R1(TL),8,0.7);
+        drawAngleDimOutward(AX,ay,45,"φ = "+R1(phD)+"°",0,ph,false,false); }}
+    );
+
+    return {steps,results:"",space:{ah:ah, af:af, bh:bh, bf:bf, PD:PD, TL:TL, th:thD, ph:phD}};
+  }
+  function buildApparentFromPhi(v){ return buildTrueAndApparent(v,"ph"); }
+  function buildApparentFromTheta(v){ return buildTrueAndApparent(v,"th"); }
+
+  /* ================= Apparent length AND angle given directly for BOTH the FV and the TV (TL not given) ================= */
+  function buildBothApparent(v){
+    const ah=v.ah, af=v.af, EL=v.el, alpha=toRad(v.alpha), PL=v.pl, beta=toRad(v.beta);
+    const rise=EL*Math.sin(alpha), adv=PL*Math.sin(beta);
+    const PD=(EL*Math.cos(alpha)+PL*Math.cos(beta))/2;   // the two agree (validated) - the average absorbs rounding
+    const TL=Math.sqrt(PD*PD+rise*rise+adv*adv);
+    const th=Math.asin(Math.min(1,rise/TL)), ph=Math.asin(Math.min(1,adv/TL));
+    const thD=th*180/Math.PI, phD=ph*180/Math.PI;
+    const bh=ah+rise, bf=af+adv;
+
+    const f=frame(bh+8, bf+8, Math.max(PL,EL));
+    const s=f.sc, AX=f.AX, REF=f.REF, dimX=AX-52;
+    const apy=REF-ah*s, ay=REF+af*s;
+    const bp ={x:AX+PD*s, y:apy-rise*s};
+    const b  ={x:AX+PD*s, y:ay+adv*s};
+    const b1 ={x:AX+PL*s, y:ay},  b1p={x:AX+PL*s, y:bp.y};     // plan swung parallel to X–Y, then projected up
+    const b2p={x:AX+EL*s, y:apy}, b2 ={x:AX+EL*s, y:b.y};      // elevation swung parallel to X–Y, then projected down
+
+    const steps=[
+     {text:"Draw the X–Y reference line.",
+      d:()=>{ drawLine(f.lineStart,REF,f.lineEnd,REF,COL_AXIS,LW_THIN);
+        drawText(f.lineStart,REF-10,"X","#111",FONT_MAIN,"left","bottom");
+        drawText(f.lineEnd,REF-10,"Y","#111",FONT_MAIN,"right","bottom"); }},
+     {text:`Mark a′ ${R1(ah)} mm above X–Y and a ${R1(af)} mm below X–Y on the same projector. Draw the loci of a′ and a.`,
+      d:()=>{ drawVerticalDim(dimX,apy,REF,R1(ah));
+        drawVerticalDim(dimX,REF,ay,R1(af));
+        drawLine(f.lineStart,apy,f.lineEnd,apy,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,apy,"Locus of a′",COL_LOCUS,FONT_DIM,"left","middle");
+        drawLine(f.lineStart,ay,f.lineEnd,ay,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,ay,"Locus of a",COL_LOCUS,FONT_DIM,"left","middle");
+        drawPoint(AX,apy,"a′",{x:-20,y:-10});
+        drawLine(AX,apy,AX,ay,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(AX,ay,"a",{x:-16,y:16}); }},
+     {text:`Front view: at a′ set α = ${R1(v.alpha)}° to the locus of a′ and draw a′b′ = ${R1(EL)} mm (thick). Draw the locus of b′ through b′.`,
+      d:()=>{ drawAngleDimOutward(AX,apy,75,"α = "+R1(v.alpha)+"°",0,-alpha,true,true);
+        drawLine(AX,apy,bp.x,bp.y,COL_THICK,LW_THICK);
+        drawPoint(bp.x,bp.y,"b′",{x:10,y:-12});
+        drawAlignedLabel(AX,apy,bp.x,bp.y,"EL = "+R1(EL),8,0.5);
+        drawLine(f.lineStart,bp.y,f.lineEnd,bp.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,bp.y,"Locus of b′",COL_LOCUS,FONT_DIM,"left","middle"); }},
+     {text:`Top view: at a set β = ${R1(v.beta)}° to the locus of a and draw a–b = ${R1(PL)} mm (thick). Draw the locus of b through b. Join b–b′: both ends land on one projector, so the data is consistent.`,
+      d:()=>{ drawAngleDimOutward(AX,ay,75,"β = "+R1(v.beta)+"°",0,beta,false,false);
+        drawLine(AX,ay,b.x,b.y,COL_THICK,LW_THICK);
+        drawPoint(b.x,b.y,"b",{x:10,y:12});
+        drawAlignedLabel(AX,ay,b.x,b.y,"PL = "+R1(PL),-8,0.5);
+        drawLine(f.lineStart,b.y,f.lineEnd,b.y,COL_LOCUS,LW_THIN,PATTERN_LOCUS);
+        drawText(f.lineEnd+8,b.y,"Locus of b",COL_LOCUS,FONT_DIM,"left","middle");
+        drawLine(b.x,b.y,bp.x,bp.y,COL_PROJ,LW_THIN,SOLID,"mid"); }},
+     cLine("a b",PL,"the length of the top view",AX,ay,b.x,b.y),
+     {text:"Rotate the top view: with centre a and radius ab, swing b parallel to X–Y to b1 on the locus of a. Project b1 up to the locus of b′ to get b1′.",
+      d:()=>{ drawArcWithMidArrow(AX,ay,PL*s,beta,0,true,COL_THIN);
+        drawPoint(b1.x,b1.y,"b1",{x:8,y:-12});
+        drawLine(b1.x,b1.y,b1p.x,b1p.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b1p.x,b1p.y,"b1′",{x:10,y:-12}); }},
+     {text:`Join a′–b1′: this is the TRUE LENGTH, TL = ${R1(TL)} mm. Its angle with the locus of a′ is the true inclination to the HP, θ = ${R1(thD)}°.`,
+      d:()=>{ drawLine(AX,apy,b1p.x,b1p.y,COL_THIN,LW_THIN);
+        drawAlignedLabel(AX,apy,b1p.x,b1p.y,"TL = "+R1(TL),8,0.7);
+        drawAngleDimOutward(AX,apy,45,"θ = "+R1(thD)+"°",0,-th,true,true); }},
+     cLine("a′b′",EL,"the length of the front view",AX,apy,bp.x,bp.y),
+     {text:"Rotate the front view: with centre a′ and radius a′b′, swing b′ parallel to X–Y to b2′ on the locus of a′. Project b2′ down to the locus of b to get b2.",
+      d:()=>{ drawArcWithMidArrow(AX,apy,EL*s,-alpha,0,false,COL_THIN);
+        drawPoint(b2p.x,b2p.y,"b2′",{x:8,y:-12});
+        drawLine(b2p.x,b2p.y,b2.x,b2.y,COL_PROJ,LW_THIN,SOLID,"mid");
+        drawPoint(b2.x,b2.y,"b2",{x:10,y:12}); }},
+     {text:`Join a–b2: the true length again, TL = ${R1(TL)} mm - the self check. Its angle with the locus of a is the true inclination to the VP, φ = ${R1(phD)}°.`,
+      d:()=>{ drawLine(AX,ay,b2.x,b2.y,COL_THIN,LW_THIN);
+        drawAlignedLabel(AX,ay,b2.x,b2.y,"TL = "+R1(TL),8,0.7);
+        drawAngleDimOutward(AX,ay,45,"φ = "+R1(phD)+"°",0,ph,false,false); }}
+    ];
+
+    return {steps,results:"",space:{ah:ah, af:af, bh:bh, bf:bf, PD:PD, TL:TL, th:thD, ph:phD}};
   }
 
   const PROBLEMS=[
@@ -1623,7 +2498,113 @@
         if(s1*s1+s2*s2>=1) return "θ and φ are too large together - sin²θ + sin²φ must be less than 1 for one end to lie in the HP and the other in the VP.";
         return null; },
       build:buildInclinedEnds },
-    { title:"Problem 11 - Locate the Horizontal Trace (HT) and Vertical Trace (VT)",
+    { title:"Problem 11 - TL, θ, φ given; A's height and B's front distance given",
+      fields:[
+        {id:"tl", label:"True length TL", unit:"mm"},
+        {id:"th", label:"Inclination to HP (θ)", unit:"°"},
+        {id:"ph", label:"Inclination to VP (φ)", unit:"°"},
+        {id:"ah", label:"A above HP", unit:"mm"},
+        {id:"bf", label:"B in front of VP", unit:"mm"}],
+      defaults:{tl:85, th:35, ph:40, ah:20, bf:15},
+      statement:v=>`A line AB, ${R1(v.tl)} mm long, has its end A ${R1(v.ah)} mm above the HP. The line makes an angle of ${R1(v.th)}° with the HP and ${R1(v.ph)}° with the VP. End B of the line is ${R1(v.bf)} mm in front of the VP. Draw the projections of the line by the first angle method.`,
+      validate:v=>{
+        if(v.tl<=0) return "True length must be positive.";
+        if(v.th<0||v.ph<0) return "Angles cannot be negative.";
+        if(v.th+v.ph>90.0001) return "θ + φ must not exceed 90° - otherwise the line cannot exist.";
+        if(v.ah<0||v.bf<0) return "Position cannot be negative in the first quadrant.";
+        return null; },
+      build:buildMixedEnds },
+    { title:"Problem 12 - θ to HP, A's height, B in VP, and elevation length given",
+      fields:[
+        {id:"tl", label:"True length TL", unit:"mm"},
+        {id:"th", label:"Inclination to HP (θ)", unit:"°"},
+        {id:"ah", label:"A above HP", unit:"mm"},
+        {id:"el", label:"Elevation length (a′b′)", unit:"mm"},
+        {id:"_bvp", label:"B in front of VP", unit:"mm (B is in the VP)", fixed:0}],
+      defaults:{tl:85, th:30, ah:15, el:60},
+      statement:v=>`A line AB, ${R1(v.tl)} mm long, is inclined at an angle of ${R1(v.th)}° to the HP. Its end A is ${R1(v.ah)} mm above the HP and the other end B is in the VP. The elevation length of the line is ${R1(v.el)} mm. Draw the projections of line AB, assuming it to be in the first quadrant.`,
+      validate:v=>{
+        if(v.tl<=0) return "True length must be positive.";
+        if(v.th<=0||v.th>=90) return "θ must be between 0° and 90°.";
+        if(v.ah<0) return "Position of A cannot be negative in the first quadrant.";
+        if(v.el<=0||v.el>=v.tl) return "Elevation length must be positive and shorter than the true length.";
+        const rise=v.tl*Math.sin(v.th*Math.PI/180);
+        if(v.el<=rise) return "Elevation length must be greater than TL·sinθ (the height difference), so a valid φ exists.";
+        return null; },
+      build:buildFixedVPElev },
+    { title:"Problem 13 - φ to VP and the apparent inclination of the FV given",
+      fields:[
+        {id:"tl",   label:"True length TL", unit:"mm"},
+        {id:"ph",   label:"Inclination to VP (φ)", unit:"°"},
+        {id:"ah",   label:"A above HP", unit:"mm"},
+        {id:"af",   label:"A in front of VP", unit:"mm"},
+        {id:"alpha",label:"Apparent inclination of FV (α) to XY", unit:"°"}],
+      defaults:{tl:65, ph:35, ah:30, af:10, alpha:45},
+      statement:v=>`A line AB, ${R1(v.tl)} mm long, is inclined at ${R1(v.ph)}° to the VP. Its end A is ${R1(v.ah)} mm above the HP and ${R1(v.af)} mm in front of the VP. The front view of the line is at ${R1(v.alpha)}° to XY. Draw the projections of line AB, assuming it to be in the first quadrant.`,
+      validate:v=>{
+        if(v.tl<=0) return "True length must be positive.";
+        if(v.ph<=0||v.ph>=90) return "φ must be between 0° and 90°.";
+        if(v.alpha<=0||v.alpha>=90) return "α must be between 0° and 90°.";
+        if(v.ah<0||v.af<0) return "Position of A cannot be negative in the first quadrant.";
+        const EL=v.tl*Math.cos(v.ph*Math.PI/180);
+        const rise=EL*Math.sin(v.alpha*Math.PI/180);
+        if(rise>=v.tl) return "This combination of φ and α is impossible - the height difference it implies exceeds the true length.";
+        return null; },
+      build:buildApparentFromPhi },
+    { title:"Problem 14 - θ to HP and the apparent inclination of the FV given",
+      fields:[
+        {id:"tl",   label:"True length TL", unit:"mm"},
+        {id:"th",   label:"Inclination to HP (θ)", unit:"°"},
+        {id:"ah",   label:"A above HP", unit:"mm"},
+        {id:"af",   label:"A in front of VP", unit:"mm"},
+        {id:"alpha",label:"Apparent inclination of FV (α) to XY", unit:"°"}],
+      defaults:{tl:75, th:35, ah:20, af:10, alpha:45},
+      statement:v=>`A line AB, ${R1(v.tl)} mm long, is inclined at ${R1(v.th)}° to the HP. Its end A is ${R1(v.ah)} mm above the HP and ${R1(v.af)} mm in front of the VP. The front view of the line is at ${R1(v.alpha)}° to XY. Draw the projections of line AB, assuming it to be in the first quadrant.`,
+      validate:v=>{
+        if(v.tl<=0) return "True length must be positive.";
+        if(v.th<=0||v.th>=90) return "θ must be between 0° and 90°.";
+        if(v.alpha<=0||v.alpha>=90) return "α must be between 0° and 90°.";
+        if(v.ah<0||v.af<0) return "Position of A cannot be negative in the first quadrant.";
+        const rise=v.tl*Math.sin(v.th*Math.PI/180);
+        const PD=rise/Math.tan(v.alpha*Math.PI/180);
+        const PL=v.tl*Math.cos(v.th*Math.PI/180);
+        if(PD>=PL) return "This combination of θ and α is impossible - PD would not be shorter than the plan length.";
+        return null; },
+      build:buildApparentFromTheta },
+    { title:"Problem 15 - Apparent length & angle of FV and TV both given (TL not given)",
+      fields:[
+        {id:"ah",     label:"A above HP", unit:"mm"},
+        {id:"af",     label:"A in front of VP", unit:"mm"},
+        {id:"el",     label:"FV length (a′b′)", unit:"mm"},
+        {id:"alpha",  label:"FV inclination (α) to XY", unit:"°"},
+        {id:"pl",     label:"TV length (ab)", unit:"mm"},
+        {id:"beta",   label:"TV inclination (β) to XY", unit:"°"}],
+      defaults:{ah:15, af:10, el:50, alpha:45, pl:50, beta:45},
+      statement:v=>`The front view and top view of a line AB are inclined at ${R1(v.alpha)}° and ${R1(v.beta)}° to XY respectively, and measure ${R1(v.el)} mm and ${R1(v.pl)} mm. End A is ${R1(v.ah)} mm above the HP and ${R1(v.af)} mm in front of the VP. Complete the projections of the line to find its true length and true inclinations with the HP and VP.`,
+      validate:v=>{
+        if(v.el<=0||v.pl<=0) return "Both view lengths must be positive.";
+        if(v.alpha<=0||v.alpha>=90||v.beta<=0||v.beta>=90) return "Both angles must be between 0° and 90°.";
+        if(v.ah<0||v.af<0) return "Position of A cannot be negative in the first quadrant.";
+        const PDe=v.el*Math.cos(v.alpha*Math.PI/180), PDp=v.pl*Math.cos(v.beta*Math.PI/180);
+        if(Math.abs(PDe-PDp)>0.5) return "Inconsistent data: the FV and TV must imply the same horizontal distance between the projectors (FV length × cos α must equal TV length × cos β).";
+        return null; },
+      build:buildBothApparent },
+    { title:"Problem 16 - Positions of both ends given; solved by the auxiliary plane method",
+      fields:[
+        {id:"ah", label:"A above HP", unit:"mm"},
+        {id:"af", label:"A in front of VP", unit:"mm"},
+        {id:"bh", label:"B above HP", unit:"mm"},
+        {id:"bf", label:"B in front of VP", unit:"mm"},
+        {id:"pd", label:"Projector distance", unit:"mm"}],
+      defaults:{ah:15, af:20, bh:55, bf:50, pd:55},
+      statement:v=>`End A of a line AB is ${R1(v.ah)} mm above the HP and ${R1(v.af)} mm in front of the VP. End B is ${R1(v.bh)} mm above the HP and ${R1(v.bf)} mm in front of the VP. The distance between the projectors of the end points is ${R1(v.pd)} mm. Draw the projections of the line and find its true length and true inclinations with the reference planes by the auxiliary plane method.`,
+      validate:v=>{
+        if(v.pd<=0) return "Projector distance must be positive.";
+        if(v.bh<=v.ah) return "For this first-quadrant problem, end B must be higher above the HP than end A.";
+        if(v.bf<=v.af) return "For this first-quadrant problem, end B must be farther in front of the VP than end A.";
+        return null; },
+      build:buildAuxPlaneEnds },
+    { title:"Problem 17 - Locate the Horizontal Trace (HT) and Vertical Trace (VT)",
       fields:[
         {id:"tl", label:"True length TL", unit:"mm"},
         {id:"ph", label:"Inclination to VP (φ)", unit:"°"},
@@ -1643,7 +2624,60 @@
       build:buildHTVT }
   ];;;;
 
+  /* ---- Final results: every quantity of the line that is NOT in the given data ----
+     Worked out from the finished geometry (s = the space data every problem returns: A at the projector x = 0,
+     B at x = PD, heights above the HP and distances in front of the VP, true length, θ and φ in degrees). */
+  function lineResults(s,prob){
+    const given={};
+    (prob.fields||[]).forEach(f=>{ const k={tl:"TL",th:"th",ph:"ph",pl:"pl",el:"el",pd:"PD",ahp:"ah",ah:"ah",_ahp:"ah",
+      avp:"af",af:"af",bh:"bh",bf:"bf",_bvp:"bf",alpha:"alpha",beta:"beta"}[f.id]; if(k) given[k]=1; });
+    if(/parallel to the VP/i.test(prob.title)){ given.ph=1; given.el=1; }      // parallel: its inclination (0°) and TL view are given
+    if(/parallel to the HP/i.test(prob.title)){ given.th=1; given.pl=1; }
+    const dh=s.bh-s.ah, df=s.bf-s.af, PD=s.PD;
+    const deg=r=>r*180/Math.PI, mm=x=>R1(x)+" mm", dg=x=>R1(x)+"°";
+    const pos=(v,up,down)=>R1(Math.abs(v))+" mm "+(v>=-1e-9?up:down);
+    const rows=[
+      ["TL","True length TL",mm(s.TL)],
+      ["th","Inclination to HP, θ",dg(s.th)],
+      ["ph","Inclination to VP, φ",dg(s.ph)],
+      ["el","Elevation (FV) length a′b′",mm(Math.hypot(PD,dh))],
+      ["pl","Plan (TV) length ab",mm(Math.hypot(PD,df))],
+      ["alpha","FV inclination to XY, α",dg(PD>1e-9?deg(Math.atan(Math.abs(dh)/PD)):90)],
+      ["beta","TV inclination to XY, β",dg(PD>1e-9?deg(Math.atan(Math.abs(df)/PD)):90)],
+      ["PD","Projector distance (a to b)",mm(PD)],
+      ["ah","End A",pos(s.ah,"above HP","below HP")],
+      ["af","End A",pos(s.af,"in front of VP","behind VP")],
+      ["bh","End B",pos(s.bh,"above HP","below HP")],
+      ["bf","End B",pos(s.bf,"in front of VP","behind VP")]];
+    // traces: where the line (produced if need be) meets the HP and the VP
+    const prod=t=>t<-1e-6?" (on AB produced beyond A)":t>1+1e-6?" (on AB produced beyond B)":"";
+    if(Math.abs(dh)>1e-6){ const t=s.ah/(s.ah-s.bh);
+      rows.push(["HT","Horizontal trace HT",pos(s.af+t*df,"in front of VP","behind VP")+", "+mm(Math.abs(t*PD))+" from a along XY"+prod(t)]); }
+    else rows.push(["HT","Horizontal trace HT","none - the line is parallel to the HP"]);
+    if(Math.abs(df)>1e-6){ const t=s.af/(s.af-s.bf);
+      rows.push(["VT","Vertical trace VT",pos(s.ah+t*dh,"above HP","below HP")+", "+mm(Math.abs(t*PD))+" from a′ along XY"+prod(t)]); }
+    else rows.push(["VT","Vertical trace VT","none - the line is parallel to the VP"]);
+    const out=rows.filter(r=>!given[r[0]]);
+    return `<b>Final Results</b> <span style="color:#6b7686;font-size:.85em">(everything not in the given data)</span>
+      <table>${out.map(r=>`<tr><td style="text-align:left">${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table>`;
+  }
+
   let probIndex=0, values={}, P=null, currentStep=1, started=false;
+
+  /* ---- optional usage tracking (see account.js) - a no-op unless a student is logged in ---- */
+  const EG_APP_KEY="lines";
+  let egFurthest=0, egCompleted=false, egViaShowAll=false;
+  if(window.EG) EG.trackDuration(EG_APP_KEY);
+  function egResetAttempt(viaShowAll){
+    egFurthest=0; egCompleted=false; egViaShowAll=!!viaShowAll;
+    if(window.EG) EG.track(EG_APP_KEY,(PROBLEMS[probIndex]||{}).title||"","open");
+  }
+  function egTrackStep(s,N){
+    if(!window.EG) return;
+    const title=(PROBLEMS[probIndex]||{}).title||"";
+    if(!egViaShowAll&&s>egFurthest){ egFurthest=s; EG.track(EG_APP_KEY,title,"progress",{step_num:s}); }
+    if(s>=N&&!egCompleted){ egCompleted=true; EG.track(EG_APP_KEY,title,egViaShowAll?"revealed":"complete"); }
+  }
   let viewZoom=1, viewPanX=0, viewPanY=0;
   const ZOOM_MIN=0.4, ZOOM_MAX=6;
 
@@ -1700,6 +2734,7 @@
   }
   function startDrawing(){
     if(!P) return;
+    egResetAttempt(false);
     started=true; currentStep=1; lastSpoken=-1; syncStartUI(); drawStep(1,true);
   }
 
@@ -1719,10 +2754,12 @@
     }
     vEl.innerText="";
     P=prob.build(values);
+    if(P&&P.space) P.results=lineResults(P.space,prob);   // the complete list of what was not given
     if(resetStep){ currentStep=1; started=false; sRotY=S_HOME.ry; sRotX=S_HOME.rx; sZoom=1; }
     syncStartUI();
     currentStep=Math.min(currentStep,P.steps.length);
     lastSpoken=-1;
+    autoLayout();
     renderStepList();
     resetView();
   }
@@ -1754,6 +2791,7 @@
     document.getElementById("stepList").style.transform="translateY(-"+((s-1)*STEP_ITEM_H)+"px)";
     { const li=document.querySelectorAll("#stepList li")[s-1]; if(li) li.scrollTop=0; }
     if(!started){ clearCanvasWhite(); return; }
+    egTrackStep(s,N);
     speakCurrent();
 
     if(!animate){ frameDraw(s,[],0,null); return; }
@@ -1764,8 +2802,8 @@
   function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
     if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
   function prevStep(){ if(P&&started&&currentStep>1){currentStep--; drawStep(currentStep);} }
-  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; drawStep(1,true);} }
-  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; drawStep(currentStep);} }
+  function restartSteps(){ if(P){egResetAttempt(false); started=true; syncStartUI(); currentStep=1; lastSpoken=-1; drawStep(1,true);} }
+  function showAll(){ if(P){egResetAttempt(true); started=true; syncStartUI(); currentStep=P.steps.length; drawStep(currentStep);} }
 
   const voiceSupported=("speechSynthesis" in window);
   let voiceOn=voiceSupported, lastSpoken=-1;   // sound is ON by default
@@ -2098,9 +3136,13 @@
   const fsWrap=document.getElementById("canvas-wrapper");
   let fsReal=false;
   function isFs(){ return fsWrap.classList.contains("fs-on"); }
-  function setCanvasSize(w,h){
-    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
-    if(w===CANVAS_W&&h===CANVAS_H) return;
+  // w x h is the room on screen; k (>= 1) is how many drawing units go to one screen pixel.
+  function setCanvasSize(w,h,k){
+    k=k||1;
+    w=Math.max(200,Math.round(w*k)); h=Math.max(160,Math.round(h*k));
+    const hd=Math.min((canvas._hdBase||1)/k, Math.sqrt(12e6/(w*h)));   // screen resolution or better, capped at ~12 megapixels so a big full screen stays quick
+    if(w===CANVAS_W&&h===CANVAS_H&&canvas._hdS===hd) return;
+    canvas._hdS=hd;
     CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none"){
       rebuild(false);
@@ -2108,9 +3150,17 @@
       if(st&&st.demo){ lastSpoken=currentStep; drawStep(currentStep,true); }   // re-laid out mid-animation: play it again instead of jumping to its end
     } else clearCanvasWhite();
   }
-  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
-  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
-  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  // In full screen the drawing area takes exactly the room the layout gives it, in the screen's own proportions,
+  // so nothing is stretched in portrait or landscape. On a small screen (a phone) the drawing is still laid out
+  // on at least the 820 x 540 of the normal view and shown scaled down to fit: drawn at one unit per screen pixel,
+  // the lines would be squeezed into a few hundred pixels while the text kept its size, and the labels would pile
+  // up on the drawing. Outside full screen it returns to 820 x 540.
+  function layoutCanvas(){
+    if(isFs()){
+      const cw=Math.max(1,canvas.clientWidth), ch=Math.max(1,canvas.clientHeight);
+      setCanvasSize(cw,ch,Math.max(1,820/cw,540/ch));
+    } else setCanvasSize(820,540,1);
+  }
   let layoutTimer=0;
   function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
   function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }

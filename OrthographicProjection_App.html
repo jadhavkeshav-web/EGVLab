@@ -14,6 +14,7 @@
   <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Orthographic Projections - Problems with Stepwise Solutions</title>
+  <script src="account.js"></script>
   <style>
     :root{
       --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
@@ -108,17 +109,23 @@
     #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
     #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:crosshair;}
     #spaceCanvas.dragging{cursor:move;}
-    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
     #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    .fs-only{display:none;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    /* step-navigation controls, relocated here from the left panel so they sit right above the sketch
+       (and so the same controls - not a duplicate set - are still reachable in full screen) */
+    #step-toolbar{display:flex;align-items:center;gap:14px;row-gap:8px;flex-wrap:wrap;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--line);}
+    #step-toolbar .btn-group{margin-bottom:0;flex-wrap:wrap;}
+    #step-toolbar .btn-group button{flex:0 0 auto;padding:7px 14px;}
+    #step-toolbar .speed-row{flex-wrap:nowrap;}
+    #step-toolbar .speed-row select{flex:0 0 auto;width:auto;}
     /* full screen (real or, where the browser has none, a page-filling overlay) */
     #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
     #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on #step-toolbar{flex:0 0 auto;}
     #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
     #canvas-wrapper.fs-on #space-wrap{display:none !important;}
     /* phones and small tablets */
@@ -192,27 +199,6 @@
       </div>
 
       <h4>Step-by-step solution</h4>
-      <div class="btn-group" id="start-row">
-        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
-      </div>
-      <div class="btn-group">
-        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
-        <button id="nextButton" onclick="nextStep()">Next ▶</button>
-      </div>
-      <div class="btn-group">
-        <button onclick="restartSteps()">Restart</button>
-        <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
-      </div>
-      <div class="btn-group speed-row">
-        <label for="speedSel">Drawing speed</label>
-        <select id="speedSel" onchange="setSpeed(this.value)">
-          <option value="1.7">Slow</option>
-          <option value="1" selected>Normal</option>
-          <option value="0.62">Fast</option>
-          <option value="0.35">Very fast</option>
-        </select>
-      </div>
       <div id="stepCounter"></div>
       <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
       <div id="results"></div>
@@ -225,14 +211,30 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
-        <span class="fs-only fs-nav">
-          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
-          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
-          <button class="fs-btn" id="fsRestart" onclick="restartSteps()">↺ Restart</button>
-          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
-        </span>
-
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <div id="step-toolbar">
+        <div class="btn-group" id="start-row">
+          <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+        </div>
+        <div class="btn-group">
+          <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+          <button id="nextButton" onclick="nextStep()">Next ▶</button>
+        </div>
+        <div class="btn-group">
+          <button onclick="restartSteps()">Restart</button>
+          <button onclick="showAll()">Show all</button>
+          <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
+        </div>
+        <div class="btn-group speed-row">
+          <label for="speedSel">Drawing speed</label>
+          <select id="speedSel" onchange="setSpeed(this.value)">
+            <option value="1.7">Slow</option>
+            <option value="1" selected>Normal</option>
+            <option value="0.62">Fast</option>
+            <option value="0.35">Very fast</option>
+          </select>
+        </div>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
 
@@ -262,7 +264,7 @@
      match, so the program still draws in the same units (canvas.width / height keep returning the
      drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
   (function(){
-    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const S=Math.min(4,Math.max(3,Math.ceil(window.devicePixelRatio||1)));   // at least 3x, so labels stay crisp on a projector
     const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
     const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
     const gc=HTMLCanvasElement.prototype.getContext;
@@ -270,12 +272,12 @@
       const cx=gc.call(this,type,opts);
       if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
       const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
-      cv._hdS=S;
+      cv._hdS=S; cv._hdBase=S;   // _hdS drops below S in full screen on a small screen (see layoutCanvas)
       const st=cx.setTransform;
-      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
-      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
-      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
-      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      cx.setTransform=function(a,b,c,d,e,f){ const k=cv._hdS; return (typeof a==="number")?st.call(this,a*k,b*k,c*k,d*k,e*k,f*k):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,cv._hdS,0,0,cv._hdS,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
       PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
       return cx;
     };
@@ -283,9 +285,9 @@
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
-  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#8a97a4";
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#222", COL_LOCUS="#777", COL_PROJ="#8a97a4";
   const COL_OBS="#c0392b";          // direction-of-observation arrows
-  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
+  const FONT_MAIN="13px Arial", FONT_DIM="15px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -363,7 +365,7 @@
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
+    if(label){ ctx.font="15px Arial"; ctx.fillStyle="#222";
       ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
@@ -390,12 +392,13 @@
     const m=(a1+a2)/2;
     drawText(cx+(r+20)*Math.cos(m), cy+(r+20)*Math.sin(m)+(above?-8:8), text,"#111",FONT_DIM,"center","middle");
   }
-  function drawVerticalDim(x,yT,yB,label){
+  function drawVerticalDim(x,yT,yB,label,font){   // the value always reads upward, on the left of the line
     if(REC){REC.push({f:"drawVerticalDim",a:Array.from(arguments)});return;}
     drawLine(x,yT,x,yB,COL_DIM,LW_THIN);
     drawArrowhead(x,yT,-Math.PI/2,COL_DIM); drawArrowhead(x,yB,Math.PI/2,COL_DIM);
-    ctx.save(); ctx.translate(x-7,(yT+yB)/2); ctx.rotate(-Math.PI/2);
-    drawText(0,0,label,"#111",FONT_DIM,"center","middle"); ctx.restore();
+    const f=font||FONT_DIM, fh=parseFloat(f.replace(/^\D*/,""))||15;
+    ctx.save(); ctx.translate(x-Math.max(7,fh/2+2),(yT+yB)/2); ctx.rotate(-Math.PI/2);
+    drawText(0,0,label,"#111",f,"center","middle"); ctx.restore();
   }
   function drawHorizontalDim(y,x1,x2,label){
     if(REC){REC.push({f:"drawHorizontalDim",a:Array.from(arguments)});return;}
@@ -581,6 +584,10 @@
   }
   function drawFirstAngleSymbol(x,y,s){
     if(REC){REC.push({f:"drawFirstAngleSymbol",a:Array.from(arguments)});return;}
+    const LABEL="FIRST ANGLE PROJECTION";
+    ctx.save(); ctx.font=FONT_DIM; const half=ctx.measureText(LABEL).width/2+8; ctx.restore();
+    const mid=x+1.2*s, fit=Math.min(Math.max(mid,half),CANVAS_W-half);
+    x+=fit-mid;                                        // slide symbol + label together so the label isn't cut off at the edge
     ctx.save(); ctx.strokeStyle=COL_DIM; ctx.lineWidth=1.1; ctx.setLineDash([]);
     ctx.beginPath();                                   // front view of a frustum
     ctx.moveTo(x,y-0.30*s); ctx.lineTo(x+1.25*s,y-0.55*s);
@@ -589,7 +596,7 @@
     ctx.beginPath(); ctx.arc(cx,y,0.55*s,0,Math.PI*2); ctx.stroke();
     ctx.beginPath(); ctx.arc(cx,y,0.30*s,0,Math.PI*2); ctx.stroke();
     ctx.restore();
-    drawText(x+1.2*s,y+0.55*s+12,"FIRST ANGLE PROJECTION",COL_DIM,FONT_DIM,"center","top");
+    drawText(x+1.2*s,y+0.55*s+12,LABEL,COL_DIM,FONT_DIM,"center","top");
   }
   EXEC.drawWit=drawWit; EXEC.drawDiaDim=drawDiaDim; EXEC.drawRadDim=drawRadDim;
   EXEC.drawObsArrow=drawObsArrow; EXEC.drawFirstAngleSymbol=drawFirstAngleSymbol;
@@ -1883,9 +1890,9 @@
         cc.lineTo(s1.x-13*Math.cos(an)+5*Math.cos(an+Math.PI/2), s1.y-13*Math.sin(an)+5*Math.sin(an+Math.PI/2));
         cc.lineTo(s1.x-13*Math.cos(an)+5*Math.cos(an-Math.PI/2), s1.y-13*Math.sin(an)+5*Math.sin(an-Math.PI/2));
         cc.closePath(); cc.fill();
-        cc.font="bold 28px Arial"; cc.textAlign="center"; cc.textBaseline="middle";
+        cc.font="bold 21px Arial"; cc.textAlign="center"; cc.textBaseline="middle";
         const lx=s1.x+13*Math.cos(an), ly=s1.y+13*Math.sin(an), lw=cc.measureText(q.label||"A").width+12;
-        cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(lx-lw/2,ly-18,lw,36);
+        cc.fillStyle="rgba(255,255,255,0.9)"; cc.fillRect(lx-lw/2,ly-14,lw,28);
         cc.fillStyle="#000"; cc.fillText(q.label||"A",lx,ly);
       });
       cc.restore();
@@ -1941,7 +1948,7 @@
         if(!radius) ar(P1.x,P1.y,ang+Math.PI);
         ar(Q1.x,Q1.y,ang);
         const mx2=(P1.x+Q1.x)/2, my2=(P1.y+Q1.y)/2;
-        cc.font="bold 22px Arial";
+        cc.font="bold 17px Arial";
         const w=cc.measureText(text).width+12;
         cc.fillStyle="rgba(255,255,255,0.93)"; cc.fillRect(mx2-w/2,my2-14,w,28);
         cc.fillStyle=DIMC; cc.textAlign="center"; cc.textBaseline="middle";
@@ -1966,7 +1973,7 @@
         for(let i=0;i<220;i++){ const x=Rs.x+ux*t, y=Rs.y+uy*t;
           if(x>bx1+m||x<bx0-m||y<by0-m) break; t+=3; }
         const T={x:Rs.x+ux*t, y:Rs.y+uy*t};
-        cc.font="bold 22px Arial";
+        cc.font="bold 17px Arial";
         const w=cc.measureText(txt).width+16;
         let dir=ux>=0?1:-1;
         if(dir>0&&T.x+w>W-4) dir=-1; else if(dir<0&&T.x-w<4) dir=1;
@@ -2324,14 +2331,27 @@
     const GAP=10;                                            // mm
     const GAPX=80;
     const totWmm=L+B+GAP, totHmm=H+B+2*GAP;
-    const sc=Math.min((CANVAS_W-PX(236)-GAPX)/totWmm,(CANVAS_H-PY(215))/totHmm,3.4);
+    // Room round the views for their dimensions: count how many dimension lines each side of each view
+    // carries (as dimFn will allocate them), so the drawing is scaled to leave space for all of them.
+    const DG=44, DS=34;    // first dimension line off the view, and between stacked lines
+    const LV={};
+    [...(O.groups||[]).reduce((a,g)=>a.concat(g.dims||[]),[]),{v:"fv",h:[0,L],side:"T"},{v:"fv",vt:[0,H],side:"L"},{v:"tv",vt:[0,B],side:"L"}].forEach(D=>{
+      let k=null;
+      if(D.h) k=D.v+((D.side!=="B")?"T":"B");
+      else if(D.vt){ const lf=(SGN>0)?(D.side!=="R"):(D.side==="R"); k=D.v+(lf?"L":"R"); }
+      if(!k) return; const n=LV[k]||0; if(D.chain&&n) return; LV[k]=n+1; });
+    const lvPad=n=>n?DG+DS*(n-1)+30:24;                       // outermost dimension line and its figure
+    const padT=lvPad(Math.max(LV.fvT||0,LV.svT||0))+30;          // + the view title
+    const padB=lvPad(Math.max(LV.tvB||0,LV.svB||0))+70;          // + the view title, and the note below it
+    const padLR=lvPad(Math.max(LV.fvL||0,LV.tvL||0,LV.fvR||0,LV.tvR||0))+90;   // + the observer arrow
+    const sc=Math.min((CANVAS_W-Math.max(PX(236),2*padLR)-GAPX)/totWmm,(CANVAS_H-padT-padB)/totHmm,3.4);
     SCALE_PXMM=sc;
     const OFF=GAP*sc;                                        // the same gap in pixels
     const totWpx=totWmm*sc+GAPX;
     const LEFT=(CANVAS_W-totWpx)/2+16;
     const OX=(SIDE==="LHSV")?LEFT:(LEFT+(B+GAP)*sc+GAPX);
     const SX=(SIDE==="LHSV")?(OX+L*sc+GAPX):(OX-GAPX);      // where X1-Y1 stands
-    const REF=(CANVAS_H-totHmm*sc)/2+(H+GAP)*sc;             // X-Y
+    const REF=padT+(CANVAS_H-padT-padB-totHmm*sc)/2+(H+GAP)*sc;   // X-Y (the views centred in the room left by the dimensions)
 
     const FVx=x=>OX+x*sc, FVy=y=>REF-OFF-y*sc;
     const TVx=x=>OX+x*sc, TVy=d=>REF+OFF+d*sc;
@@ -2423,7 +2443,6 @@
        every zone keeps its own level counter, so two dimensions never
        land on top of one another; the overall sizes are allocated last
        and therefore sit outside the feature sizes. */
-    const DG=52, DS=40;    // first dimension line off the view, and between stacked lines
     // D.chain : put this dimension on the same line as the previous one in its zone (chain dimensioning)
     const Z={}; let CHAIN=false; const zl=k=>{ const n=Z[k]||0; if(CHAIN&&n) return n-1; Z[k]=n+1; return n; };
     function dimFn(D){
@@ -2504,10 +2523,17 @@
 
     steps.push({text:"Now the thin PROJECTION LINES. Fix the gap first – "+GAP+" mm – then draw one thin line "+GAP+" mm above X–Y and one "+GAP+" mm below it, and one line "+GAP+" mm on each side of X₁–Y₁. These are thin continuous construction lines, and every view STARTS from its own line: the front view stands on the line above X–Y, the top view hangs from the line below it, and the "+SVFULL+" begins at the line on its side of X₁–Y₁. The gap is the same on every side, and that is what lets the 45° line carry the depths correctly.",
       hl:[],
-      d:()=>{ drawVerticalDim(xyL+34,REF-OFF,REF,String(GAP));
-              drawVerticalDim(xyL+34,REF,REF+OFF,String(GAP));
-              drawHorizontalDim(y1B-8,SX-OFF,SX,String(GAP));
-              drawHorizontalDim(y1B-8,SX,SX+OFF,String(GAP));
+      d:()=>{ // on a small drawing the gap is narrower than its figures: a smaller figure, but placed the same way -
+              // reading upward on the left of a vertical dimension line, above a horizontal one
+              const tight=OFF<26, G=String(GAP), fnt=tight?"11px Arial":undefined;
+              drawVerticalDim(xyL+34,REF-OFF,REF,G,fnt);
+              drawVerticalDim(xyL+34,REF,REF+OFF,G,fnt);
+              drawHorizontalDim(y1B-8,SX-OFF,SX,tight?"":G);
+              drawHorizontalDim(y1B-8,SX,SX+OFF,tight?"":G);
+              if(tight){
+                drawText(SX-OFF/2,y1B-11,G,"#111","11px Arial","center","bottom");
+                drawText(SX+OFF/2,y1B-11,G,"#111","11px Arial","center","bottom");
+              }
               rollSet([[xyL,REF-OFF,xyR,REF-OFF],[xyL,REF+OFF,xyR,REF+OFF]],COL_PROJ,LW_THIN);
               rollSet([[SX-OFF,x1T,SX-OFF,y1B],[SX+OFF,x1T,SX+OFF,y1B]],COL_PROJ,LW_THIN); }});
 
@@ -2564,7 +2590,8 @@
       sv:()=>{
         steps.push({text:"The front view and the top view are complete - the "+SVFULL.toUpperCase()+" is got from BOTH of them. From the point where X–Y and X₁–Y₁ cross, draw the 45° mitre line as a THIN plain construction line – it is not a centre line, so it is not drawn chain-dotted. Every depth taken from the top view is carried horizontally to this line and then turned through a right angle into the side view.",
           d:()=>{ drawSLine(SX,REF,SVx(B)+16*SGN,TVy(B)+16,COL_CONS,LW_THIN);
-                  drawText(SVx(B)+20*SGN,TVy(B)+20,"45°",COL_CONS,FONT_DIM,(SGN>0?"left":"right"),"middle"); }});
+                  { const mx=SX+(SVx(B)-SX)*0.3, my=REF+(TVy(B)-REF)*0.3;          // up the mitre line, clear of the corner symbol
+                    drawText(mx+14*SGN,my-4,"45°",COL_CONS,FONT_DIM,(SGN>0?"left":"right"),"middle"); } }});
         steps.push({text:"Block in the "+SVFULL.toUpperCase()+". Two sets of projectors are needed and BOTH must be used: the depths "+R1(B)+" mm come round from the TOP VIEW through the 45° mitre line, and the heights come straight across from the FRONT VIEW. Where the two sets cross, the corners of the side view are fixed – a rectangle "+R1(B)+" mm × "+R1(H)+" mm.",
           hv:HVs(null,null,RC(0,0,B,H)),
           d:()=>{ pjTVSV([0,B]); pjFVSV([0,H]); paint("sv",RC(0,0,B,H),true); }}); }
@@ -2898,8 +2925,10 @@
             ["l",(v.L+v.w2)/2,v.H-v.g,(v.L-v.w2)/2,v.H-v.g],
             ["l",(v.L-v.w2)/2,v.H-v.g,(v.L-v.w)/2,v.H],
             ["l",(v.L-v.w)/2,v.H,0,v.H],["l",0,v.H,0,0]]},
-    hid:{sv:[["l",0,v.H-v.g,v.B,v.H-v.g,1]]},
-    hidText:"Now the hidden edge. In the "+SVN(v)+" the solid end of the block hides the slot completely, so only its depth can be reported - a single dashed line right across the full depth, "+R1(v.g)+" mm below the top face.",
+    hid:{tv:[["l",(v.L-v.w2)/2,0,(v.L-v.w2)/2,v.B,1],["l",(v.L+v.w2)/2,0,(v.L+v.w2)/2,v.B,1]],
+         sv:[["l",0,v.H-v.g,v.B,v.H-v.g,1]]},
+    hidT:{tv:"Now the hidden edges of the TOP VIEW. The two bottom edges of the dovetail, "+R1(v.w2)+" mm apart, lie UNDER the overhanging top of the block - the slot is narrower at the top than at the bottom - so they cannot be seen from above: draw them as thin dashed lines running the full depth.",
+          sv:"Now the hidden edge of the "+SVN(v)+". The solid end of the block hides the slot completely, so only its depth can be reported - a single dashed line right across the full depth, "+R1(v.g)+" mm below the top face."},
     groups:[
       {dimText:"The dovetail is "+R1(v.w)+" mm wide at the top, opens out to "+R1(v.w2)+" mm at the bottom and is "+R1(v.g)+" mm deep, all about the centre line. The two widths are dimensioned in parallel, one below the other, so that neither reading is in doubt.",
        dims:[{v:"tv",h:[(v.L-v.w)/2,(v.L+v.w)/2],side:"B",text:R1(v.w)},
@@ -2911,12 +2940,11 @@
            ["l",(v.L-v.w2)/2,v.H-v.g,(v.L+v.w2)/2,v.H-v.g],
            ["l",(v.L-v.w)/2,v.H,(v.L-v.w2)/2,v.H-v.g],
            ["l",(v.L+v.w2)/2,v.H-v.g,(v.L+v.w)/2,v.H]],tv:[],sv:[]},
-      {text:"Project the slot into the TOP VIEW. Looking down you can see BOTH the narrow opening at the top and the wider bottom, so four visible lines are drawn, each running the full depth.",
+      {text:"Project the slot into the TOP VIEW. Looking down, only the narrow opening in the top face can be seen - two visible lines "+R1(v.w)+" mm apart, each running the full depth. The wider bottom of the dovetail lies under the overhanging top, so its edges are hidden; they are put in with the other hidden edges.",
        hl:["sside4","sside5","sside6"],
        fv:[],
        tv:[["cl",v.L/2,-6,v.L/2,v.B+6],
-           ["l",(v.L-v.w)/2,0,(v.L-v.w)/2,v.B],["l",(v.L+v.w)/2,0,(v.L+v.w)/2,v.B],
-           ["l",(v.L-v.w2)/2,0,(v.L-v.w2)/2,v.B],["l",(v.L+v.w2)/2,0,(v.L+v.w2)/2,v.B]],sv:[]}]});
+           ["l",(v.L-v.w)/2,0,(v.L-v.w)/2,v.B],["l",(v.L+v.w)/2,0,(v.L+v.w)/2,v.B]],sv:[]}]});
 
   OB.rgroove=v=>({L:v.L,B:v.B,H:v.H,
     model:()=>{ const R=v.r, L=v.L, H=v.H;
@@ -3081,52 +3109,100 @@
 
   /* ================= four more objects ================= */
 
-  /* regular hexagonal prism, axis vertical, two corners on a line parallel to X-Y */
-  OB.hexPrism=v=>{ const s=v.s, L=2*s, B=s*Math.sqrt(3), H=v.H, hb=B/2;
-    const hexTV=[[0,hb,s/2,0],[s/2,0,3*s/2,0],[3*s/2,0,2*s,hb],
-                 [2*s,hb,3*s/2,B],[3*s/2,B,s/2,B],[s/2,B,0,hb]].map(a=>["l"].concat(a));
+  /* ---- regular polygon base for the prism and the pyramid (3 to 6 sides) ----
+     The base stands on the HP with ONE SIDE PARALLEL TO THE VP, at the front (nearest the observer) - for an even
+     number of sides the rear side is then parallel too. Corners are given in (x, depth): x from 0 at the left,
+     depth from 0 at the rear (the VP side) to B at the front. Side k joins corner k to corner k+1; corners 0 and 1
+     are the ends of the front side. Which vertical / sloping edges are SEEN in a view follows from the faces on
+     either side of the corner: an edge is visible when at least one of those faces is turned towards the observer. */
+  const POLYN=v=>Math.max(3,Math.min(6,Math.round(+v)||4));
+  const POLY_NAME={3:"triangle",4:"square",5:"pentagon",6:"hexagon"};
+  const POLY_ADJ={3:"triangular",4:"square",5:"pentagonal",6:"hexagonal"};
+  function polyBase(n,s){
+    const R=polyR(n,s), ph=Math.PI/2-Math.PI/n, raw=[];
+    for(let k=0;k<n;k++){ const a=ph+TAU*k/n; raw.push({x:R*Math.cos(a), d:R*Math.sin(a)}); }
+    const x0=Math.min(...raw.map(p=>p.x)), d0=Math.min(...raw.map(p=>p.d));
+    const cln=t=>Math.round(t*1e6)/1e6;
+    const P=raw.map(p=>({x:cln(p.x-x0), d:cln(p.d-d0)}));
+    const nrm=k=>{ const a=ph+TAU*(k+0.5)/n; return {x:Math.cos(a), d:Math.sin(a)}; };   // outward normal of side k
+    return {n:n, R:R, ph:ph, P:P, L:Math.max(...P.map(p=>p.x)), B:Math.max(...P.map(p=>p.d)), cx:cln(-x0), cd:cln(-d0), nrm:nrm};
+  }
+  /* the corners seen as edges in a view: key "x" for the front view, "d" for the side view; faces(nv) says
+     whether a face with outward normal nv is turned towards the observer. Edges that fall on one line are drawn once,
+     a visible one hiding any dashed one behind it. */
+  function polyEdges(g,key,faces){
+    const vis=[], hid=[], near=(a,b)=>Math.abs(a-b)<1e-4;
+    g.P.forEach((p,k)=>{ const seen=faces(g.nrm((k-1+g.n)%g.n))||faces(g.nrm(k));
+      (seen?vis:hid).push(p[key]); });
+    const V=[]; vis.forEach(t=>{ if(!V.some(u=>near(u,t))) V.push(t); });
+    const Hd=[]; hid.forEach(t=>{ if(!V.some(u=>near(u,t))&&!Hd.some(u=>near(u,t))) Hd.push(t); });
+    return {vis:V.sort((a,b)=>a-b), hid:Hd.sort((a,b)=>a-b)};
+  }
+  const FRONT_FACING=nv=>nv.d>1e-6;
+  const SIDE_FACING=v=>(v.side==="RHSV")?(nv=>nv.x>1e-6):(nv=>nv.x<-1e-6);
+
+  /* regular prism (3 to 6 sides), axis vertical, standing on its base */
+  OB.hexPrism=v=>{ const n=POLYN(v.n||6), s=v.s, H=v.H, g=polyBase(n,s), L=g.L, B=g.B, P=g.P, cx=g.cx, cd=g.cd;
+    const nm=POLY_NAME[n], IA=R1(180*(n-2)/n), SV=SVN(v);
+    const inner=(t,lim)=>t>1e-4&&t<lim-1e-4;
+    const polyTV=P.map((p,k)=>["l",p.x,p.d,P[(k+1)%n].x,P[(k+1)%n].d]);
+    const fe=polyEdges(g,"x",FRONT_FACING), se=polyEdges(g,"d",SIDE_FACING(v));
+    const fvVis=fe.vis.filter(x=>inner(x,L)).map(x=>["l",x,0,x,H]), fvHid=fe.hid.map(x=>["l",x,0,x,H,1]);
+    const svVis=se.vis.filter(d=>inner(d,B)).map(d=>["l",d,0,d,H]), svHid=se.hid.map(d=>["l",d,0,d,H,1]);
+    const lats=[]; for(let i=1;i<=n;i++) lats.push("lat"+i);
+    const cnt=(k,one,many)=>k===1?("one "+one):(k+" "+many);
     return {L:L,B:B,H:H, order:["tv","fv","sv"],          // the true shape is seen from above: start with the top view
-    model:()=>{ const m=m_prism(6,s,H,0); m.verts.forEach(p=>{ p.x+=s; p.z+=hb; }); return m; },
-    hlAll:["top","lat1","lat2","lat3","lat4","lat5","lat6"],
-    fin:{fv:[["l",0,0,L,0],["l",L,0,L,H],["l",L,H,0,H],["l",0,H,0,0],
-             ["l",s/2,0,s/2,H],["l",3*s/2,0,3*s/2,H]],
-         tv:hexTV,
-         sv:[["l",0,0,B,0],["l",B,0,B,H],["l",B,H,0,H],["l",0,H,0,0],["l",hb,0,hb,H]]},
+    model:()=>{ const m=m_prism(n,s,H,g.ph); m.verts.forEach(p=>{ p.x+=cx; p.z+=cd; }); return m; },
+    hlAll:["top"].concat(lats),
+    fin:{fv:[["l",0,0,L,0],["l",L,0,L,H],["l",L,H,0,H],["l",0,H,0,0]].concat(fe.vis.filter(x=>inner(x,L)).map(x=>["l",x,0,x,H])),
+         tv:polyTV,
+         sv:[["l",0,0,B,0],["l",B,0,B,H],["l",B,H,0,H],["l",0,H,0,0]].concat(se.vis.filter(d=>inner(d,B)).map(d=>["l",d,0,d,H]))},
+    hid:{fv:fvHid, sv:svHid},
+    hidT:{fv:"Now the hidden edges of the FRONT VIEW. "+cnt(fvHid.length,"vertical edge","vertical edges")+" at the rear of the "+nm+" do"+(fvHid.length===1?"es":"")+" not line up with any edge in front, and the faces in front hide "+(fvHid.length===1?"it":"them")+": draw "+(fvHid.length===1?"it":"them")+" as thin dashed lines the full height of the prism.",
+          sv:"Now the hidden edges of the "+SV+". "+cnt(svHid.length,"vertical edge","vertical edges")+" on the far side of the prism do"+(svHid.length===1?"es":"")+" not line up with any edge on the near side: draw "+(svHid.length===1?"it":"them")+" as thin dashed lines the full height."},
     groups:[
-      {dimText:"All six sides of the hexagon are equal to the side given on the figure, and two opposite corners lie on the horizontal centre line of the top view. Dimension one side, along the front edge, before the hexagon is drawn.",
-       dims:[{v:"tv",h:[s/2,3*s/2],side:"B",text:R1(s)}],
-       text:"Draw the TOP VIEW first - it shows the true shape of the base, a regular hexagon. Draw the two centre lines, then the six equal sides: the corners on the horizontal centre line are 2 × "+R1(s)+" mm apart, and the front and rear sides are parallel to X–Y. The top face and the base are both this hexagon.",
+      {dimText:"All "+n+" sides of the "+nm+" are equal to the side given on the figure, and the front side is parallel to X–Y. Dimension that side, along the front edge, before the "+nm+" is drawn.",
+       dims:[{v:"tv",h:[P[0].x<P[1].x?P[0].x:P[1].x, P[0].x<P[1].x?P[1].x:P[0].x],side:"B",text:R1(s)}],
+       text:"Draw the TOP VIEW first - it shows the true shape of the base, a regular "+nm+" of side "+R1(s)+" mm. Draw the two centre lines, then the front side parallel to X–Y and the other sides one after another, each at the interior angle of "+IA+"° to the last"+(n===4?" (the square is simply set out with the T-square and set-square)":n===3||n===6?" (the 60° set-square gives these directions)":" (set it out with the protractor)")+". The top face and the base are both this "+nm+".",
        hl:["top"],
-       fv:[],tv:hexTV.concat([["cl",s,-6,s,B+6],["cl",-6,hb,L+6,hb]]),sv:[]},
-      {text:"Project every corner of the hexagon up into the FRONT VIEW. Three rectangular faces are seen: the middle one is the face at the front, and the two outer ones are the inclined faces on either side. The four vertical edges at the corners of the hexagon show as four full lines; the two corners at the far ends of the hexagon fix the outline. The rear faces are hidden but line up behind these, so no dashed line is needed.",
-       hl:["lat1","lat2","lat3","lat4","lat5","lat6"],
-       fv:[["cl",s,-6,s,H+6],["l",s/2,0,s/2,H],["l",3*s/2,0,3*s/2,H]],tv:[],sv:[]},
-      {text:"Now the "+"side view. Looking from the side you meet the corner of the hexagon that points towards you: its edge appears as a full line down the middle of the view, at half the depth. The edges at the front and rear are the outline. Two faces are seen, with that edge between them.",
-       hl:["lat1","lat2","lat3","lat4","lat5","lat6"],
-       fv:[],tv:[],sv:[["cl",hb,-6,hb,H+6],["l",hb,0,hb,H]]}
+       fv:[],tv:polyTV.concat([["cl",cx,-6,cx,B+6],["cl",-6,cd,L+6,cd]]),sv:[]},
+      {text:"Project every corner of the "+nm+" up into the FRONT VIEW. Each corner is a vertical edge running the full height. The two corners farthest left and right fix the outline"+(fvVis.length?"; "+cnt(fvVis.length,"more edge","more edges")+" on the front half of the prism "+(fvVis.length===1?"is":"are")+" seen and drawn as full lines":"")+"."+(fvHid.length?" "+cnt(fvHid.length,"edge","edges")+" at the rear "+(fvHid.length===1?"is":"are")+" hidden behind the front faces - "+(fvHid.length===1?"it is":"they are")+" put in with the hidden edges.":" Every rear edge lines up exactly behind a front one, so no dashed line is needed."),
+       hl:lats,
+       fv:[["cl",cx,-6,cx,H+6]].concat(fvVis),tv:[],sv:[]},
+      {text:"Now the "+SV+". Carry each corner's depth round the 45° line from the top view; its height comes across from the front view. The front and rear of the prism give the outline"+(svVis.length?"; "+cnt(svVis.length,"edge","edges")+" on the near side "+(svVis.length===1?"is":"are")+" seen as full lines":"")+"."+(svHid.length?" "+cnt(svHid.length,"edge","edges")+" on the far side "+(svHid.length===1?"is":"are")+" hidden and will be dashed.":""),
+       hl:lats,
+       fv:[],tv:[],sv:[["cl",cd,-6,cd,H+6]].concat(svVis)}
     ]}; };
 
-  /* square pyramid, base edges parallel and perpendicular to the VP */
-  OB.pyramid=v=>{ const s=v.s, H=v.H, hs=s/2;
-    const slopes=[["l",0,0,hs,H],["l",s,0,hs,H]];
-    return {L:s,B:s,H:H,
-    model:()=>{ const m=m_pyr(4,s,H,Math.PI/4); m.verts.forEach(p=>{ p.x+=hs; p.z+=hs; }); return m; },
-    hlAll:["base","lat1","lat2","lat3","lat4"],
-    fin:{fv:[["l",0,0,s,0]].concat(slopes),
-         tv:[["l",0,0,s,0],["l",s,0,s,s],["l",s,s,0,s],["l",0,s,0,0],
-             ["l",0,0,hs,hs],["l",s,0,hs,hs],["l",0,s,hs,hs],["l",s,s,hs,hs]],
-         sv:[["l",0,0,s,0]].concat(slopes)},
+  /* regular pyramid (3 to 6 sides), axis vertical, standing on its base */
+  OB.pyramid=v=>{ const n=POLYN(v.n||4), s=v.s, H=v.H, g=polyBase(n,s), L=g.L, B=g.B, P=g.P, cx=g.cx, cd=g.cd;
+    const nm=POLY_NAME[n], IA=R1(180*(n-2)/n), SV=SVN(v);
+    const polyTV=P.map((p,k)=>["l",p.x,p.d,P[(k+1)%n].x,P[(k+1)%n].d]);
+    const spokes=P.map(p=>["l",p.x,p.d,cx,cd]);
+    const fe=polyEdges(g,"x",FRONT_FACING), se=polyEdges(g,"d",SIDE_FACING(v));
+    const fvVis=fe.vis.map(x=>["l",x,0,cx,H]), fvHid=fe.hid.map(x=>["l",x,0,cx,H,1]);
+    const svVis=se.vis.map(d=>["l",d,0,cd,H]), svHid=se.hid.map(d=>["l",d,0,cd,H,1]);
+    const lats=[]; for(let i=1;i<=n;i++) lats.push("lat"+i);
+    const cnt=(k,one,many)=>k===1?("one "+one):(k+" "+many);
+    return {L:L,B:B,H:H, order:["tv","fv","sv"],          // the true shape of the base is seen from above: start with the top view
+    model:()=>{ const m=m_pyr(n,s,H,g.ph); m.verts.forEach(p=>{ p.x+=cx; p.z+=cd; }); return m; },
+    hlAll:["base"].concat(lats),
+    fin:{fv:[["l",0,0,L,0]].concat(fvVis), tv:polyTV.concat(spokes), sv:[["l",0,0,B,0]].concat(svVis)},
+    hid:{fv:fvHid, sv:svHid},
+    hidT:{fv:"Now the hidden edges of the FRONT VIEW. "+cnt(fvHid.length,"sloping edge","sloping edges")+" from a rear corner of the base to the apex "+(fvHid.length===1?"lies":"lie")+" behind the front faces and "+(fvHid.length===1?"does":"do")+" not line up with any edge in front: draw "+(fvHid.length===1?"it":"them")+" as thin dashed lines from the base to the apex.",
+          sv:"Now the hidden edges of the "+SV+". "+cnt(svHid.length,"sloping edge","sloping edges")+" on the far side of the pyramid "+(svHid.length===1?"does":"do")+" not line up with any edge on the near side: draw "+(svHid.length===1?"it":"them")+" as thin dashed lines from the base to the apex."},
     groups:[
-      {text:"Draw the axis of the pyramid as a centre line in the FRONT VIEW and mark the apex on it, at the height given on the figure. Join the apex to both ends of the base line. The front view is a triangle: the two sloping lines are the outline, and the two edges that run to the apex from the near corners lie exactly over them.",
-       hl:["lat1","lat2","lat3","lat4"],px:[hs],
-       fv:[["cl",hs,-6,hs,H+8]].concat(slopes),tv:[],sv:[]},
-      {text:"Project the apex straight down into the TOP VIEW: it falls at the centre of the square, on both centre lines. Join it to the four corners of the base. All four sloping edges are seen from above, so all four are full lines - the top view is a square with its two diagonals.",
-       hl:["lat1","lat2","lat3","lat4"],
-       fv:[],tv:[["cl",hs,-6,hs,s+6],["cl",-6,hs,s+6,hs],
-                 ["l",0,0,hs,hs],["l",s,0,hs,hs],["l",0,s,hs,hs],["l",s,s,hs,hs]],sv:[]},
-      {text:"For the "+"side view carry the position of the apex round the 45° line, and its height across from the front view. It gives the same triangle again: a base equal to the depth, and an apex at half the depth.",
-       hl:["lat1","lat2","lat3","lat4"],pd:[hs],
-       fv:[],tv:[],sv:[["cl",hs,-6,hs,H+8]].concat(slopes)}
+      {dimText:"All "+n+" sides of the base are equal to the side given on the figure, and the front side is parallel to X–Y. Dimension that side, along the front edge, before the base is drawn.",
+       dims:[{v:"tv",h:[Math.min(P[0].x,P[1].x),Math.max(P[0].x,P[1].x)],side:"B",text:R1(s)}],
+       text:"Draw the TOP VIEW first - it shows the true shape of the base, a regular "+nm+" of side "+R1(s)+" mm, with the front side parallel to X–Y and each side at the interior angle of "+IA+"° to the last. The apex lies on the axis, so from above it falls at the centre of the "+nm+", where the two centre lines cross. Join it to every corner: all the sloping edges are seen from above, so all are full lines.",
+       hl:["base"].concat(lats),
+       fv:[],tv:polyTV.concat(spokes,[["cl",cx,-6,cx,B+6],["cl",-6,cd,L+6,cd]]),sv:[]},
+      {text:"Draw the axis in the FRONT VIEW and mark the apex on it at the height given on the figure. Project every corner of the base up to the base line and join each to the apex. The two outermost sloping lines are the outline"+(fvVis.length>2?"; "+cnt(fvVis.length-2,"more edge","more edges")+" on the front of the pyramid "+(fvVis.length-2===1?"is":"are")+" seen as full lines":"")+"."+(fvHid.length?" "+cnt(fvHid.length,"edge","edges")+" from the rear corners "+(fvHid.length===1?"is":"are")+" hidden - put in with the hidden edges.":" Every rear edge lies exactly behind a front one, so no dashed line is needed."),
+       hl:lats, px:P.map(p=>p.x).concat([cx]),
+       fv:[["cl",cx,-6,cx,H+8]].concat(fvVis),tv:[],sv:[]},
+      {text:"For the "+SV+" carry the depth of every corner and of the apex round the 45° line, and the height of the apex across from the front view. Join each corner to the apex"+(svHid.length?"; the edges on the far side that are hidden will be dashed.":"."),
+       hl:lats, pd:P.map(p=>p.d).concat([cd]),
+       fv:[],tv:[],sv:[["cl",cd,-6,cd,H+8]].concat(svVis)}
     ]}; };
 
   /* sectional problems - cutting plane parallel to the VP, through the axis of the hole */
@@ -3397,12 +3473,12 @@
   DIMS3.cylSec=DIMS3.cylOnPlate;
   /* these two have no length / depth / height box to dimension */
   const OWN3={
-    hexPrism:(v,o)=>[dP(R1(o.H),[[[v.s/2,0,o.B],[v.s/2,o.H,o.B]],[[3*v.s/2,0,o.B],[3*v.s/2,o.H,o.B]],
-                                 [[0,0,o.B/2],[0,o.H,o.B/2]],[[2*v.s,0,o.B/2],[2*v.s,o.H,o.B/2]]]),
-                     dx(v.s/2,3*v.s/2,[[o.H,o.B],[o.H,0]],R1(v.s))],
-    pyramid:(v,o)=>[dx(0,o.L,[[0,o.B],[0,0]],R1(o.L)),
-                    dP(R1(o.H),[[[0,0,o.B],[o.L/2,o.H,o.B/2]],[[o.L,0,o.B],[o.L/2,o.H,o.B/2]],
-                                [[0,0,0],[o.L/2,o.H,o.B/2]],[[o.L,0,0],[o.L/2,o.H,o.B/2]]])]
+    hexPrism:(v,o)=>{ const g=polyBase(POLYN(v.n||6),v.s), F=g.P[0], G=g.P[1];      // F-G: the front side
+      return [dP(R1(o.H),g.P.map(p=>[[p.x,0,p.d],[p.x,o.H,p.d]])),
+              dx(Math.min(F.x,G.x),Math.max(F.x,G.x),[[o.H,F.d],[0,F.d]],R1(v.s))]; },
+    pyramid:(v,o)=>{ const g=polyBase(POLYN(v.n||4),v.s), F=g.P[0], G=g.P[1];
+      return [dx(Math.min(F.x,G.x),Math.max(F.x,G.x),[[0,F.d]],R1(v.s)),
+              dP(R1(o.H),g.P.map(p=>[[p.x,0,p.d],[g.cx,o.H,g.cd]]))]; }
   };
   DIMS3.ribBracket=v=>{ const zc=v.B/2, xg1=v.L-v.a, xg0=xg1-v.w;
     return [dx(0,v.l1,[[v.H,v.B],[v.H,0]],R1(v.l1)),
@@ -3438,6 +3514,8 @@
         ODP={id:"B",label:"Depth B",unit:"mm"},
         OHT={id:"H",label:"Height H",unit:"mm"};
   const vBase=v=>(v.L<=0||v.B<=0||v.H<=0)?"Length, depth and height must all be positive.":null;
+  const POLY_FIELD=label=>({id:"n",label:label,unit:"",choices:[{v:3,t:"Triangle (3 sides)"},{v:4,t:"Square (4 sides)"},
+                                                              {v:5,t:"Pentagon (5 sides)"},{v:6,t:"Hexagon (6 sides)"}]});
 
   const PROBLEMS=[
     { title:"Problem 1 - Rectangular block",
@@ -3585,15 +3663,19 @@
 
   /* ---- four more problems ---- */
   PROBLEMS.push(
-    { title:"Problem 14 - Hexagonal prism",
-      fields:[{id:"s",label:"Side of the hexagon",unit:"mm"},OHT], defaults:{s:30,H:55},
-      statement:()=>"A regular hexagonal prism stands on its base on the HP with its axis vertical. Two of its rectangular faces are parallel to the VP." +TAIL,
+    { title:"Problem 14 - Prism (triangular, square, pentagonal or hexagonal)",
+      fields:[POLY_FIELD("Shape of the base"),{id:"s",label:"Side of the base",unit:"mm"},OHT], defaults:{n:6,s:30,H:55},
+      statement:v=>{ const n=POLYN(v.n);
+        return "A regular "+POLY_ADJ[n]+" prism stands on its base on the HP with its axis vertical. "
+          +(n%2===0?"Two of its rectangular faces are parallel to the VP.":"One of its rectangular faces is parallel to the VP, on the side nearer the observer.")+TAIL; },
       validate:v=>(v.s<=0||v.H<=0)?"The side and the height must be positive.":null,
       build:v=>buildOrtho(v,OB.hexPrism) },
 
-    { title:"Problem 15 - Square pyramid",
-      fields:[{id:"s",label:"Side of the base",unit:"mm"},OHT], defaults:{s:50,H:65},
-      statement:()=>"A square pyramid stands on its base on the HP with its axis vertical. Two sides of the base are parallel to the VP." +TAIL,
+    { title:"Problem 15 - Pyramid (triangular, square, pentagonal or hexagonal)",
+      fields:[POLY_FIELD("Shape of the base"),{id:"s",label:"Side of the base",unit:"mm"},OHT], defaults:{n:4,s:50,H:65},
+      statement:v=>{ const n=POLYN(v.n);
+        return "A regular "+POLY_ADJ[n]+" pyramid stands on its base on the HP with its axis vertical. "
+          +(n%2===0?"Two sides of the base are parallel to the VP.":"One side of the base is parallel to the VP, on the side nearer the observer.")+TAIL; },
       validate:v=>(v.s<=0||v.H<=0)?"The side and the height must be positive.":null,
       build:v=>buildOrtho(v,OB.pyramid) },
 
@@ -3698,11 +3780,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 22px Arial";
+    gctx.font="bold 17px Arial";
     const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
     gctx.fillRect(x-w/2,y-14,w,28);
-    gText(x,y,t,color||GINK,"bold 22px Arial");
+    gText(x,y,t,color||GINK,"bold 17px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -3824,6 +3906,21 @@
 
 
   let probIndex=0, values={}, P=null, currentStep=1, started=false;
+
+  /* ---- optional usage tracking (see account.js) - a no-op unless a student is logged in ---- */
+  const EG_APP_KEY="orthographic";
+  let egFurthest=0, egCompleted=false, egViaShowAll=false;
+  if(window.EG) EG.trackDuration(EG_APP_KEY);
+  function egResetAttempt(viaShowAll){
+    egFurthest=0; egCompleted=false; egViaShowAll=!!viaShowAll;
+    if(window.EG) EG.track(EG_APP_KEY,(PROBLEMS[probIndex]||{}).title||"","open");
+  }
+  function egTrackStep(s,N){
+    if(!window.EG) return;
+    const title=(PROBLEMS[probIndex]||{}).title||"";
+    if(!egViaShowAll&&s>egFurthest){ egFurthest=s; EG.track(EG_APP_KEY,title,"progress",{step_num:s}); }
+    if(s>=N&&!egCompleted){ egCompleted=true; EG.track(EG_APP_KEY,title,egViaShowAll?"revealed":"complete"); }
+  }
   let viewZoom=1, viewPanX=0, viewPanY=0;
   const ZOOM_MIN=0.4, ZOOM_MAX=6;
 
@@ -3908,6 +4005,7 @@
   }
   function startDrawing(){
     if(!P) return;
+    egResetAttempt(false);
     started=true; currentStep=1; lastSpoken=-1; compassPose=null; syncStartUI(); drawStep(1,true);
   }
 
@@ -4078,6 +4176,7 @@
       clearCanvasWhite();
       return;
     }
+    egTrackStep(s,N);
     speakCurrent();                 // narration and drawing run together
     HL_SEQ=stepHL(P.steps[s-1]);
     renderGiven(animate?[]:HL_SEQ); // when animating, the edges light up one by one
@@ -4090,8 +4189,8 @@
   function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
     if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
   function prevStep(){ if(P&&started&&currentStep>1){currentStep--; compassPose=null; drawStep(currentStep);} }
-  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
-  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
+  function restartSteps(){ if(P){egResetAttempt(false); started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
+  function showAll(){ if(P){egResetAttempt(true); started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
   const voiceSupported=("speechSynthesis" in window);
@@ -4210,9 +4309,13 @@
   const fsWrap=document.getElementById("canvas-wrapper");
   let fsReal=false;
   function isFs(){ return fsWrap.classList.contains("fs-on"); }
-  function setCanvasSize(w,h){
-    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
-    if(w===CANVAS_W&&h===CANVAS_H) return;
+  // w x h is the room on screen; k (>= 1) is how many drawing units go to one screen pixel.
+  function setCanvasSize(w,h,k){
+    k=k||1;
+    w=Math.max(200,Math.round(w*k)); h=Math.max(160,Math.round(h*k));
+    const hd=Math.min((canvas._hdBase||1)/k, Math.sqrt(12e6/(w*h)));   // screen resolution or better, capped at ~12 megapixels so a big full screen stays quick
+    if(w===CANVAS_W&&h===CANVAS_H&&canvas._hdS===hd) return;
+    canvas._hdS=hd;
     CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none"){
       rebuild(false);
@@ -4220,9 +4323,17 @@
       if(st&&st.demo){ lastSpoken=currentStep; drawStep(currentStep,true); }   // re-laid out mid-animation: play it again instead of jumping to its end
     } else clearCanvasWhite();
   }
-  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
-  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
-  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  // In full screen the drawing area takes exactly the room the layout gives it, in the screen's own proportions,
+  // so nothing is stretched in portrait or landscape. On a small screen (a phone) the drawing is still laid out
+  // on at least the 820 x 540 of the normal view and shown scaled down to fit: drawn at one unit per screen pixel,
+  // the lines would be squeezed into a few hundred pixels while the text kept its size, and the labels would pile
+  // up on the drawing. Outside full screen it returns to 820 x 540.
+  function layoutCanvas(){
+    if(isFs()){
+      const cw=Math.max(1,canvas.clientWidth), ch=Math.max(1,canvas.clientHeight);
+      setCanvasSize(cw,ch,Math.max(1,820/cw,540/ch));
+    } else setCanvasSize(820,540,1);
+  }
   let layoutTimer=0;
   function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
   function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }

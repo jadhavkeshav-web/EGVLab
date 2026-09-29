@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in - Engineering Graphics</title>
+<style>
+  :root{
+    --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
+    --line:#dfe5ec; --paper:#f4f6f9; --card:#ffffff; --muted:#6b7686;
+    --bad:#b3261e; --good:#2e7d32;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  body{margin:0; background:var(--paper); color:#16202b; font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex; justify-content:center; padding:32px 16px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 1px 3px rgba(22,52,79,.08);
+    width:100%; max-width:420px; padding:22px 24px;}
+  h1{font-size:1.15rem; color:var(--ink); margin:10px 0 4px;}
+  .back{font-size:.82rem; color:var(--muted); text-decoration:none;}
+  .back:hover{color:var(--ink-2);}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px; line-height:1.35;}
+  .sub{font-size:.85rem; color:var(--muted); margin-bottom:14px;}
+
+  #google-btn{display:flex; justify-content:center; min-height:44px;}
+  .divider{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.78rem; margin:16px 0 4px;}
+  .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  .modes{display:flex; gap:6px; margin:12px 0 4px;}
+  .modes button{flex:1; padding:8px 10px; border:1px solid var(--line); background:#eef2f7;
+    color:var(--ink); border-radius:8px; font:600 .85rem/1 inherit; cursor:pointer;}
+  .modes button[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  label{display:block; font-size:.82rem; color:var(--muted); margin:12px 0 4px;}
+  input, select{width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; background:#fff;}
+  input:focus, select:focus{outline:2px solid var(--ink-2); outline-offset:0; border-color:transparent;}
+  .submit{display:block; margin-top:16px; width:100%; padding:10px; border:0; border-radius:8px; background:var(--accent);
+    color:#fff; font:700 .9rem/1 inherit; cursor:pointer; text-align:center; text-decoration:none;}
+  .submit:disabled{opacity:.6; cursor:default;}
+  .secondary{display:block; margin-top:10px; width:100%; padding:9px; border:1px solid var(--ink); border-radius:8px;
+    color:var(--ink); font:600 .88rem/1 inherit; text-align:center; text-decoration:none; background:#fff;}
+  .link-btn{display:block; margin:12px auto 0; background:none; border:0; color:var(--ink-2); font:inherit; font-size:.85rem; cursor:pointer;}
+  .link-btn:hover{text-decoration:underline;}
+
+  .choice{display:block; width:100%; text-align:left; padding:14px 16px; margin-top:10px; border:1px solid var(--line);
+    border-radius:10px; background:#fff; cursor:pointer; font:inherit;}
+  .choice:hover{border-color:var(--ink-2); background:#f8fafc;}
+  .choice b{display:block; color:var(--ink); font-size:.98rem;}
+  .choice span{display:block; color:var(--muted); font-size:.82rem; margin-top:3px;}
+
+  .suggest{border:1px solid var(--line); border-top:0; border-radius:0 0 8px 8px; max-height:180px; overflow:auto;}
+  .suggest div{padding:7px 10px; font-size:.86rem; cursor:pointer;}
+  .suggest div:hover{background:#eef2f7;}
+  .empty-note{font-size:.8rem; color:var(--bad); margin-top:6px; line-height:1.35;}
+
+  .msg{font-size:.85rem; margin-top:14px; padding:8px 10px; border-radius:8px; line-height:1.35;}
+  .msg.bad{background:#fdecea; color:var(--bad);}
+  .msg.good{background:#e9f6ea; color:var(--good);}
+  .done-text{font-size:.9rem; line-height:1.45; margin:8px 0 4px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <a class="back" href="index.html">&larr; Back to Engineering Graphics</a>
+  <h1 id="title">Sign in</h1>
+  <div class="sub" id="subtitle"></div>
+
+  <!-- Step 1: sign in or create an account -->
+  <section id="step-auth" hidden>
+    <div id="google-area" hidden>
+      <div id="google-btn"></div>
+      <div class="divider">or use your email</div>
+    </div>
+    <div class="modes">
+      <button type="button" id="mode-login" aria-pressed="true">Log in</button>
+      <button type="button" id="mode-signup" aria-pressed="false">Create account</button>
+    </div>
+    <form id="f-login" novalidate>
+      <label for="li-email">Email</label>
+      <input id="li-email" type="email" autocomplete="email">
+      <label for="li-password">Password</label>
+      <input id="li-password" type="password" autocomplete="current-password">
+      <button class="submit" type="submit">Log in</button>
+      <button type="button" class="link-btn" id="go-forgot">Forgot password?</button>
+    </form>
+    <form id="f-signup" novalidate hidden>
+      <label for="su-name">Your full name</label>
+      <input id="su-name" autocomplete="name">
+      <label for="su-email">Email</label>
+      <input id="su-email" type="email" autocomplete="email">
+      <div class="hint">This is your login ID.</div>
+      <label for="su-password">Password</label>
+      <input id="su-password" type="password" autocomplete="new-password">
+      <div class="hint">At least 6 characters.</div>
+      <label for="su-password2">Confirm password</label>
+      <input id="su-password2" type="password" autocomplete="new-password">
+      <button class="submit" type="submit">Create account</button>
+    </form>
+  </section>
+
+  <!-- Step 2: student or faculty -->
+  <section id="step-role" hidden>
+    <button type="button" class="choice" id="pick-student">
+      <b>Student</b><span>Choose your institute and faculty. Your faculty can then see which problems you have worked through.</span>
+    </button>
+    <button type="button" class="choice" id="pick-faculty">
+      <b>Faculty</b><span>Choose your institute. Your students can then find you, and you can follow their progress on a dashboard.</span>
+    </button>
+    <div class="hint" style="margin-top:12px;">This can't be changed later.</div>
+    <button type="button" class="link-btn" id="role-logout">Log out</button>
+  </section>
+
+  <!-- Step 3a: faculty - institute -->
+  <section id="step-faculty" hidden>
+    <form id="f-faculty" novalidate>
+      <label for="fa-institute">Institute name</label>
+      <input id="fa-institute" autocomplete="off" placeholder="e.g. XYZ College of Engineering">
+      <div id="fa-suggest" class="suggest" hidden></div>
+      <div class="hint">If your institute appears in the list, pick it, so that all its faculty are grouped together. Otherwise type its full name.</div>
+      <button class="submit" type="submit">Finish</button>
+    </form>
+    <button type="button" class="link-btn" data-back>&larr; Back</button>
+  </section>
+
+  <!-- Step 3b: student - institute, then faculty -->
+  <section id="step-student" hidden>
+    <form id="f-student" novalidate>
+      <label for="st-institute">Institute</label>
+      <input id="st-institute" autocomplete="off" placeholder="Start typing your institute's name">
+      <div id="st-suggest" class="suggest" hidden></div>
+      <div id="st-empty" class="empty-note" hidden></div>
+      <label for="st-faculty">Faculty</label>
+      <select id="st-faculty" disabled><option value="">Pick your institute first</option></select>
+      <button class="submit" type="submit">Finish</button>
+    </form>
+    <button type="button" class="link-btn" data-back>&larr; Back</button>
+  </section>
+
+  <!-- Forgot password: request a reset link -->
+  <section id="step-forgot" hidden>
+    <form id="f-forgot" novalidate>
+      <label for="fp-email">Email</label>
+      <input id="fp-email" type="email" autocomplete="email">
+      <button class="submit" type="submit">Send reset link</button>
+    </form>
+    <button type="button" class="link-btn" data-back-auth>&larr; Back to sign in</button>
+  </section>
+
+  <!-- Reset password: opened from the emailed link (account.html?reset=TOKEN) -->
+  <section id="step-newpw" hidden>
+    <form id="f-newpw" novalidate>
+      <label for="np-password">New password</label>
+      <input id="np-password" type="password" autocomplete="new-password">
+      <div class="hint">At least 6 characters.</div>
+      <label for="np-password2">Confirm new password</label>
+      <input id="np-password2" type="password" autocomplete="new-password">
+      <button class="submit" type="submit">Set new password</button>
+    </form>
+  </section>
+
+  <!-- Already signed in -->
+  <section id="step-done" hidden>
+    <p class="done-text" id="done-text"></p>
+    <a class="submit" href="index.html">Go to the apps</a>
+    <a class="secondary" id="done-dashboard" href="dashboard.html" hidden>Open the faculty dashboard</a>
+    <a class="secondary" id="done-dashboard-admin" href="dashboard.html?admin=1" hidden>Open the admin dashboard (all institutes)</a>
+    <button type="button" class="link-btn" id="done-change-pw-btn">Change password</button>
+    <form id="f-change-pw" hidden novalidate style="margin-top:8px;">
+      <label for="cp-current" id="cp-current-label">Current password</label>
+      <input id="cp-current" type="password" autocomplete="current-password">
+      <label for="cp-new">New password</label>
+      <input id="cp-new" type="password" autocomplete="new-password">
+      <div class="hint">At least 6 characters.</div>
+      <label for="cp-new2">Confirm new password</label>
+      <input id="cp-new2" type="password" autocomplete="new-password">
+      <button class="submit" type="submit">Save new password</button>
+    </form>
+    <button type="button" class="link-btn" id="done-logout">Log out</button>
+  </section>
+
+  <div id="msg" class="msg" hidden></div>
+</div>
+
+<script src="account.js"></script>
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+
+  var STEPS = {
+    auth:    ["Sign in", "Optional — only needed if faculty want to follow their students' progress."],
+    role:    ["Are you a student or a faculty member?", ""],
+    faculty: ["Which institute are you at?", ""],
+    student: ["Find your faculty", "Your institute appears here once your faculty has signed up."],
+    done:    ["You're signed in", ""],
+    forgot:  ["Reset your password", "Enter the email you signed up with."],
+    newpw:   ["Choose a new password", ""]
+  };
+  function show(step){
+    Object.keys(STEPS).forEach(function(s){ $("step-" + s).hidden = (s !== step); });
+    $("title").textContent = STEPS[step][0];
+    $("subtitle").textContent = STEPS[step][1];
+    $("subtitle").hidden = !STEPS[step][1];
+    clearMsg();
+  }
+
+  var msgEl = $("msg");
+  function showMsg(text, good){ msgEl.textContent = text; msgEl.className = "msg " + (good ? "good" : "bad"); msgEl.hidden = false; }
+  function clearMsg(){ msgEl.hidden = true; }
+
+  function errText(d){
+    if (!EG.apiBase() || (d && d.error === "not configured")) return "This site's account system isn't set up yet.";
+    if (!d || !d._status) return "Couldn't reach the server — please check your connection and try again.";
+    return d.error || "Something went wrong. Please try again.";
+  }
+
+  function busy(form, on){ var b = form.querySelector("button[type=submit]"); if (b) b.disabled = on; }
+
+  // ---- after any successful sign-in ----
+  function signedIn(d, note){
+    if (!d || d.ok !== true){ showMsg(errText(d), false); return; }
+    EG.setSession(d.token, d.user);
+    if (!d.user.role){ show("role"); if (note) showMsg(note, true); return; }
+    showDone(d.user);
+    showMsg((note ? note + " " : "") + "Taking you to the apps…", true);
+    setTimeout(function(){ location.href = "index.html"; }, note ? 2500 : 900);
+  }
+
+  var currentUser = null;
+  function showDone(user){
+    currentUser = user;
+    show("done");
+    var t;
+    if (user.role === "admin") {
+      t = "Signed in as " + user.name + " (admin). You can see usage across every institute on the dashboard.";
+    } else if (user.role === "faculty") {
+      t = "Signed in as " + user.name + " (faculty, " + (user.institute || "no institute") + ")" +
+          (user.is_admin ? " with admin access" : "") + ". " +
+          "Ask your students to sign up, choose “Student”, and pick " + (user.institute || "your institute") + " and your name.";
+    } else {
+      t = "Signed in as " + user.name + " (student)" +
+          (user.faculty ? ". Faculty: " + user.faculty.name + (user.institute ? ", " + user.institute : "") : "") +
+          ". Your work in the apps is now visible to your faculty.";
+    }
+    $("done-text").textContent = t;
+    // A stand-alone admin account only ever sees the all-institutes view; a
+    // faculty account with the extra is_admin privilege gets both, so it can
+    // switch between its own students and everyone.
+    $("done-dashboard").hidden = !(user.role === "faculty");
+    $("done-dashboard-admin").hidden = !(user.role === "admin" || (user.role === "faculty" && user.is_admin));
+    $("f-change-pw").hidden = true;
+    var hasPassword = !user.sign_in || user.sign_in.password;
+    $("cp-current-label").hidden = !hasPassword;
+    $("cp-current").hidden = !hasPassword;
+  }
+
+  function doLogout(){ EG.logout().then(function(){ show("auth"); initGoogle(); }); }
+  $("role-logout").addEventListener("click", doLogout);
+  $("done-logout").addEventListener("click", doLogout);
+
+  // ---- forgot / reset password ----
+  $("go-forgot").addEventListener("click", function(){
+    $("fp-email").value = $("li-email").value.trim();
+    show("forgot");
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back-auth]"), function(b){
+    b.addEventListener("click", function(){ show("auth"); });
+  });
+  $("f-forgot").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this, email = $("fp-email").value.trim();
+    if (!email){ showMsg("Please enter your email.", false); return; }
+    busy(form, true);
+    EG.forgotPassword(email).then(function(d){
+      busy(form, false);
+      if (!d || d.ok !== true){ showMsg(errText(d), false); return; }
+      showMsg(d.message || "If that email has an account, we've sent a link to reset the password.", true);
+    });
+  });
+  $("f-newpw").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this, pw = $("np-password").value, pw2 = $("np-password2").value;
+    if (pw.length < 6){ showMsg("Password must be at least 6 characters.", false); return; }
+    if (pw !== pw2){ showMsg("The two passwords don't match.", false); return; }
+    busy(form, true);
+    EG.resetPassword(resetToken, pw).then(function(d){
+      busy(form, false);
+      signedIn(d, "Your password has been changed.");
+    });
+  });
+
+  // ---- change password (while signed in) ----
+  $("done-change-pw-btn").addEventListener("click", function(){
+    $("f-change-pw").hidden = !$("f-change-pw").hidden;
+    clearMsg();
+  });
+  $("f-change-pw").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this, cur = $("cp-current").value, pw = $("cp-new").value, pw2 = $("cp-new2").value;
+    if (pw.length < 6){ showMsg("New password must be at least 6 characters.", false); return; }
+    if (pw !== pw2){ showMsg("The two new passwords don't match.", false); return; }
+    busy(form, true);
+    EG.changePassword(cur, pw).then(function(d){
+      busy(form, false);
+      if (!d || d.ok !== true){ showMsg(errText(d), false); return; }
+      form.reset();
+      form.hidden = true;
+      showMsg("Your password has been changed.", true);
+    });
+  });
+
+  // ---- step 1: email log in / create account ----
+  var mode = "login";
+  function setMode(m){
+    mode = m;
+    $("mode-login").setAttribute("aria-pressed", String(m === "login"));
+    $("mode-signup").setAttribute("aria-pressed", String(m === "signup"));
+    $("f-login").hidden = m !== "login";
+    $("f-signup").hidden = m !== "signup";
+    clearMsg();
+  }
+  $("mode-login").addEventListener("click", function(){ setMode("login"); });
+  $("mode-signup").addEventListener("click", function(){ setMode("signup"); });
+
+  $("f-login").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this, email = $("li-email").value.trim(), pw = $("li-password").value;
+    if (!email || !pw){ showMsg("Please enter your email and password.", false); return; }
+    busy(form, true);
+    EG.apiFetch("/login.php", { method:"POST", noAuth:true, body:{ email:email, password:pw } })
+      .then(function(d){ busy(form, false); signedIn(d); });
+  });
+
+  $("f-signup").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this, name = $("su-name").value.trim(), email = $("su-email").value.trim();
+    var pw = $("su-password").value, pw2 = $("su-password2").value;
+    if (!name || !email || !pw){ showMsg("Please fill in your name, email and a password.", false); return; }
+    if (pw.length < 6){ showMsg("Password must be at least 6 characters.", false); return; }
+    if (pw !== pw2){ showMsg("The two passwords don't match.", false); return; }
+    busy(form, true);
+    EG.apiFetch("/signup.php", { method:"POST", noAuth:true, body:{ name:name, email:email, password:pw } })
+      .then(function(d){ busy(form, false); signedIn(d); });
+  });
+
+  // ---- step 1: Continue with Google (only if the site owner has set it up) ----
+  function onGoogle(resp){
+    showMsg("Checking your Google account…", true);
+    EG.apiFetch("/google_login.php", { method:"POST", noAuth:true, body:{ credential: resp.credential } })
+      .then(function(d){
+        signedIn(d, d && d.linked ? "This email now signs in with Google; its old password has been removed." : "");
+      });
+  }
+  var googleStarted = false;
+  function initGoogle(){
+    if (googleStarted) return;
+    googleStarted = true;
+    EG.initGoogle({ button: $("google-btn"), onCredential: onGoogle }).then(function(ok){
+      $("google-area").hidden = !ok;
+    });
+  }
+
+  // ---- step 2: student or faculty ----
+  $("pick-student").addEventListener("click", function(){ show("student"); $("st-institute").focus(); });
+  $("pick-faculty").addEventListener("click", function(){ show("faculty"); $("fa-institute").focus(); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function(b){
+    b.addEventListener("click", function(){ show("role"); });
+  });
+
+  // institute search box shared by both roles
+  function instituteSearch(input, list, onPick, onNoMatch){
+    var timer = null;
+    input.addEventListener("input", function(){
+      var q = input.value.trim();
+      if (timer) clearTimeout(timer);
+      list.hidden = true; list.innerHTML = "";
+      if (!q){ if (onNoMatch) onNoMatch(false); return; }
+      timer = setTimeout(function(){
+        EG.apiFetch("/institutes.php?q=" + encodeURIComponent(q), { noAuth:true }).then(function(d){
+          if (input.value.trim() !== q) return; // the person kept typing - a newer search is on its way
+          list.innerHTML = "";
+          var institutes = (d && d.ok) ? d.institutes : [];
+          if (onNoMatch) onNoMatch(!institutes.length);
+          institutes.forEach(function(inst){
+            var row = document.createElement("div");
+            row.textContent = inst.name;             // textContent only - these names are typed by users
+            row.addEventListener("click", function(){ input.value = inst.name; list.hidden = true; onPick(inst.name, inst.id); });
+            list.appendChild(row);
+          });
+          list.hidden = !institutes.length;
+        });
+      }, 250);
+    });
+  }
+
+  // ---- step 3a: faculty ----
+  instituteSearch($("fa-institute"), $("fa-suggest"), function(){});
+  $("f-faculty").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this, inst = $("fa-institute").value.trim();
+    if (!inst){ showMsg("Please enter your institute's name.", false); return; }
+    busy(form, true);
+    EG.apiFetch("/set_role.php", { method:"POST", body:{ role:"faculty", institute:inst } }).then(function(d){
+      busy(form, false);
+      if (!d || d.ok !== true){ showMsg(errText(d), false); return; }
+      EG.setSession(EG.session().token, d.user);
+      showDone(d.user);
+    });
+  });
+
+  // ---- step 3b: student ----
+  var facSel = $("st-faculty"), stEmpty = $("st-empty");
+  function resetFaculty(text){
+    facSel.innerHTML = ""; facSel.appendChild(new Option(text, "")); facSel.disabled = true;
+  }
+  instituteSearch($("st-institute"), $("st-suggest"), function(name){
+    stEmpty.hidden = true;
+    resetFaculty("Loading…");
+    EG.apiFetch("/faculty_list.php?institute=" + encodeURIComponent(name), { noAuth:true }).then(function(d){
+      var list = (d && d.ok) ? d.faculty : [];
+      if (!list.length){ resetFaculty("No faculty found"); return; }
+      facSel.innerHTML = "";
+      facSel.appendChild(new Option("Choose your faculty", ""));
+      list.forEach(function(f){ facSel.appendChild(new Option(f.name + " (" + f.email + ")", f.id)); });
+      facSel.disabled = false;
+    });
+  }, function(noMatch){
+    resetFaculty("Pick your institute first");
+    stEmpty.hidden = !noMatch;
+    stEmpty.textContent = "No institute found with that name. Your institute appears here only after your faculty has signed up — ask them to sign up first, or check the spelling.";
+  });
+  $("f-student").addEventListener("submit", function(e){
+    e.preventDefault(); clearMsg();
+    var form = this;
+    if (!facSel.value){ showMsg("Please pick your institute from the list, then choose your faculty.", false); return; }
+    busy(form, true);
+    EG.apiFetch("/set_role.php", { method:"POST", body:{ role:"student", faculty_id:facSel.value } }).then(function(d){
+      busy(form, false);
+      if (!d || d.ok !== true){ showMsg(errText(d), false); return; }
+      EG.setSession(EG.session().token, d.user);
+      showDone(d.user);
+    });
+  });
+
+  // ---- start: pick the right step for whoever opened this page ----
+  var resetToken = new URLSearchParams(location.search).get("reset");
+  var sess = EG.session();
+  if (!EG.apiBase()) {
+    show("auth");
+    showMsg("This site's account system isn't set up yet.", false);
+  } else if (resetToken) {
+    show("newpw");
+  } else if (!sess) {
+    show("auth");
+    initGoogle();
+  } else {
+    EG.apiFetch("/me.php").then(function(d){
+      if (d && d.ok && d.user) {
+        EG.setSession(sess.token, d.user);
+        if (!d.user.role) show("role"); else showDone(d.user);
+      } else {
+        show("auth");
+        initGoogle();
+        if (!(d && d._status === 401)) showMsg(errText(d), false);
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

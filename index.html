@@ -34,8 +34,12 @@
     flex:0 0 auto; background:var(--card);
     border-bottom:1px solid var(--line);
     box-shadow:0 1px 3px rgba(22,52,79,.06);
+    display:flex; flex-direction:column;
+    padding:0 16px;
+  }
+  .header-top{
     display:flex; align-items:center; gap:18px;
-    padding:0 16px; min-height:var(--bar);
+    min-height:var(--bar);
   }
   .brand{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
   .brand svg{display:block;}
@@ -43,18 +47,20 @@
   .brand-text b{display:block; font-size:.98rem; color:var(--ink); font-weight:700; letter-spacing:.2px;}
   .brand-text span{display:block; font-size:.73rem; color:var(--muted);}
 
+  /* topic tabs sit on their own row below the brand/account row */
   nav{
-    flex:1 1 auto; display:flex; gap:6px; align-items:center;
+    display:flex; gap:8px; align-items:center;
     overflow-x:auto; scrollbar-width:thin;
+    padding:2px 0 12px;
   }
   nav::-webkit-scrollbar{height:6px;}
   nav::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
 
   .tab{
     flex:0 0 auto; position:relative;
-    padding:8px 14px 9px; border:1px solid var(--line); border-radius:8px;
+    padding:11px 20px 12px; border:1px solid var(--line); border-radius:8px;
     background:var(--card); color:var(--ink);
-    font:600 .875rem/1 inherit; font-family:inherit; cursor:pointer;
+    font-weight:700; font-size:1.25rem; line-height:1; font-family:inherit; cursor:pointer;
     white-space:nowrap;
   }
   .tab:hover{background:#eef2f7;}
@@ -74,13 +80,42 @@
   @media (max-width:1180px){ .credit{display:none;} }
   @media (max-width:640px){
     .brand-text span{display:none;}
-    header{gap:12px; padding:0 10px;}
+    header{padding:0 10px;}
+    .header-top{gap:12px;}
   }
-  /* below this the wordmark crowds the topic tabs - keep the mark, drop the words */
+
+  /* ---------- "How to use" (guided tour) ---------- */
+  .howto{
+    flex:0 0 auto; margin-left:auto; display:inline-flex; align-items:center; gap:6px;
+    padding:6px 12px 6px 6px; border:1px solid var(--line); border-radius:999px;
+    background:var(--card); color:var(--ink); font:600 .82rem/1 inherit; font-family:inherit; cursor:pointer; white-space:nowrap;
+  }
+  .howto:hover{border-color:var(--ink-2);}
+  .howto:focus-visible{outline:2px solid var(--ink-2); outline-offset:2px;}
+  .howto-q{
+    width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff;
+    display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem;
+  }
+  @media (max-width:760px){ .howto{padding:5px;} .howto-t{display:none;} }
+
+  /* ---------- optional account widget + usage strip ---------- */
+  #eg-account{
+    flex:0 0 auto; font-size:.78rem; color:var(--muted); white-space:nowrap;
+  }
+  #eg-account a{color:var(--ink-2); text-decoration:none;}
+  #eg-account a:hover{text-decoration:underline;}
+  /* on phones keep just the links (Log in / Dashboard / Log out), drop the greeting */
+  @media (max-width:760px){ #eg-account{font-size:.72rem;} #eg-account .eg-hi{display:none;} }
+  #eg-usage-summary{
+    display:none; flex:0 0 auto; text-align:center; font-size:.76rem; color:var(--muted);
+    padding:5px 12px; background:var(--card); border-bottom:1px solid var(--line);
+  }
+  /* below this the wordmark crowds the account/credit row - keep the mark, drop the words */
   @media (max-width:560px){
     .brand-text{display:none;}
-    header{gap:10px; padding:0 8px;}
-    .tab{padding:8px 11px 9px; font-size:.83rem;}
+    header{padding:0 8px;}
+    .header-top{gap:10px;}
+    .tab{padding:9px 13px 10px; font-size:.9rem;}
   }
 
   /* ---------- stage ---------- */
@@ -109,22 +144,30 @@
 <body>
 
 <header>
-  <div class="brand">
-    <!-- set-square: the instrument the whole suite imitates -->
-    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-      <path d="M3 22.2 L22.2 22.2 L3 3 Z" fill="none" stroke="#16344f" stroke-width="1.8" stroke-linejoin="round"/>
-      <path d="M3 15.6 L9.6 22.2" fill="none" stroke="#c96a2b" stroke-width="1.8" stroke-linecap="round"/>
-    </svg>
-    <div class="brand-text">
-      <b>Engineering Graphics</b>
-      <span>Interactive drawing simulators</span>
+  <div class="header-top">
+    <div class="brand">
+      <!-- set-square: the instrument the whole suite imitates -->
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+        <path d="M3 22.2 L22.2 22.2 L3 3 Z" fill="none" stroke="#16344f" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M3 15.6 L9.6 22.2" fill="none" stroke="#c96a2b" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-text">
+        <b>Engineering Graphics</b>
+        <span>Interactive drawing simulators</span>
+      </div>
     </div>
+
+    <button id="tour-btn" class="howto" type="button" title="How to use - a guided tour">
+      <span class="howto-q" aria-hidden="true">?</span><span class="howto-t">How to use</span>
+    </button>
+    <div id="eg-account"></div>
+    <div class="credit">&copy; 2026 Keshav M. Jadhav &middot; All rights reserved</div>
   </div>
 
   <nav id="tabs" role="tablist" aria-label="Topics"></nav>
-
-  <div class="credit">&copy; 2026 Keshav M. Jadhav &middot; All rights reserved</div>
 </header>
+
+<div id="eg-usage-summary"></div>
 
 <main>
   <iframe id="stage" title="Selected topic" allowfullscreen></iframe>
@@ -136,6 +179,7 @@
   "use strict";
 
   var TOPICS = [
+    { id:"home",        label:"Home",                     file:"home.html" },
     { id:"curves",      label:"Engineering Curves",       file:"EngineeringCurves_App.html" },
     { id:"lines",       label:"Projection of Lines",      file:"LineProblems_App.html" },
     { id:"orthographic",label:"Orthographic Projection",  file:"OrthographicProjection_App.html" },
@@ -206,7 +250,8 @@
       }catch(err){ tabEls[idx].scrollIntoView(); }
     }
 
-    document.title = t.label + " - Engineering Graphics";
+    document.title = (t.id === "home") ? "Engineering Graphics - Interactive Drawing Simulators"
+                                       : t.label + " - Engineering Graphics";
     stage.setAttribute("title", t.label);
 
     settled = false;
@@ -237,11 +282,25 @@
   });
 
   window.addEventListener("hashchange", function(){
-    go((location.hash || "").replace(/^#/, ""), false);
+    var h = (location.hash || "").replace(/^#/, "");
+    if(h === "tour"){ if(window.EGShell.startTour) window.EGShell.startTour(); return; }
+    go(h, false);
   });
 
-  go((location.hash || "").replace(/^#/, ""), true);
+  // For the home page (inside the frame) and the guided tour (tour.js).
+  var firstHash = (location.hash || "").replace(/^#/, "");
+  window.EGShell = {
+    stage: stage,
+    go: function(id){ go(id, true); },
+    current: function(){ return current; },
+    wantTour: firstHash === "tour",     // index.html#tour opens the tour straight away
+    startTour: null                     // filled in by tour.js
+  };
+
+  go(firstHash === "tour" ? "home" : firstHash, true);
 })();
 </script>
+<script src="account.js"></script>
+<script src="tour.js"></script>
 </body>
 </html>

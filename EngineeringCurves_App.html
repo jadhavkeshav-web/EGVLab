@@ -14,6 +14,7 @@
   <meta name="copyright" content="Copyright (c) 2026 Keshav M. Jadhav. All rights reserved.">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Engineering Curves - Problems with Stepwise Solutions</title>
+  <script src="account.js"></script>
   <style>
     :root{
       --ink:#16344f; --ink-2:#2a5a86; --accent:#c96a2b;
@@ -92,17 +93,23 @@
     #space-hint{font-size:.8rem;color:var(--muted);margin-left:auto;}
     #spaceCanvas{touch-action:none;width:100%;height:auto;background:#fff;border:1px solid #eef1f5;border-radius:6px;cursor:crosshair;}
     #spaceCanvas.dragging{cursor:move;}
-    #zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    #zoom-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
     #zoom-toolbar button{flex:0 0 auto;width:38px;padding:6px 0;font-size:1.05rem;line-height:1;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;}
     #zoom-toolbar button:hover{background:#eef2f7;}
     #zoom-toolbar .fit-btn{width:auto;padding:6px 12px;font-size:.85rem;}
     #zoom-level{min-width:52px;text-align:center;font-size:.9rem;color:#2c3644;font-weight:600;}
-    .fs-only{display:none;}
     #zoom-toolbar .fs-btn{width:auto;padding:6px 12px;font-size:.85rem;}
+    /* step-navigation controls, relocated here from the left panel so they sit right above the sketch
+       (and so the same controls - not a duplicate set - are still reachable in full screen) */
+    #step-toolbar{display:flex;align-items:center;gap:14px;row-gap:8px;flex-wrap:wrap;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--line);}
+    #step-toolbar .btn-group{margin-bottom:0;flex-wrap:wrap;}
+    #step-toolbar .btn-group button{flex:0 0 auto;padding:7px 14px;}
+    #step-toolbar .speed-row{flex-wrap:nowrap;}
+    #step-toolbar .speed-row select{flex:0 0 auto;width:auto;}
     /* full screen (real or, where the browser has none, a page-filling overlay) */
     #canvas-wrapper.fs-on{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;padding:6px 8px;border-radius:0;border:0;box-shadow:none;overflow:hidden;}
     #canvas-wrapper.fs-on #zoom-toolbar{flex:0 0 auto;flex-wrap:wrap;margin-bottom:6px;}
-    #canvas-wrapper.fs-on .fs-nav{display:flex;gap:8px;flex-wrap:wrap;}
+    #canvas-wrapper.fs-on #step-toolbar{flex:0 0 auto;}
     #canvas-wrapper.fs-on canvas#projectionCanvas{flex:1 1 0;height:0;min-height:0;width:100%;max-width:none;border:0;border-radius:0;}
     #canvas-wrapper.fs-on #space-wrap{display:none !important;}
     /* phones and small tablets */
@@ -154,27 +161,6 @@
       </div>
 
       <h4>Step-by-step solution</h4>
-      <div class="btn-group" id="start-row">
-        <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
-      </div>
-      <div class="btn-group">
-        <button id="prevButton" onclick="prevStep()">◀ Previous</button>
-        <button id="nextButton" onclick="nextStep()">Next ▶</button>
-      </div>
-      <div class="btn-group">
-        <button onclick="restartSteps()">Restart</button>
-        <button onclick="showAll()">Show all</button>
-        <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
-      </div>
-      <div class="btn-group speed-row">
-        <label for="speedSel">Drawing speed</label>
-        <select id="speedSel" onchange="setSpeed(this.value)">
-          <option value="1.7">Slow</option>
-          <option value="1" selected>Normal</option>
-          <option value="0.62">Fast</option>
-          <option value="0.35">Very fast</option>
-        </select>
-      </div>
       <div id="stepCounter"></div>
       <div id="step-viewport" title="Tap the step to hear it read aloud"><ul id="stepList"></ul></div>
       <div id="results"></div>
@@ -187,14 +173,30 @@
         <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
         <button class="fit-btn" onclick="resetView()">Fit view</button>
         <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="Full screen">⛶ Full screen</button>
-        <span class="fs-only fs-nav">
-          <button class="fs-btn" id="fsPrev" onclick="prevStep()">◀ Previous</button>
-          <button class="fs-btn" id="fsNext" onclick="nextStep()">Next ▶</button>
-          <button class="fs-btn" id="fsRestart" onclick="restartSteps()">↺ Restart</button>
-          <button class="fs-btn" id="fsVoice" onclick="toggleVoice()">🔊 Sound on</button>
-        </span>
-
         <span id="zoom-hint">Ctrl + scroll to zoom · Drag to pan</span>
+      </div>
+      <div id="step-toolbar">
+        <div class="btn-group" id="start-row">
+          <button id="startButton" class="start-btn" onclick="startDrawing()">▶ Start drawing</button>
+        </div>
+        <div class="btn-group">
+          <button id="prevButton" onclick="prevStep()">◀ Previous</button>
+          <button id="nextButton" onclick="nextStep()">Next ▶</button>
+        </div>
+        <div class="btn-group">
+          <button onclick="restartSteps()">Restart</button>
+          <button onclick="showAll()">Show all</button>
+          <button id="voiceBtn" class="on" onclick="toggleVoice()">🔊 Voice on</button>
+        </div>
+        <div class="btn-group speed-row">
+          <label for="speedSel">Drawing speed</label>
+          <select id="speedSel" onchange="setSpeed(this.value)">
+            <option value="1.7">Slow</option>
+            <option value="1" selected>Normal</option>
+            <option value="0.62">Fast</option>
+            <option value="0.35">Very fast</option>
+          </select>
+        </div>
       </div>
       <canvas id="projectionCanvas" width="820" height="540"></canvas>
 
@@ -215,7 +217,7 @@
      match, so the program still draws in the same units (canvas.width / height keep returning the
      drawing size) while the lines and text come out crisp on high-resolution screens and when zoomed. */
   (function(){
-    const S=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+    const S=Math.min(4,Math.max(3,Math.ceil(window.devicePixelRatio||1)));   // at least 3x, so labels stay crisp on a projector
     const PW=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"width");
     const PH=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,"height");
     const gc=HTMLCanvasElement.prototype.getContext;
@@ -223,12 +225,12 @@
       const cx=gc.call(this,type,opts);
       if(type!=="2d"||!cx||this._nohd||this._hdS) return cx;
       const cv=this; let lw=PW.get.call(cv), lh=PH.get.call(cv);
-      cv._hdS=S;
+      cv._hdS=S; cv._hdBase=S;   // _hdS drops below S in full screen on a small screen (see layoutCanvas)
       const st=cx.setTransform;
-      cx.setTransform=function(a,b,c,d,e,f){ return (typeof a==="number")?st.call(this,a*S,b*S,c*S,d*S,e*S,f*S):st.apply(this,arguments); };
-      cx.resetTransform=function(){ return st.call(this,S,0,0,S,0,0); };
-      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*S)); cx.setTransform(1,0,0,1,0,0); }});
-      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0); }});
+      cx.setTransform=function(a,b,c,d,e,f){ const k=cv._hdS; return (typeof a==="number")?st.call(this,a*k,b*k,c*k,d*k,e*k,f*k):st.apply(this,arguments); };
+      cx.resetTransform=function(){ return st.call(this,cv._hdS,0,0,cv._hdS,0,0); };
+      Object.defineProperty(cv,"width",{configurable:true,get(){ return lw; },set(v){ lw=+v; PW.set.call(cv,Math.round(lw*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
+      Object.defineProperty(cv,"height",{configurable:true,get(){ return lh; },set(v){ lh=+v; PH.set.call(cv,Math.round(lh*cv._hdS)); cx.setTransform(1,0,0,1,0,0); }});
       PW.set.call(cv,Math.round(lw*S)); PH.set.call(cv,Math.round(lh*S)); cx.setTransform(1,0,0,1,0,0);
       return cx;
     };
@@ -236,8 +238,8 @@
   let CANVAS_W=820, CANVAS_H=540;
   const PX=v=>Math.min(v,CANVAS_W*0.4), PY=v=>Math.min(v,CANVAS_H*0.26);   // side / top-bottom allowances scale down on small canvases
   const LW_THIN=1.2, LW_THICK=2.8;
-  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#333", COL_LOCUS="#777", COL_PROJ="#777";
-  const FONT_MAIN="13px Arial", FONT_DIM="20px Arial";
+  const COL_AXIS="#111", COL_THICK="#111", COL_THIN="#555", COL_DIM="#222", COL_LOCUS="#777", COL_PROJ="#777";
+  const FONT_MAIN="13px Arial", FONT_DIM="15px Arial";
   const PATTERN_LOCUS=[25,5,5,5,5,5], SOLID=[];
   const PATTERN_CENTRE=[20,4,5,4];
   let SCALE_PXMM=0;   // px per mm of the current drawing (for ruler graduations)
@@ -271,11 +273,119 @@
     else if(arrow==="end") drawArrowhead(x2,y2,a,color);
     else if(arrow==="both"){ drawArrowhead(x2,y2,a,color); drawArrowhead(x1,y1,a+Math.PI,color); }
   }
+  /* ---- point names placed clear of the drawing ----
+     When a problem is (re)built, its finished drawing is rendered once without the point names (autoLayout).
+     Each name is then put at the spot nearest its usual position (off) that keeps clear of the lines, the
+     curve and the names already placed, and every step - animated or not - uses that same spot. */
+  const LBL_FONT="15px Arial", LBL_H=12;
+  let LBL=null, LBL_REQ=null;
+  const lblKey=(x,y,t)=>t+"@"+Math.round(x)+","+Math.round(y);
+  function drawLabel(x,y,label,off={x:6,y:6}){
+    if(REC){REC.push({f:"drawLabel",a:Array.from(arguments)});return;}
+    if(LBL_REQ){ LBL_REQ.push({x:x,y:y,t:label,off:off}); return; }
+    const o=(LBL&&LBL.get(lblKey(x,y,label)))||off;
+    ctx.font=LBL_FONT; ctx.fillStyle="#111";
+    ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+o.x,y+o.y);
+  }
   function drawPoint(x,y,label,off={x:6,y:6}){
     if(REC){REC.push({f:"drawPoint",a:Array.from(arguments)});return;}
     ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(x,y,3.2,0,2*Math.PI); ctx.fill();
-    if(label){ ctx.font="20px Arial"; ctx.fillStyle="#222";
-      ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label,x+off.x,y+off.y); }
+    if(label) drawLabel(x,y,label,off);
+  }
+  function autoLayout(){
+    LBL=null;
+    if(!P) return;
+    LBL_REQ=[];
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    try{ P.steps.forEach(st=>{ if(!st.demo) st.d(); }); }catch(e){ console.warn(e); }
+    ctx.restore();
+    const req=LBL_REQ; LBL_REQ=null;
+    // darkness of the drawing per canvas unit, as a summed-area table for quick box totals
+    const W=Math.ceil(CANVAS_W), H=Math.ceil(CANVAS_H), k=canvas._hdS||1;
+    const bw=Math.round(CANVAS_W*k), bh=Math.round(CANVAS_H*k);
+    const px=ctx.getImageData(0,0,bw,bh).data;
+    const T=new Float32Array((W+1)*(H+1));
+    for(let y=0;y<H;y++){
+      let row=0;
+      const y0=Math.floor(y*k), y1=Math.max(y0+1,Math.floor((y+1)*k));
+      for(let x=0;x<W;x++){
+        const x0=Math.floor(x*k), x1=Math.max(x0+1,Math.floor((x+1)*k));
+        let m=0;
+        for(let yy=y0;yy<y1&&yy<bh;yy++) for(let xx=x0;xx<x1&&xx<bw;xx++){
+          const i=(yy*bw+xx)*4, d=255-Math.min(px[i],px[i+1],px[i+2]);
+          if(d>m) m=d;
+        }
+        row+=m>40?Math.pow(m/255,3):0;       // cubed: a faint construction line matters far less than the curve or text
+        T[(y+1)*(W+1)+x+1]=T[y*(W+1)+x+1]+row;
+      }
+    }
+    const ink=(x0,y0,x1,y1)=>{
+      x0=Math.max(0,Math.floor(x0)); y0=Math.max(0,Math.floor(y0)); x1=Math.min(W,Math.ceil(x1)); y1=Math.min(H,Math.ceil(y1));
+      if(x1<=x0||y1<=y0) return 0;
+      return T[y1*(W+1)+x1]-T[y0*(W+1)+x1]-T[y1*(W+1)+x0]+T[y0*(W+1)+x0];
+    };
+    ctx.save(); ctx.font=LBL_FONT;
+    const h=LBL_H;
+    req.forEach(r=>{
+      const w=ctx.measureText(r.t).width;
+      r.w=w; r.pc={x:r.x+r.off.x+w/2, y:r.y+r.off.y};
+      r.cands=[r.pc];
+      for(const g of [4,8,13,19]) for(let a=0;a<24;a++){
+        const c=Math.cos(a*Math.PI/12), s=Math.sin(a*Math.PI/12), d=g+w/2*Math.abs(c)+h/2*Math.abs(s);
+        r.cands.push({x:r.x+c*d, y:r.y+s*d, g:g});
+      }
+    });
+    const gap=(L,R,U,D,p)=>Math.hypot(Math.max(L-p.x,0,p.x-R),Math.max(U-p.y,0,p.y-D));
+    req.forEach(r=>{
+      const w=r.w;
+      r.cands.forEach(c=>{      // the drawing under each candidate never changes - score it once
+        const L=c.x-w/2, R=c.x+w/2, U=c.y-h/2, D=c.y+h/2;
+        c.base=ink(L-1,U-1,R+1,D+1)*10 + Math.hypot(c.x-r.pc.x,c.y-r.pc.y)*0.8 + (c.g||0)*0.4
+             + ((L<2||U<2||R>CANVAS_W-2||D>CANVAS_H-2)?1e6:0);
+        // a name must sit nearer its own point than any other named point, or it reads as the wrong one
+        const own=gap(L,R,U,D,r);
+        req.forEach(o=>{ if(o===r||(Math.abs(o.x-r.x)<1&&Math.abs(o.y-r.y)<1)) return;
+          const d=gap(L,R,U,D,o); if(d<own+5) c.base+=(own+5-d)*8; });
+      });
+    });
+    const boxOf=(r,c)=>({L:c.x-r.w/2,R:c.x+r.w/2,U:c.y-h/2,D:c.y+h/2});
+    const choose=r=>{
+      let best=r.pc, bs=Infinity;
+      r.cands.forEach(c=>{
+        const b0=boxOf(r,c); let sc=c.base;
+        req.forEach(o=>{ if(o===r||!o.box) return; const b=o.box;
+          const ox=Math.min(b0.R+2,b.R)-Math.max(b0.L-2,b.L), oy=Math.min(b0.D+2,b.D)-Math.max(b0.U-2,b.U);
+          if(ox>0&&oy>0) sc+=ox*oy*50; });
+        if(sc<bs){ bs=sc; best=c; }
+      });
+      r.pick=best; r.box=boxOf(r,best);
+    };
+    req.forEach(choose);                         // in drawing order ...
+    for(let pass=0;pass<2;pass++) req.forEach(choose);   // ... then let each name move again, knowing where all the others went
+    const out=new Map();
+    req.forEach(r=>out.set(lblKey(r.x,r.y,r.t),{x:r.pick.x-r.w/2-r.x, y:r.pick.y-r.y}));
+    ctx.restore();
+    LBL=out;
+  }
+  /* ---- dimensions with extension lines, standing about 10 mm clear of the object ---- */
+  const MM10=s=>Math.max(10*s,30);                        // 10 mm at the drawing scale, but room for the figure on a small drawing
+  const DIM_OFF=()=>MM10(SCALE_PXMM||2.4);                 // object to first dimension line
+  const DIM_STEP=()=>Math.max(18,8*(SCALE_PXMM||2.4));    // between stacked dimension lines
+  const EXT_OVER=()=>Math.max(6,2.5*(SCALE_PXMM||2.4));   // extension line runs a little past the dimension line
+  // horizontal dimension at height yd between the points (x1,y1) and (x2,y2) of the object
+  function dimHExt(x1,y1,x2,y2,yd,label){
+    [[x1,y1],[x2,y2]].forEach(p=>{ if(Math.abs(p[1]-yd)<1) return;
+      const dir=Math.sign(yd-p[1]);
+      drawLine(p[0],p[1]+dir*3,p[0],yd+dir*EXT_OVER(),COL_DIM,LW_THIN); });
+    drawHorizontalDim(yd,x1,x2,label);
+  }
+  // vertical dimension at x = xd between the points (x1,y1) and (x2,y2) of the object
+  function dimVExt(x1,y1,x2,y2,xd,label){
+    [[x1,y1],[x2,y2]].forEach(p=>{ if(Math.abs(p[0]-xd)<1) return;
+      const dir=Math.sign(xd-p[0]);
+      drawLine(p[0]+dir*3,p[1],xd+dir*EXT_OVER(),p[1],COL_DIM,LW_THIN); });
+    drawVerticalDim(xd,Math.min(y1,y2),Math.max(y1,y2),label);
   }
   function drawText(x,y,t,color="#111",font=FONT_DIM,al="left",bl="middle"){
     if(REC){REC.push({f:"drawText",a:Array.from(arguments)});return;}
@@ -347,7 +457,7 @@
   let animId=0;      // token to cancel a running animation
   let compassPose=null;   // {ax,ay,bx,by} - where the compass legs last were, so it can move (not vanish) to its next job
 
-  const EXEC={drawLine,drawPoint,drawText,drawArc,drawArcWithMidArrow,
+  const EXEC={drawLine,drawPoint,drawLabel,drawText,drawArc,drawArcWithMidArrow,
               drawAngleDimOutward,drawVerticalDim,drawHorizontalDim,drawAlignedLabel,
               drawRLine,drawSLine,drawCircle,markAngles,stepOff,rollSet,scaleMarks,measureSpan,
               drawCut,drawArcPlain,lineSet};
@@ -457,15 +567,15 @@
   // Diameter dimension OUTSIDE the circle: two extension lines touching the circle and a dimension line with arrowheads between them.
   function circleDimOutside(cx,cy,R,label,side){
     if(side==="left"){
-      const x=cx-R-26;
-      drawLine(cx,cy-R,x-4,cy-R,COL_DIM,LW_THIN);
-      drawLine(cx,cy+R,x-4,cy+R,COL_DIM,LW_THIN);
+      const x=cx-R-DIM_OFF();
+      drawLine(cx,cy-R,x-EXT_OVER(),cy-R,COL_DIM,LW_THIN);
+      drawLine(cx,cy+R,x-EXT_OVER(),cy+R,COL_DIM,LW_THIN);
       drawVerticalDim(x,cy-R,cy+R,label);
       return;
     }
-    const dir=(side==="bottom")?1:-1, y=cy+dir*(R+24);
-    drawLine(cx-R,cy,cx-R,y+dir*4,COL_DIM,LW_THIN);
-    drawLine(cx+R,cy,cx+R,y+dir*4,COL_DIM,LW_THIN);
+    const dir=(side==="bottom")?1:-1, y=cy+dir*(R+DIM_OFF());
+    drawLine(cx-R,cy,cx-R,y+dir*EXT_OVER(),COL_DIM,LW_THIN);
+    drawLine(cx+R,cy,cx+R,y+dir*EXT_OVER(),COL_DIM,LW_THIN);
     drawHorizontalDim(y,cx-R,cx+R,label);
   }
   function diameterDimAuto(cx,cy,pt,D,ext=28,off=-8,t=0.85){
@@ -1119,13 +1229,25 @@
     ctx.fillText(text,lx+(lx<px?-5:5),ly);
   }
   EXEC.drawCurveLabel=drawCurveLabel;
-  // Concept animation (rolling circle, unwinding string ...). fn(t) draws the picture for t = 0..1;
-  // when animated it plays over dur ms, otherwise it shows the finished picture (t = 1).
-  function demoAnim(fn,dur){
+  // Concept animation (rolling circle, unwinding string ...). fn(t) draws the picture for t = 0..1.
+  // still=true shows only the starting position (t = 0); otherwise it plays over dur ms when
+  // animated, and shows the finished picture (t = 1) when not.
+  function demoAnim(fn,dur,still){
     if(REC){REC.push({f:"demoAnim",a:Array.from(arguments)});return;}
-    fn(1);
+    fn(still?0:1);
   }
   EXEC.demoAnim=demoAnim;
+  // A concept animation takes two steps: the starting position first, then - on Next - the animation.
+  // So nothing moves before the student asks for it (entering full screen re-draws the current step,
+  // which used to set the animation going by itself).
+  function demoSteps(text,fn,dur){
+    const cut=text.indexOf(" Watch the animation");
+    const intro=cut>0?text.slice(0,cut):text, watch=cut>0?text.slice(cut+1):text;
+    return [
+      {demo:true, text:intro+" The picture shows the starting position - press Next to watch it move.", d:()=>demoAnim(fn,dur,true)},
+      {demo:true, text:watch, d:()=>demoAnim(fn,dur)}
+    ];
+  }
   // helix drawn on a 3-D solid: pts = [{x,y,vis}]; the visible (near) runs are dark and solid, the hidden (far) runs thin, light and dashed
   function drawHelixPts(pts){
     let s0=0;
@@ -1143,6 +1265,7 @@
     ctx.setLineDash([]);
   }
   async function animDemo(s,items,k,it,myId){
+    if(it.a[2]){ frameDraw(s-1,items,k,()=>it.a[0](0)); return; }   // starting position only - nothing moves yet
     await animateFrames(it.a[1]*SPEED,t=>{
       if(animId!==myId) return false;
       frameDraw(s-1,items,k,()=>it.a[0](t));
@@ -1247,9 +1370,13 @@
     const xmaxAx=xs[xs.length-1];
     const belowMax=Math.max.apply(null,xs.map(x=>x-xV));
     const yTop=Math.max(ym,e*xmaxAx)+12;
-    const yBot=Math.max(ym,belowMax)+12;
     let xR=xEnd;
     if(kind==="ell"){ xR=Math.max(xEnd, 2*xV + f, xV+xEnd); }   // room for F', and for C' (mirror of C about O)
+    // the two dimensions (C-V, then C-F) go below the drawing: 10 mm clear of its lowest line, 8 mm apart
+    const yLow=Math.max(ym,...xs.map(x=>(kind==="par")?yA(x):e*x));
+    const s0=fitBox([{x:-12,y:yTop},{x:xR+22,y:-(yLow+26)}],8).s;          // scale, near enough, to space the two dimension lines
+    const yDim1=yLow+Math.max(10,30/s0), yDim2=yDim1+Math.max(8,34/s0);                     // room for the second figure between them
+    const yBot=yDim2+6;
     const F0=fitBox([{x:-12,y:yTop},{x:xR+22,y:-yBot}],8), s=F0.s, M=F0.M;
     const C=M({x:0,y:0}), Fp=M({x:f,y:0}), V=M({x:xV,y:0});
     const Ept=M({x:xV,y:f-xV});
@@ -1275,13 +1402,13 @@
         drawPoint(C.x,C.y,"C",{x:-16,y:14}); }},
      {text:`Mark the focus F on the axis, ${R1(f)} mm from the directrix.`,
       d:()=>{ drawPoint(Fp.x,Fp.y,"F",{x:-4,y:16});
-        drawHorizontalDim(M({x:0,y:-(yBot-6)}).y,C.x,Fp.x,R1(f)); }},
+        dimHExt(C.x,C.y,Fp.x,Fp.y,M({x:0,y:-yDim2}).y,R1(f)); }},
      {text:isPar?`As the eccentricity is e = 1. Divide CF into ${np} equal parts with the scale.`
              :`As the eccentricity is e = ${eTxt}. Divide CF into ${en}+${ed}=${np} equal parts with the scale.`,
       d:()=>{ scaleMarks(C.x,C.y,Fp.x,Fp.y,np); }},
      {text:`Mark the vertex V on the ${ed===1?"first":ed===2?"second":ed===3?"third":ed+"th"} division from C (the ${np}-part division of CF), so that VF / VC = ${eTxt} = e. V is the nearest point of the curve.`,
       d:()=>{ drawPoint(V.x,V.y,"V",{x:-6,y:16});
-        drawHorizontalDim(M({x:0,y:-(yBot-6)*0.52}).y,C.x,V.x,R1(xV)); }}
+        dimHExt(C.x,C.y,V.x,V.y,M({x:0,y:-yDim1}).y,R1(xV)); }}
     ];
 
     if(!isPar){
@@ -1354,8 +1481,11 @@
           const ang=Math.atan2(p1.y-Fp.y,p1.x-Fp.x);
           drawCut(Fp.x,Fp.y,rad,ang,COL_THIN);
           drawCut(Fp.x,Fp.y,rad,-ang,COL_THIN);
-          drawPoint(p1.x,p1.y,"P"+(q+1),{x:9,y:-15});
-          drawPoint(p2.x,p2.y,"P"+(q+1)+"′",{x:9,y:15}); }});
+          // hyperbola: the eccentricity line runs just outside the upper branch, so name the points on the inner side,
+          // between the perpendiculars
+          const hyp=(kind==="hyp");
+          drawPoint(p1.x,p1.y,"P"+(q+1),hyp?{x:5,y:13}:{x:9,y:-15});
+          drawPoint(p2.x,p2.y,"P"+(q+1)+"′",hyp?{x:5,y:-13}:{x:9,y:15}); }});
     });
 
     steps.push(
@@ -1392,8 +1522,8 @@
 
     const steps=[
      {text:`First lay off the two dimensions that fix the ellipse: the major axis, ${R1(MA)} mm, and the minor axis, ${R1(MI)} mm.`,
-      d:()=>{ drawHorizontalDim(M({x:0,y:b+30}).y,A.x,B.x,R1(MA));
-        drawVerticalDim(M({x:-a-30,y:0}).x,Cc.y,Dd.y,R1(MI)); }},
+      d:()=>{ dimHExt(E.x,E.y,Fq.x,Fq.y,M({x:0,y:b+Math.max(10,30/s)}).y,R1(MA));      // 10 mm clear of the rectangle
+        dimVExt(E.x,E.y,H.x,H.y,M({x:-a-Math.max(10,30/s),y:0}).x,R1(MI)); }},
      {text:`Draw the major axis AB = ${R1(MA)} mm and the minor axis CD = ${R1(MI)} mm, bisecting each other at right angles at O. Both are axes of symmetry, so extend each a little beyond its ends as a centre line.`,
       d:()=>{ drawSLine(A.x,A.y,B.x,B.y,COL_THIN,LW_THIN);
         drawLine(A.x-CL_EXT,A.y,A.x,A.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
@@ -1486,8 +1616,8 @@
 
     const steps=[
      {text:`First lay off the two dimensions that fix the parabola: the base AB, ${R1(base)} mm, and the axis, ${R1(h)} mm.`,
-      d:()=>{ drawHorizontalDim(A.y+30,A.x,B.x,R1(base));
-        drawVerticalDim(A.x-26,V.y,A.y,R1(h)); }},
+      d:()=>{ dimHExt(A.x,A.y,B.x,B.y,A.y+Math.max(10*s,46),R1(base));   // clear of the numbers under the base
+        dimVExt(A.x,A.y,Dd.x,Dd.y,A.x-MM10(s),R1(h)); }},
      {text:`Draw the base AB = ${R1(base)} mm and mark its mid-point O. Erect the axis at O and mark the apex V, ${R1(h)} mm above the base.`,
       d:()=>{ drawSLine(A.x,A.y,B.x,B.y,COL_THIN,LW_THIN);
         drawAngleDimOutward(O.x,O.y,28,"90°",0,-Math.PI/2,true,true);
@@ -1556,15 +1686,15 @@
 
     const steps=[
      {text:`Place the scale horizontally and draw the major axis A-B = ${R1(MA)} mm. Keeping the scale in position, mark the mid-point O.`,
-      d:()=>{ drawSLine(A.x,A.y,B.x,B.y,COL_THIN,LW_THIN);
+      d:()=>{ drawSLine(A.x-12,A.y,B.x+12,B.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);   // the axes are the circles' centre lines: chain lines
         drawPoint(A.x,A.y,"A",{x:-20,y:0}); drawPoint(B.x,B.y,"B",{x:8,y:0});
         drawPoint(cx,cy,"O",{x:5,y:15});
-        drawHorizontalDim(cy+Ra+34,A.x,B.x,R1(MA)); }},
+        dimHExt(A.x,A.y,B.x,B.y,cy+Ra+MM10(s),R1(MA)); }},     // 10 mm below the major-axis circle
      {text:`At O set out 90° with the protractor, then draw the minor axis C-D = ${R1(MI)} mm with the scale, bisected at O.`,
       d:()=>{ drawAngleDimOutward(cx,cy,34,"90°",0,-Math.PI/2,true,true);
-        drawSLine(Cp.x,Cp.y,Dp.x,Dp.y,COL_THIN,LW_THIN);
+        drawSLine(cx,cy-Ra-12,cx,cy+Ra+12,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
         drawPoint(Cp.x,Cp.y,"C",{x:8,y:-12}); drawPoint(Dp.x,Dp.y,"D",{x:8,y:13});
-        drawVerticalDim(cx-Ra-34,Cp.y,Dp.y,R1(MI)); }},
+        dimVExt(Cp.x,Cp.y,Dp.x,Dp.y,cx-Ra-MM10(s),R1(MI)); }},
      {text:"With centre O and the compass, draw two concentric circles taking the major axis and the minor axis as diameters.",
       d:()=>{ drawCircle(cx,cy,Ra,COL_THIN,LW_THIN); drawCircle(cx,cy,Rb,COL_THIN,LW_THIN); }},
      {text:`Divide both circles into ${ND} equal parts. Set the protractor at O and mark ${joinAnd(DV.upperIdx.map(q=>q*DEG+"°"))} (0°, 90° and 180° are already given by the two axes), then draw the radial lines through O.`,
@@ -1629,9 +1759,8 @@
     const hStart=Object.keys(hGroups).map(k=>hGroups[k]);
 
     const steps=[
-     {demo:true,
-      text:`First understand the curve. A CYCLOID is the path traced by a point P on the circumference of a circle that rolls, without slipping, along a straight line. Watch the animation: the circle turns clockwise while it rolls to the right, and after one complete turn P is back on the line, having moved a distance equal to the circumference, πD = ${R1(BL)}. Then construct the curve step by step.`,
-      d:()=>demoAnim(t=>{
+     ...demoSteps(`First understand the curve. A CYCLOID is the path traced by a point P on the circumference of a circle that rolls, without slipping, along a straight line. Watch the animation: the circle turns clockwise while it rolls to the right, and after one complete turn P is back on the line, having moved a distance equal to the circumference, πD = ${R1(BL)}. Then construct the curve step by step.`,
+      t=>{
         const th=t*2*Math.PI, R=r*s, cx=sx+R*th, cy=C0.y, N=Math.max(2,Math.round(th/0.05));
         ctx.save(); ctx.setLineDash([]);
         ctx.strokeStyle=COL_AXIS; ctx.lineWidth=LW_THIN;
@@ -1649,7 +1778,7 @@
         ctx.restore();
         drawArrowArc(cx,cy,R*0.5,-2.6+th,-0.55+th,false,COL_DIM);              // turns clockwise WITH the circle
         drawLine(cx+R+10,cy,cx+R+42,cy,COL_DIM,1.6,SOLID,"end");              // and rolls to the right
-      },7000)},
+      },7000),
      {text:`Mark the centre C on the left of the sheet and, with the compass, draw the rolling circle of radius = ${R1(r)} mm (as diameter ${R1(D)} mm). Mark the generating point P, which starts ${SPNAME}. The curved arrow above the circle shows that it will turn clockwise as it rolls to the right.`,
       d:()=>{ drawCircle(C0.x,C0.y,r*s,COL_THIN,LW_THIN);
         drawPoint(C0.x,C0.y,"C",{x:9,y:-9});
@@ -1658,7 +1787,7 @@
      {text:`From the point where the circle touches the ground draw the base line with the scale, tangent to the circle and equal to the circumference: πD = ${R1(BL)} mm.`,
       d:()=>{ drawSLine(sx,baseY,endX,baseY,COL_AXIS,LW_THIN);
         drawPoint(endX,baseY,"A",{x:9,y:15});
-        drawHorizontalDim(baseY-2*r*s-Math.max(14*s,46),sx,endX,"πD = "+R1(BL)); }},
+        dimHExt(sx,baseY-2*r*s,endX,baseY-r*s,baseY-2*r*s-Math.max(10*s,40),"πD = "+R1(BL)); }},
      {text:`P-A must now be divided into ${ND} equal parts. Set the protractor at P and draw an auxiliary line P-Q at 30° below the base, long enough to take ${ND} convenient divisions (like say ${5*ND} mm and 5 mm each, or ${10*ND} mm and 10 mm each division - here ${ND} × ${R1(part)} = ${R1(aux)} mm).`,
       d:()=>{ markAngles(sx,baseY,84,[INC],true);
         drawSLine(sx,baseY,QN.x,QN.y,COL_THIN,LW_THIN);
@@ -1708,7 +1837,24 @@
   }
 
   /* ---------- involute of a circle ---------- */
+  /* Two constructions, chosen by the string length:
+       - string = circumference (the standard textbook case): the original construction - the string is UNWOUND
+         clockwise from P, the base tangent is the circumference divided into ND parts, and each point is cut on
+         its tangent with the compass.
+       - string shorter or longer than the circumference: the string is laid out straight along the base line at
+         its full length and then WOUND ON to the circle anticlockwise. The base line is divided up to the
+         circumference exactly as before; any extra length is stepped off beyond it with the compass (one
+         division at a time), and a short string simply ends part-way along the divided line. Each point of the
+         curve is at the free length still left (mark k to P) along the tangent at division k. A string that runs
+         out between two divisions finishes ON the circle, found by stepping the leftover with the compass; a
+         string longer than one turn keeps winding on for a second layer using the same tangents. */
   function buildInvolute(v){
+    const CIR=Math.PI*v.d, STR=(v.str>0)?v.str:CIR;
+    return (Math.abs(STR-CIR)<=0.5) ? buildInvoluteEqual(v) : buildInvoluteString(v);
+  }
+
+  /* string = circumference: unwinding, clockwise (the standard construction) */
+  function buildInvoluteEqual(v){
     const D=v.d, r=D/2, CIR=Math.PI*D;
     const DV=divInfo(v.nd), ND=DV.ND, AS=DV.AS, DEG=DV.DEG, QI=DV.QI, HI=DV.HI;
     let part=5; [20,15,10,5].some(p=>{ if(ND*p<=CIR*1.08){ part=p; return true; } return false; });
@@ -1716,7 +1862,7 @@
     const T=i=>i*AS;
     const con=t=>({x:-r*Math.sin(t), y:r*Math.cos(t)});
     const inv=t=>{const c=con(t);return {x:c.x+r*t*Math.cos(t), y:c.y+r*t*Math.sin(t)};};
-    let mnx=-r,mxx=Math.max(r,CIR,run),mny=-r,mxy=r+drop;
+    let mnx=-r,mxx=Math.max(r,CIR,run),mny=-r,mxy=r+drop+20;   // +20: room for the πD dimension below Q
     const raw=[];
     for(let q=0;q<=360;q+=4){ const p=inv(q*Math.PI/180); raw.push(p);
       mnx=Math.min(mnx,p.x); mxx=Math.max(mxx,p.x); mny=Math.min(mny,p.y); mxy=Math.max(mxy,p.y); }
@@ -1731,14 +1877,6 @@
     const measSet=(lo,hi)=>()=>{
       for(let i=lo;i<=hi;i++){ const b=Bt(i); measureSpan(P.x,P.y,b.x,b.y); }
     };
-    const pairSet=(lo,hi)=>()=>{                      // one radius at a time: measure it, then use it
-      for(let i=lo;i<=hi;i++){
-        const b=Bt(i); measureSpan(P.x,P.y,b.x,b.y);
-        const c=CP(i), L=LEN(i), p=IP(i);
-        drawCut(c.x,c.y,L,T(i),COL_THIN);
-        drawPoint(p.x,p.y,"P"+i,radOff(c.x,c.y,p.x,p.y,13));
-      }
-    };
     const markSet=(lo,hi)=>()=>{
       for(let i=lo;i<=hi;i++){
         const c=CP(i), L=LEN(i), p=IP(i);
@@ -1746,11 +1884,20 @@
         drawPoint(p.x,p.y,"P"+i,radOff(c.x,c.y,p.x,p.y,13));
       }
     };
+    // each point in two steps: first set the compass to P-i on the base tangent, then (Next) cut tangent i with it
+    const ptSteps=(lo,hi)=>{
+      const out=[];
+      for(let i=lo;i<=hi;i++) out.push(
+        {text:`Point P${i}: set the compass to the length P-${i} measured along the base tangent (${i} divisions = ${R1(CIR*i/ND)} mm).`,
+         d:measSet(i,i)},
+        {text:`Without altering the compass, put its point on division ${i} of the circle and cut tangent ${i} with a short arc - that is P${i}.`,
+         d:markSet(i,i)});
+      return out;
+    };
 
     const steps=[
-     {demo:true,
-      text:`First understand the curve. An INVOLUTE of a circle is the path traced by the end of a taut string that is unwound from the circle. Watch the animation: the string leaves the circle along a tangent, always kept straight, and its free end P draws the curve. After one complete turn the string is fully unwound and its length equals the circumference, πD = ${R1(CIR)}. Then construct the curve step by step.`,
-      d:()=>demoAnim(t=>{
+     ...demoSteps(`First understand the curve. An INVOLUTE of a circle is the path traced by the end of a taut string that is unwound from the circle. Watch the animation: the string leaves the circle along a tangent, always kept straight, and its free end P draws the curve. After one complete turn the string is fully unwound and its length equals the circumference, πD = ${R1(CIR)}. Then construct the curve step by step.`,
+      t=>{
         const th=t*2*Math.PI, R=r*s, N=Math.max(2,Math.round(th/0.05));
         const c=M(con(th)), p=M(inv(th));
         ctx.save(); ctx.setLineDash([]);
@@ -1768,7 +1915,7 @@
         ctx.restore();
         if(th>0.05){ const q2=M(inv(th+0.03)), dx=q2.x-p.x, dy=q2.y-p.y, L=Math.hypot(dx,dy)||1;
           drawLine(p.x,p.y,p.x+dx/L*30,p.y+dy/L*30,COL_DIM,1.6,SOLID,"end"); }   // direction in which P moves
-      },7000)},
+      },7000),
      {text:`With the compass draw the given circle of diameter D = ${R1(D)} mm. Mark the centre O and the point P at the bottom of the circle, where the string begins to unwind.`,
       d:()=>{ drawCircle(O.x,O.y,r*s,COL_THIN,LW_THIN);
         drawPoint(O.x,O.y,"O",{x:8,y:-9}); drawPoint(P.x,P.y,"P",{x:-18,y:15}); }},
@@ -1784,7 +1931,7 @@
           drawPoint(c.x,c.y,String(i),radOff(O.x,O.y,c.x,c.y,12)); } }},
      {text:`With the scale draw the base tangent at P, equal to the circumference of the circle: πD = ${R1(CIR)} mm.`,
       d:()=>{ drawSLine(P.x,P.y,E.x,E.y,COL_AXIS,LW_THIN);
-        drawHorizontalDim(P.y+34,P.x,E.x,"πD = "+R1(CIR)); }},
+        dimHExt(P.x,P.y,E.x,E.y,M({x:0,y:r+drop+Math.max(14,44/s)}).y,"πD = "+R1(CIR)); }},   // below the 30° construction, clear of the numbering
      {text:`Divide the tangent into ${ND} equal parts in the same way as before: draw an auxiliary line at 30° from P and lay off ${ND} divisions of ${R1(part)} mm with the scale (like say ${5*ND} mm and 5 mm each, or ${10*ND} mm and 10 mm each division).`,
       d:()=>{ markAngles(P.x,P.y,84,[INC],true);
         drawSLine(P.x,P.y,Qa.x,Qa.y,COL_THIN,LW_THIN);
@@ -1804,19 +1951,163 @@
       d:measSet(1,1)},
      {text:`Without altering the compass, put its point on division 1 of the circle and cut tangent 1 with a short arc - that is P1.`,
       d:markSet(1,1)},
-     {text:`Now take each radius in turn: set the compass to P-2 on the base line and cut tangent 2 at P2; then P-3 for tangent 3; then P-4 for tangent 4. The compass is opened once for each point and carried straight to its own tangent.`,
-      d:pairSet(2,4)},
-     {text:`Continue one at a time for tangents ${rangeWords(5,Math.min(8,ND-1))} - measure the length off the base tangent, then swing that same setting onto the tangent of the same number.`,
-      d:pairSet(5,Math.min(8,ND-1))},
-     {text:`${ND>9?"Finish with tangents 9, 10 and 11 in the same way. ":""}The last point P${ND} is the far end of the base tangent, where the whole circumference has been unwound.`,
-      d:()=>{ if(ND>9) pairSet(9,ND-1)(); drawPoint(E.x,E.y,"P"+ND,{x:7,y:-14}); }},
+     ...ptSteps(2,ND-1),
+     {text:`The last point P${ND} is the far end of the base tangent, where the whole circumference has been unwound.`,
+      d:()=>{ drawPoint(E.x,E.y,"P"+ND,{x:7,y:-14}); }},
      {text:`Draw a smooth curve through P, P1, P2 ... P${ND} - the required INVOLUTE of the circle.`,
       d:()=>{ drawCurve(fine,COL_THICK,LW_THICK); labelCurveAuto(fine,"INVOLUTE"); }}
     ];
     const results=`<b>Final Results:</b><table>
       <tr><td>Circle dia D</td><td>${R1(D)}</td><td>Circumference πD</td><td>${R1(CIR)}</td></tr>
       <tr><td>One division</td><td>${R1(CIR/ND)}</td><td>Last tangent length</td><td>${R1(CIR)}</td></tr>
-      <tr><td>Length of the involute</td><td colspan="3">π²D / 2 = ${R1(Math.PI*Math.PI*D/2)} mm</td></tr></table>`;
+      <tr><td>Length of the involute</td><td colspan="3">π²D = ${R1(Math.PI*Math.PI*D)} mm</td></tr></table>`;
+    return {steps,results};
+  }
+
+  /* string shorter or longer than the circumference: winding on, anticlockwise, from the straight string */
+  function buildInvoluteString(v){
+    const D=v.d, r=D/2, CIR=Math.PI*D;
+    const STR=(v.str>0)?v.str:CIR, isLong=STR>CIR;
+    const DV=divInfo(v.nd), ND=DV.ND, AS=DV.AS, DEG=DV.DEG, QI=DV.QI, HI=DV.HI;
+    const div=CIR/ND;                                        // one division of the circumference (arc length)
+    const nFull=Math.floor((STR+1e-6)/div);                  // whole divisions the string covers (can exceed ND)
+    const rem=STR-nFull*div;                                 // what is left after the last whole division
+    const hasRem=rem>0.5;
+    let part=5; [20,15,10,5].some(p=>{ if(ND*p<=CIR*1.08){ part=p; return true; } return false; });
+    const INC=Math.PI/6, aux=ND*part, drop=aux*Math.sin(INC), run=aux*Math.cos(INC);
+    const BL=Math.max(STR,CIR);                              // the base line: the whole circumference is always laid out
+    // winding: the point of the circle reached after angle t (anticlockwise from A at the bottom), the direction
+    // of the free string there, and the free end when a length r*t has wound on
+    const T=k=>k*AS;
+    const conW=t=>({x:r*Math.sin(t), y:r*Math.cos(t)});
+    const tanW=t=>({x:Math.cos(t), y:-Math.sin(t)});
+    const wind=t=>{ const c=conW(t), u=tanW(t), L=STR-r*t; return {x:c.x+L*u.x, y:c.y+L*u.y}; };
+    const thetaMax=STR/r;
+    let mnx=-r,mxx=Math.max(r,BL,run),mny=-r,mxy=r+drop+36;   // room for the two stacked dimensions below Q
+    const raw=[];
+    { const NQ=160; for(let q=0;q<=NQ;q++){ const p=wind(thetaMax*q/NQ); raw.push(p);
+        mnx=Math.min(mnx,p.x); mxx=Math.max(mxx,p.x); mny=Math.min(mny,p.y); mxy=Math.max(mxy,p.y); } }
+    const fb=fitRect(mxx-mnx+42, mxy-mny+42), s=fb.sc;
+    const M=p=>({x:fb.ox+(p.x-mnx+21)*s, y:fb.oy+(p.y-mny+21)*s});
+    const O=M({x:0,y:0}), A=M(conW(0));                      // A: where the string is fixed to the circle
+    const Pf=M({x:STR,y:r});                                 // P: the free end, in its starting position
+    const E=M({x:CIR,y:r});                                  // mark ND: one circumference along the base line
+    const Bt=k=>M({x:div*k,y:r});                            // mark k of the base line
+    const Qa=M({x:run,y:r+drop});
+    const fine=raw.map(M);
+    const CP=k=>M(conW(T(k))), IP=k=>M(wind(T(k))), LEN=k=>(STR-k*div)*s;
+    const endW=wind(thetaMax), Pend=M(endW);                 // the string's final position: ON the circle
+    const YD=M({x:0,y:r+drop+Math.max(14,44/s)}).y;
+    const divNo=k=>((k-1)%ND)+1;                             // circle division used by mark k (second time round for k>ND)
+    const round2=k=>k>ND?` (the second time round the circle)`:``;
+    const ptSteps=[];
+    for(let k=1;k<=nFull;k++){
+      const L=STR-k*div;
+      ptSteps.push(
+       {text:`Point P${k}: set the compass to the distance from mark ${k} to P on the base line - the string still free once ${k} division${k===1?"":"s"} (${R1(k*div)} mm) has wound on: ${R1(L)} mm.`,
+        d:()=>{ const b=Bt(k); measureSpan(b.x,b.y,Pf.x,Pf.y); }},
+       L<0.5 ?
+       {text:`That distance is nothing - the string ends exactly at division ${divNo(k)} of the circle${round2(k)}. Mark P${k} there: it is the final position of the free end.`,
+        d:()=>{ const c=CP(k); drawPoint(c.x,c.y,"P"+k,radOff(O.x,O.y,c.x,c.y,-16)); }} :
+       (k%ND===0) ?
+       {text:`Division ${ND} of the circle is A itself, so its tangent is the base line: with the compass point at A cut the base line - P${k} lies on the base line, ${R1(L)} mm from A. One complete turn of string has wound on.`,
+        d:()=>{ const p=IP(k); drawCut(A.x,A.y,LEN(k),0,COL_THIN); drawPoint(p.x,p.y,"P"+k,{x:-8,y:-16}); }} :
+       {text:`Without altering the compass, put its point on division ${divNo(k)} of the circle${round2(k)} and cut its tangent with a short arc - that is P${k}.`,
+        d:()=>{ const c=CP(k), p=IP(k); drawCut(c.x,c.y,LEN(k),-T(k),COL_THIN);
+          drawPoint(p.x,p.y,"P"+k,k>ND?radOff(O.x,O.y,p.x,p.y,-34):radOff(c.x,c.y,p.x,p.y,13)); }});
+    }
+    const steps=[
+     ...demoSteps(`First understand the curve. Here the string is ${R1(STR)} mm long - ${isLong?"LONGER":"SHORTER"} than the circumference πD = ${R1(CIR)} mm - so it is drawn by WINDING the string on to the circle. The string is fixed to the circle at A and is first laid out straight, at its full length, along the base line; its free end P then swings round as the string winds on anticlockwise, and traces the curve. As more string winds on, less stays free, so P moves closer to the circle${isLong?`; after one complete turn there is still ${R1(STR-CIR)} mm left, and it keeps winding on for a second layer`:`, and the whole string has wound on before one turn is complete`}. The curve ends where the free end reaches the circle itself. Then construct the curve step by step.`,
+      t=>{
+        const th=t*thetaMax, R=r*s;
+        const c=M(conW(th)), p=M(wind(th));
+        ctx.save(); ctx.setLineDash([]);
+        ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK;              // the path traced so far
+        ctx.beginPath(); ctx.moveTo(Pf.x,Pf.y);
+        const N=Math.max(2,Math.round(th/0.03));
+        for(let q=1;q<=N;q++){ const u=M(wind(th*q/N)); ctx.lineTo(u.x,u.y); }
+        ctx.stroke();
+        ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.arc(O.x,O.y,R,0,2*Math.PI); ctx.stroke();
+        ctx.strokeStyle="#c96a2b"; ctx.lineWidth=3;                      // string already wound on
+        ctx.beginPath(); ctx.arc(O.x,O.y,R,Math.PI/2-Math.min(th,2*Math.PI),Math.PI/2,false); ctx.stroke();
+        ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(p.x,p.y); ctx.stroke();   // taut string
+        ctx.fillStyle="#c96a2b"; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill();
+        ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(O.x,O.y,2.6,0,2*Math.PI); ctx.fill();
+        ctx.restore();
+        if(th>0.05 && th<thetaMax-0.05){ const q2=M(wind(th+0.03)), dx=q2.x-p.x, dy=q2.y-p.y, L=Math.hypot(dx,dy)||1;
+          drawLine(p.x,p.y,p.x+dx/L*30,p.y+dy/L*30,COL_DIM,1.6,SOLID,"end"); }
+      },7000),
+     {text:`With the compass draw the given circle of diameter D = ${R1(D)} mm. Mark the centre O and the point A at the bottom of the circle, where the string is fixed.`,
+      d:()=>{ drawCircle(O.x,O.y,r*s,COL_THIN,LW_THIN);
+        drawPoint(O.x,O.y,"O",{x:8,y:-9}); drawPoint(A.x,A.y,"A",{x:-18,y:15}); }},
+     {text:`Divide the circle into ${ND} equal parts. Set the protractor at O and mark ${DEG}° intervals on the upper half; each diameter drawn through O gives the matching point below. Number the points 1 to ${ND} ANTICLOCKWISE from A - the direction in which the string winds on. Dimension the diameter outside the circle.`,
+      d:()=>{ markAngles(O.x,O.y,r*s,DV.upperAng,true);
+        DV.upperIdx.forEach(q=>{ const a=-q*AS;
+          drawLine(O.x+r*s*Math.cos(a),O.y+r*s*Math.sin(a),
+                   O.x-r*s*Math.cos(a),O.y-r*s*Math.sin(a),COL_THIN,LW_THIN); });
+        drawLine(O.x,O.y-r*s,O.x,O.y+r*s,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
+        drawLine(O.x-r*s,O.y,O.x+r*s,O.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
+        // the diameter dimension goes on whichever side (top, left or right) the curve crosses least
+        const Rp=r*s, off=DIM_OFF(), hits=f=>fine.filter(f).length;
+        // (the whole zone from the circle out to beyond the dimension line: the extension lines cross it too)
+        const cand=[["top",hits(p=>Math.abs(p.x-O.x)<Rp+10&&p.y>O.y-Rp-off-34&&p.y<O.y-Rp)],
+                    ["right",hits(p=>Math.abs(p.y-O.y)<Rp+10&&p.x<O.x+Rp+off+50&&p.x>O.x+Rp)],
+                    ["left",hits(p=>Math.abs(p.y-O.y)<Rp+10&&p.x>O.x-Rp-off-50&&p.x<O.x-Rp)]];
+        const side=cand.reduce((b,c)=>c[1]<b[1]?c:b)[0];
+        if(side==="right"){ const x=O.x+Rp+off;
+          drawLine(O.x,O.y-Rp,x+EXT_OVER(),O.y-Rp,COL_DIM,LW_THIN);
+          drawLine(O.x,O.y+Rp,x+EXT_OVER(),O.y+Rp,COL_DIM,LW_THIN);
+          drawVerticalDim(x,O.y-Rp,O.y+Rp,"Ø"+R1(D)); }
+        else circleDimOutside(O.x,O.y,Rp,"Ø"+R1(D),side);
+        for(let i=1;i<=ND-1;i++){ const c=CP(i);
+          drawPoint(c.x,c.y,String(i),radOff(O.x,O.y,c.x,c.y,12)); } }},
+     {text:`With the scale draw the base line: the tangent at A, drawn horizontally to the right, ${isLong?`equal to the string, ${R1(STR)} mm`:`equal to the circumference, πD = ${R1(CIR)} mm`}. Lay the string straight along it from A and mark its free end P, ${R1(STR)} mm from A - the FIRST point of the curve.`,
+      d:()=>{ drawSLine(A.x,A.y,M({x:BL,y:r}).x,A.y,COL_AXIS,LW_THIN);
+        const Ec=M({x:CIR,y:r}), gap=Math.max(DIM_STEP(),40), y1=isLong?YD+gap:YD, y2=isLong?YD:YD+gap;   // shorter dimension nearer the line
+        dimHExt(A.x,A.y,Pf.x,Pf.y,y1,"String length = "+R1(STR));
+        dimHExt(A.x,A.y,Ec.x,Ec.y,y2,"Circumference πD = "+R1(CIR));
+        drawPoint(Pf.x,Pf.y,"P",{x:7,y:-16}); }},
+     {text:`Divide the circumference length along the base line into ${ND} equal parts, as usual: draw an auxiliary line at 30° from A and lay off ${ND} divisions of ${R1(part)} mm with the scale (like say ${5*ND} mm and 5 mm each, or ${10*ND} mm and 10 mm each division).`,
+      d:()=>{ markAngles(A.x,A.y,84,[INC],true);
+        drawSLine(A.x,A.y,Qa.x,Qa.y,COL_THIN,LW_THIN);
+        drawPoint(Qa.x,Qa.y,"Q",{x:9,y:11});
+        scaleMarks(A.x,A.y,Qa.x,Qa.y,ND); }},
+     {text:`Join Q to the point ${R1(CIR)} mm (πD) from A and, with the roll-and-draw scale, draw parallels through each division to divide that length into ${ND} equal parts of ${R1(div)} mm. Number the marks 1 to ${ND}.${isLong?"":` The free end P lies between marks ${nFull} and ${nFull+1}: only ${R1(STR)} mm of the ${R1(CIR)} mm is string.`}`,
+      d:()=>{ drawSLine(Qa.x,Qa.y,E.x,E.y,COL_THIN,LW_THIN);
+        const L=[]; for(let i=ND-1;i>=1;i--){ const q=M({x:run*i/ND,y:r+drop*i/ND}), b=Bt(i);
+          L.push([q.x,q.y,b.x,b.y]); }
+        rollSet(L,COL_PROJ,LW_THIN);
+        for(let i=1;i<=ND;i++){ const b=Bt(i);
+          drawText(b.x,b.y+16,String(i),COL_DIM,"11px Arial","center","middle"); } }},
+     ...(isLong ? [
+     {text:`The string is longer than one circumference, so the base line goes on beyond mark ${ND}. Set the compass to one division (mark ${ND-1} to ${ND}, ${R1(div)} mm) and step it along from mark ${ND}: marks ${ND+1}${nFull>ND+1?` to ${nFull}`:""}${hasRem?`, and then ${R1(rem)} mm is left to P`:` - the last one lands exactly on P`}.`,
+      d:()=>{ const b1=Bt(ND-1), b2=Bt(ND); measureSpan(b1.x,b1.y,b2.x,b2.y);
+        for(let k=ND+1;k<=nFull;k++){ const b0=Bt(k-1), b=Bt(k);
+          drawCut(b0.x,b0.y,div*s,0,COL_THIN);
+          drawText(b.x,b.y+16,String(k),COL_DIM,"11px Arial","center","middle"); } }}
+     ] : []),
+     {text:`At each division point of the circle that the string reaches (1 to ${Math.min(ND-1,nFull)}), draw a tangent, at right angles to the radius at that point. Draw it on the side towards which the string is being wound: going anticlockwise round the circle, the free string lies AHEAD of the point - at division ${QI} (right end of the horizontal diameter) the tangent points straight up, at division ${HI} (top) straight to the left, at division ${3*QI} (left end) straight down, and so on.${isLong?` For the second time round the same tangents are used again.`:""}`,
+      d:()=>{ const last=Math.min(ND-1,Math.max(nFull,isLong?ND-1:0));
+        for(let i=1;i<=last;i++){ const c=CP(i), L=Math.max(0,LEN(i)); if(L<0.5) continue;
+          const u=tanW(T(i));
+          drawSLine(c.x,c.y,c.x+u.x*(L+16),c.y+u.y*(L+16),COL_THIN,LW_THIN); } }},
+     ...ptSteps,
+     ...(hasRem ? [
+     {text:`After mark ${nFull} only ${R1(rem)} mm of string is left - less than one division - so the free end finishes ON the circle a little beyond division ${divNo(nFull)||"A"}. Set the compass to that leftover, the distance from mark ${nFull} to P on the base line.`,
+      d:()=>{ const b=Bt(nFull); measureSpan(b.x,b.y,Pf.x,Pf.y); }},
+     {text:`With the compass point on division ${nFull%ND===0?"A (division "+ND+")":divNo(nFull)} of the circle${round2(nFull)}, cut the circle itself. That cut is P in its final position - the whole string has wound on, and the curve ends there, on the circle.`,
+      d:()=>{ const c=CP(nFull); drawCut(c.x,c.y,rem*s,Math.atan2(Pend.y-c.y,Pend.x-c.x),COL_THIN);
+        drawPoint(Pend.x,Pend.y,"P",radOff(O.x,O.y,Pend.x,Pend.y,-30)); }}
+     ] : []),
+     {text:`Draw a smooth curve from P through P1, P2 ... to the final position of P on the circle - the required INVOLUTE of the circle.`,
+      d:()=>{ drawCurve(fine,COL_THICK,LW_THICK); labelCurveAuto(fine,"INVOLUTE"); }}
+    ];
+    const curveLen=r*thetaMax*thetaMax/2;
+    const results=`<b>Final Results:</b><table>
+      <tr><td>Circle dia D</td><td>${R1(D)}</td><td>Circumference πD</td><td>${R1(CIR)}</td></tr>
+      <tr><td>String length</td><td>${R1(STR)}</td><td>One division</td><td>${R1(div)}</td></tr>
+      <tr><td>Turns wound on</td><td>${R1(STR/CIR)}</td><td>Length of the involute</td><td>${R1(curveLen)} mm</td></tr></table>`;
     return {steps,results};
   }
 
@@ -1832,7 +2123,7 @@
     const r=D/2, H=P*N, M12=ND*N;
     const partH=H/M12, DIRECT=NICE(partH);
     const INC=Math.PI/6, aux=DIRECT?0:M12*partH, drop=aux*Math.sin(INC), run=aux*Math.cos(INC);
-    const fb=fitRect(D+150+run, H+22+D+drop), s=fb.sc;
+    const fb=fitRect(D+150+run, H+22+D+drop+16), s=fb.sc;   // +16: room for the diameter dimension below the plan
     const fx=fb.ox+(26+run)*s, baseY=fb.oy+H*s, cx=fx+r*s;
     const tvC={x:cx, y:baseY+(22+r)*s};
     const th=j=>j*AS;
@@ -1848,9 +2139,8 @@
       else cur.pts.push(p);
     }
     const steps=[
-     {demo:true,
-      text:`First understand the curve. A HELIX is the path of a point that moves at a uniform speed along a straight line (a generator of the cylinder) while that line turns at a uniform speed around the axis. Watch the animation: the solid cylinder is drawn in 3-D, and the helix winds round it. The near half of each turn is drawn dark and solid, while the half on the far side, hidden behind the cylinder, is drawn thin and dashed. In the top view below, the same point goes round the circle while it climbs steadily up the cylinder. The height it gains in one complete turn is the PITCH, ${R1(P)} mm. Then construct the curve step by step.`,
-      d:()=>demoAnim(t=>{
+     ...demoSteps(`First understand the curve. A HELIX is the path of a point that moves at a uniform speed along a straight line (a generator of the cylinder) while that line turns at a uniform speed around the axis. Watch the animation: the solid cylinder is drawn in 3-D, and the helix winds round it. The near half of each turn is drawn dark and solid, while the half on the far side, hidden behind the cylinder, is drawn thin and dashed. In the top view below, the same point goes round the circle while it climbs steadily up the cylinder. The height it gains in one complete turn is the PITCH, ${R1(P)} mm. Then construct the curve step by step.`,
+      t=>{
         const T=t*2*Math.PI*N, Rr=r*s, Hh=H*s, NN=Math.max(2,Math.round(T/0.05));
         const e=Math.min(0.28*Rr,18*s);                                   // depth of the elliptical rims (solid seen from slightly above)
         const yy=a=>baseY-P*s*a/(2*Math.PI)+e*Math.sin(a);
@@ -1879,7 +2169,7 @@
         if(fvis) ctx.fill(); else { ctx.fillStyle="#fff"; ctx.fill(); ctx.strokeStyle="#c96a2b"; ctx.lineWidth=1.2; ctx.stroke(); }
         ctx.restore();
         drawLine(tp.x,tp.y,tp.x-Math.sin(T)*26,tp.y+Math.cos(T)*26,COL_DIM,1.6,SOLID,"end");   // point goes round the circle
-      },4500*N+1500)},
+      },4500*N+1500),
      {text:`Draw the X-Y reference line. Below it draw the TOP VIEW first - a circle of diameter ${R1(D)} mm - with its two centre lines.`,
       d:()=>{ drawSLine(fx-46,baseY,fx+D*s+46,baseY,COL_AXIS,LW_THIN);
         drawText(fx-52,baseY-10,"X",COL_DIM,FONT_MAIN,"right","bottom");
@@ -1887,12 +2177,12 @@
         drawCircle(tvC.x,tvC.y,r*s,COL_THICK,1.8);
         drawLine(tvC.x-r*s-12,tvC.y,tvC.x+r*s+12,tvC.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
         drawLine(cx,tvC.y-r*s-12,cx,tvC.y+r*s+12,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
-        drawHorizontalDim(tvC.y+r*s+42,tvC.x-r*s,tvC.x+r*s,"Ø"+R1(D)); }},
+        dimHExt(tvC.x-r*s,tvC.y,tvC.x+r*s,tvC.y,tvC.y+r*s+MM10(s)+14,"Ø"+R1(D)); }},   // 10 mm below the circle and its numbering
      {text:`Project the left and right extremes of the TOP VIEW circle upward, with the roll-and-draw scale, to fix the width of the FRONT VIEW.`,
       d:()=>{ drawRLine(cx-r*s,tvC.y,cx-r*s,baseY,COL_PROJ,LW_THIN);
         drawRLine(cx+r*s,tvC.y,cx+r*s,baseY,COL_PROJ,LW_THIN); }},
      {text:`Mark the height of the cylinder, ${R1(H)} mm, above X-Y.`,
-      d:()=>{ drawVerticalDim(fx+D*s+22,baseY-H*s,baseY,R1(H)); }},
+      d:()=>{ dimVExt(fx+D*s,baseY-H*s,fx+D*s,baseY,fx+D*s+MM10(s),R1(H)); }},
      {text:`Draw the FRONT VIEW - a rectangle ${R1(D)} mm wide and ${R1(H)} mm high, standing on X-Y.`,
       d:()=>{ drawSLine(fx,baseY,fx+D*s,baseY,COL_THICK,LW_THICK);
         drawSLine(fx,baseY-H*s,fx+D*s,baseY-H*s,COL_THICK,LW_THICK);
@@ -1957,7 +2247,7 @@
     const r=D/2, M12=ND*N;
     const partH=h/M12, DIRECT=NICE(partH);
     const INC=Math.PI/6, aux=DIRECT?0:M12*partH, drop=aux*Math.sin(INC), run=aux*Math.cos(INC);
-    const fb=fitRect(D+96+run, h+24+D), s=fb.sc;
+    const fb=fitRect(D+96+run, h+24+D+16), s=fb.sc;   // +16: room for the diameter dimension below the plan
     const fx=fb.ox+(26+run)*s, baseY=fb.oy+h*s, cx=fx+r*s;
     const apex={x:cx, y:baseY-h*s};
     const tvC={x:cx, y:baseY+(24+r)*s};
@@ -1978,9 +2268,8 @@
       tvFine.push({x:tvC.x+r*s*(1-t/M12)*Math.cos(t*AS), y:tvC.y+r*s*(1-t/M12)*Math.sin(t*AS)}); }
 
     const steps=[
-     {demo:true,
-      text:`First understand the curve. A HELIX on a cone is the path of a point that moves at a uniform speed along a generator of the cone, from the base towards the apex, while that generator turns at a uniform speed around the axis. Watch the animation: the solid cone is drawn in 3-D, and the helix winds round it up to the apex. The near half of each turn is drawn dark and solid, while the half on the far side, hidden behind the cone, is drawn thin and dashed. In the top view below, the point spirals in towards the centre while it climbs steadily up the cone. Then construct the curve step by step.`,
-      d:()=>demoAnim(t=>{
+     ...demoSteps(`First understand the curve. A HELIX on a cone is the path of a point that moves at a uniform speed along a generator of the cone, from the base towards the apex, while that generator turns at a uniform speed around the axis. Watch the animation: the solid cone is drawn in 3-D, and the helix winds round it up to the apex. The near half of each turn is drawn dark and solid, while the half on the far side, hidden behind the cone, is drawn thin and dashed. In the top view below, the point spirals in towards the centre while it climbs steadily up the cone. Then construct the curve step by step.`,
+      t=>{
         const T=t*2*Math.PI*N, Rr=r*s, NN=Math.max(2,Math.round(T/0.05));
         const e=Math.min(0.28*Rr,18*s);                                   // depth of the elliptical base rim (solid seen from slightly above)
         ctx.save(); ctx.setLineDash([]);
@@ -2005,7 +2294,7 @@
         if(fvis) ctx.fill(); else { ctx.fillStyle="#fff"; ctx.fill(); ctx.strokeStyle="#c96a2b"; ctx.lineWidth=1.2; ctx.stroke(); }
         ctx.restore();
         drawLine(tp.x,tp.y,tp.x-Math.sin(T)*26,tp.y+Math.cos(T)*26,COL_DIM,1.6,SOLID,"end");
-      },4500*N+1500)},
+      },4500*N+1500),
      {text:`Draw the X-Y reference line first.`,
       d:()=>{ drawSLine(fx-46,baseY,fx+D*s+46,baseY,COL_AXIS,LW_THIN);
         drawText(fx-52,baseY-10,"X",COL_DIM,FONT_MAIN,"right","bottom");
@@ -2014,7 +2303,7 @@
       d:()=>{ drawCircle(tvC.x,tvC.y,r*s,COL_THICK,1.8);
         drawLine(tvC.x-r*s-12,tvC.y,tvC.x+r*s+12,tvC.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
         drawLine(tvC.x,tvC.y-r*s-12,tvC.x,tvC.y+r*s+12,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
-        drawHorizontalDim(tvC.y+r*s+42,tvC.x-r*s,tvC.x+r*s,"Ø"+R1(D)); }},
+        dimHExt(tvC.x-r*s,tvC.y,tvC.x+r*s,tvC.y,tvC.y+r*s+MM10(s)+14,"Ø"+R1(D)); }},   // 10 mm below the circle and its numbering
      {text:`Divide the circle into ${ND} equal parts: set the protractor at the centre, mark the ${DEG}° intervals on the upper half, and carry each diameter through the centre. Number the points 1 to ${ND} - these radial lines are the generators seen in plan. (Diameters ${QI}-${3*QI} and ${HI}-${ND} are the centre lines already drawn, so they are not re-inked.)`,
       d:()=>{ markAngles(tvC.x,tvC.y,r*s,DV.upperAng,false);
         DV.upperIdx.forEach(q=>{ const a=-q*AS;
@@ -2026,7 +2315,7 @@
       d:()=>{ drawRLine(cx-r*s,tvC.y,cx-r*s,baseY,COL_PROJ,LW_THIN);
         drawRLine(cx+r*s,tvC.y,cx+r*s,baseY,COL_PROJ,LW_THIN); }},
      {text:`Mark the height of the cone, ${R1(h)} mm, above X-Y.`,
-      d:()=>{ drawVerticalDim(fx-22,baseY-h*s,baseY,R1(h)); }},
+      d:()=>{ dimVExt(cx,apex.y,fx+D*s,baseY,fx+D*s+MM10(s),R1(h)); }},   // on the right, clear of the height divisions on the left
      {text:`Draw the FRONT VIEW - a triangle of base ${R1(D)} mm and height ${R1(h)} mm, with apex O on the centre line.`,
       d:()=>{ drawSLine(fx,baseY,fx+D*s,baseY,COL_THICK,LW_THICK);
         drawSLine(fx,baseY,apex.x,apex.y,COL_THICK,LW_THICK);
@@ -2094,6 +2383,8 @@
   /* ---------- Archimedean spiral ---------- */
   function buildSpiral(v){
     const r0=Math.max(0,v.r0), r1=v.r1, N=NTURN(v.n);
+    const FROMP=(+v.st===1), SG=(+v.dir===1)?-1:1;       // start at P (moving in) / at O (moving out);  -1 = anticlockwise
+    const CW=SG>0?"clockwise":"anticlockwise";
     const DV=divInfo(v.nd), ND=DV.ND, AS=DV.AS, DEG=DV.DEG, QI=DV.QI, HI=DV.HI;
     const M12=ND*N, RL=r1-r0, partD=RL/M12, DIRECT=NICE(partD);
     let part=2; [10,5,4,2].some(p=>{ if(M12*p<=1.5*r1){ part=p; return true; } return false; });
@@ -2101,99 +2392,111 @@
     const arun=aux*Math.cos(AINC), adrop=aux*Math.sin(AINC);
     const fb=fitRect(2*r1+52+arun, 2*r1+42+adrop), s=fb.sc;
     const O={x:fb.ox+(r1+26)*s, y:fb.oy+(r1+21)*s};
-    const th=j=>j*AS;
-    const Rj=j=>(r0+(r1-r0)*j/M12)*s;
+    const th=j=>SG*j*AS;                                  // radial line j (canvas angle; lines are numbered in the direction of turning)
+    const Rmm=u=>FROMP?(r1-RL*u):(r0+RL*u);                // radius (mm) after the fraction u of the whole travel
+    const Rj=j=>Rmm(j/M12)*s;
     const PT=j=>({x:O.x+Rj(j)*Math.cos(th(j)), y:O.y+Rj(j)*Math.sin(th(j))});
-    const fine=[]; for(let q=0;q<=M12*10;q++){ const t=q/10;
-      const R=(r0+(r1-r0)*t/M12)*s;
-      fine.push({x:O.x+R*Math.cos(t*AS), y:O.y+R*Math.sin(t*AS)}); }
+    const fine=[]; for(let q=0;q<=M12*10;q++){ const t=q/10, R=Rmm(t/M12)*s;
+      fine.push({x:O.x+R*Math.cos(SG*t*AS), y:O.y+R*Math.sin(SG*t*AS)}); }
     const Ppt={x:O.x+r1*s, y:O.y};
     const auxQ={x:Ppt.x+arun*s, y:Ppt.y+adrop*s};
+    const START=FROMP?"P":(r0>0?"S":"O"), END=FROMP?(r0>0?"S":"O"):"P";
+    const onCircle=j=>({x:O.x+r1*s*Math.cos(th(j)), y:O.y+r1*s*Math.sin(th(j))});
     const measCut=(lo,hi)=>()=>{
       for(let j=lo;j<=hi;j++){
-        const dv={x:O.x+Rj(j)*Math.cos(0), y:O.y};        // the j-th division on O-P
+        const dv={x:O.x+Rj(j), y:O.y};                     // the j-th division on O-P
         measureSpan(O.x,O.y,dv.x,dv.y);                    // radius for this point
-        drawCut(O.x,O.y,Rj(j),th(j),COL_THIN);             // swung onto radial line j
+        if(Rj(j)>0.5) drawCut(O.x,O.y,Rj(j),th(j),COL_THIN);   // swung onto radial line j
         const p=PT(j);
         drawPoint(p.x,p.y,"P"+j,radOff(O.x,O.y,p.x,p.y,13));
       }
     };
+    const divLabels=()=>{ for(let j=1;j<=M12;j++){ const dv={x:O.x+Rj(j),y:O.y};
+      if(j%2===0||M12<=12) drawText(dv.x,O.y+13,String(j),COL_DIM,"9px Arial","center","middle"); } };
     const steps=[
-     {demo:true,
-      text:`First understand the curve. An ARCHIMEDEAN SPIRAL is the path of a point P that moves at a uniform speed along a straight line (the radius vector) while that line turns at a uniform speed about a fixed point, the pole O. Watch the animation: the radius vector turns clockwise and P moves steadily outwards along it, so the distance from O grows by the same amount in every equal turn. Then construct the curve step by step.`,
-      d:()=>demoAnim(t=>{
+     ...demoSteps(`First understand the curve. An ARCHIMEDEAN SPIRAL is the path of a point that moves at a uniform speed along a straight line (the radius vector) while that line turns at a uniform speed about a fixed point, the pole O. Watch the animation: the radius vector turns ${CW} and the point moves steadily ${FROMP?"inwards from P towards O":"outwards from O towards P"} along it, so its distance from O changes by the same amount in every equal turn. Then construct the curve step by step.`,
+      t=>{
         const T=t*2*Math.PI*N, NN=Math.max(2,Math.round(T/0.05));
-        const RR=u=>(r0+(r1-r0)*u)*s;
+        const RR=u=>Rmm(u)*s;
         ctx.save(); ctx.setLineDash([]);
         ctx.strokeStyle="#5b87ad"; ctx.lineWidth=1.2;
         ctx.beginPath(); ctx.arc(O.x,O.y,r1*s,0,2*Math.PI); ctx.stroke();
         ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK; ctx.beginPath();
-        for(let q=0;q<=NN;q++){ const u=t*q/NN, a=T*q/NN, x=O.x+RR(u)*Math.cos(a), y=O.y+RR(u)*Math.sin(a); if(q) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
+        for(let q=0;q<=NN;q++){ const u=t*q/NN, a=SG*T*q/NN, x=O.x+RR(u)*Math.cos(a), y=O.y+RR(u)*Math.sin(a); if(q) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
         ctx.stroke();
-        const p={x:O.x+RR(t)*Math.cos(T), y:O.y+RR(t)*Math.sin(T)};
+        const p={x:O.x+RR(t)*Math.cos(SG*T), y:O.y+RR(t)*Math.sin(SG*T)};
         ctx.strokeStyle="#c96a2b"; ctx.lineWidth=2;
-        ctx.beginPath(); ctx.moveTo(O.x,O.y); ctx.lineTo(O.x+r1*s*Math.cos(T),O.y+r1*s*Math.sin(T)); ctx.stroke();   // radius vector
+        ctx.beginPath(); ctx.moveTo(O.x,O.y); ctx.lineTo(O.x+r1*s*Math.cos(SG*T),O.y+r1*s*Math.sin(SG*T)); ctx.stroke();   // radius vector
         ctx.fillStyle="#c96a2b"; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill();
         ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(O.x,O.y,2.6,0,2*Math.PI); ctx.fill();
         ctx.restore();
-        drawArrowArc(O.x,O.y,Math.max(14,r1*s*0.28),T-0.9,T,false,COL_DIM);                 // the radius vector turns clockwise
-      },4500*N+1500)},
-     {text:`Mark the pole O. Mark the far end P of the tracing point's travel, the greatest radius ${R1(r1)} mm away, and give the distance O-P as a dimension${r0>0?`. Also dimension the shortest radius, ${R1(r0)} mm - the spiral starts at S, that distance from O`:""}. Then draw the horizontal line O-P.`,
-      d:()=>{ drawHorizontalDim(O.y-24,O.x,Ppt.x,"OP = "+R1(r1));
+        drawArrowArc(O.x,O.y,Math.max(14,r1*s*0.28),SG*(T-0.9),SG*T,SG<0,COL_DIM);          // the way the radius vector turns
+      },4500*N+1500),
+     {text:`Mark the pole O and, on a horizontal centre line through it, the point P, the greatest radius ${R1(r1)} mm away; give the distance O-P as a dimension${r0>0?`. Also dimension the shortest radius, ${R1(r0)} mm - the point S, that distance from O`:""}. The point starts at ${START} and ends at ${END}.`,
+      d:()=>{ dimHExt(O.x,O.y,Ppt.x,Ppt.y,O.y-r1*s-MM10(s)-8,"OP = "+R1(r1));   // above the outer circle and its numbering
         if(r0>0) drawHorizontalDim(O.y+24,O.x,O.x+r0*s,R1(r0));
-        drawSLine(O.x,O.y,Ppt.x,Ppt.y,COL_THIN,LW_THIN);
+        drawLine(O.x-r1*s-14,O.y,O.x+r1*s+14,O.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);   // O-P lies on the horizontal centre line
         drawPoint(O.x,O.y,"O",{x:-16,y:14});
         drawPoint(Ppt.x,Ppt.y,"P",{x:9,y:12});
         if(r0>0) drawPoint(O.x+r0*s,O.y,"S",{x:4,y:-12}); }},
-     {text:`Through the pole O draw the horizontal and vertical centre lines. With the compass, centre O and radius O-P, ${R1(r1)} mm, draw a circle - it passes through P.`,
-      d:()=>{ drawLine(O.x-r1*s-14,O.y,O.x+r1*s+14,O.y,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
-        drawLine(O.x,O.y-r1*s-14,O.x,O.y+r1*s+14,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
+     {text:`Through O draw the vertical centre line. With the compass, centre O and radius O-P, ${R1(r1)} mm, draw a circle - it passes through P.`,
+      d:()=>{ drawLine(O.x,O.y-r1*s-14,O.x,O.y+r1*s+14,COL_LOCUS,LW_THIN,PATTERN_CENTRE);
         drawCircle(O.x,O.y,r1*s,COL_THIN,LW_THIN); }},
-     {text:`Divide the circle into ${ND} equal parts of ${DEG}° with the protractor - mark the upper half and carry each diameter through O. Number the radial lines 1, 2, 3 ... ${ND}, taking O-P as line ${ND}.`,
+     {text:`Divide the circle into ${ND} equal parts of ${DEG}°. Set the protractor at O and mark the upper half only; drawing each diameter right through O gives the matching point on the lower half. (The diameters along the two centre lines are already drawn, so they are not re-inked.) Number the radial lines 1, 2, 3 ... ${ND} in the ${CW} direction, taking O-P as line ${ND}.`,
       d:()=>{ markAngles(O.x,O.y,r1*s,DV.upperAng,false);
-        for(let j=1;j<=ND;j++){ const p={x:O.x+r1*s*Math.cos(th(j)), y:O.y+r1*s*Math.sin(th(j))};
-          drawLine(O.x,O.y,p.x,p.y,COL_THIN,LW_THIN);
+        for(let q=1;q<HI;q++){ if(q===QI) continue;       // full diameters, as in the cycloid; the centre lines stay chain lines
+          const a=onCircle(q), b=onCircle(q+HI);
+          drawLine(a.x,a.y,b.x,b.y,COL_THIN,LW_THIN); }
+        for(let j=1;j<=ND;j++){ const p=onCircle(j);
           drawText(p.x+13*Math.cos(th(j)),p.y+13*Math.sin(th(j)),String(j),COL_DIM,"10px Arial","center","middle"); } }},
-     ...(DIRECT?[{text:`O-P must now be divided into ${M12} equal parts. Here ${R1(RL)} mm divides exactly into ${M12} parts of ${R1(partD)} mm each - a whole number - so no auxiliary line is needed: lay the scale along O-P${r0>0?` starting ${R1(r0)} mm from O`:""} and mark off the ${M12} divisions directly. Number them 1, 2, 3 ... from O.`,
-      d:()=>{ scaleMarks(O.x+r0*s,O.y,Ppt.x,Ppt.y,M12);
-        for(let j=1;j<=M12;j++){ const dv={x:O.x+Rj(j),y:O.y};
-          if(j%2===0||M12<=ND) drawText(dv.x,O.y+13,String(j),COL_DIM,"9px Arial","center","middle"); } }}]:[
-     {text:`O-P must now be divided into ${M12} equal parts, and ${R1(r1)} mm rarely divides by ${M12} conveniently. So use the auxiliary-line method: from P draw a line at 30° clear of the circle, and lay off ${M12} divisions of ${R1(part)} mm along it with the scale (like say ${5*M12} mm and 5 mm each, or ${10*M12} mm and 10 mm each division - any length that divides evenly will do).`,
+     ...(DIRECT?[{text:`O-P must now be divided into ${M12} equal parts. Here ${R1(RL)} mm divides exactly into ${M12} parts of ${R1(partD)} mm each - a whole number - so no auxiliary line is needed: lay the scale along O-P${r0>0?" from S":""} and mark off the ${M12} divisions directly. Number them 1, 2, 3 ... from ${FROMP?"P":"O"}, the end the point starts from.`,
+      d:()=>{ scaleMarks(O.x+r0*s,O.y,Ppt.x,Ppt.y,M12); divLabels(); }}]:[
+     {text:`O-P must now be divided into ${M12} equal parts, and ${R1(RL)} mm rarely divides by ${M12} conveniently. So use the auxiliary-line method: from P draw a line at 30° clear of the circle, and lay off ${M12} divisions of ${R1(part)} mm along it with the scale (like say ${5*M12} mm and 5 mm each, or ${10*M12} mm and 10 mm each division - any length that divides evenly will do).`,
       d:()=>{ markAngles(Ppt.x,Ppt.y,60,[AINC],false);
         drawSLine(Ppt.x,Ppt.y,auxQ.x,auxQ.y,COL_THIN,LW_THIN);
         drawPoint(auxQ.x,auxQ.y,"Q",{x:9,y:11});
         scaleMarks(Ppt.x,Ppt.y,auxQ.x,auxQ.y,M12); }},
-     {text:`Join the last division Q to O. Draw a line parallel to Q-O through every division; where each cuts O-P divides it into ${M12} equal parts. Number them 1, 2, 3 ... from O.`,
-      d:()=>{ drawSLine(auxQ.x,auxQ.y,O.x,O.y,COL_THIN,LW_THIN);
+     {text:`Join the last division Q to ${r0>0?"S":"O"}. Draw a line parallel to it through every division; where each cuts O-P divides it into ${M12} equal parts. Number them 1, 2, 3 ... from ${FROMP?"P":"O"}, the end the point starts from.`,
+      d:()=>{ const E={x:O.x+r0*s,y:O.y};
+        drawSLine(auxQ.x,auxQ.y,E.x,E.y,COL_THIN,LW_THIN);
         const L=[]; for(let j=1;j<M12;j++){
           const aP={x:Ppt.x+(auxQ.x-Ppt.x)*j/M12, y:Ppt.y+(auxQ.y-Ppt.y)*j/M12};
-          const oP={x:Ppt.x+(O.x-Ppt.x)*j/M12,  y:Ppt.y+(O.y-Ppt.y)*j/M12};
+          const oP={x:Ppt.x+(E.x-Ppt.x)*j/M12,  y:Ppt.y+(E.y-Ppt.y)*j/M12};
           L.push([aP.x,aP.y,oP.x,oP.y]); }
         rollSet(L,COL_PROJ,LW_THIN);
-        for(let j=1;j<=M12;j++){ const dv={x:O.x+Rj(j),y:O.y};
-          if(j%2===0||M12<=12) drawText(dv.x,O.y+13,String(j),COL_DIM,"9px Arial","center","middle"); } }},
+        divLabels(); }},
      ]),
-     {text:`Now take each radius in turn. For P1: set the compass from O to the first division of O-P, swing it round to cut radial line 1, and mark P1. Then repeat with the second division onto line 2, and the third onto line 3.`,
+     {text:`Now take each radius in turn. For P1: set the compass from O to division 1 on O-P, swing it round to cut radial line 1, and mark P1. Then repeat with division 2 onto line 2, and division 3 onto line 3.`,
       d:measCut(1,3)},
      {text:`Continue one at a time for lines ${rangeWords(4,6)} - each time the compass is opened to the division of the same number on O-P before it is swung.`,
       d:measCut(4,6)},
      ...(M12>=7?[{text:`Do the same for lines ${rangeWords(7,Math.min(9,M12))}.`,
       d:measCut(7,Math.min(9,M12))}]:[]),
-     ...(M12>9?[{text:`Finish with the remaining lines up to ${M12}, where the point reaches P on the circle.`,
+     ...(M12>9?[{text:`Finish with the remaining lines up to ${M12}, where the point reaches ${END}.`,
       d:measCut(10,M12)}]:[]),
-     {text:`Draw a smooth curve through O, P1, P2, P3 ... to P - the required ARCHIMEDEAN SPIRAL.`,
+     {text:`Draw a smooth curve through ${START}, P1, P2, P3 ... to ${END} - the required ARCHIMEDEAN SPIRAL.`,
       d:()=>{ drawCurve(fine,COL_THICK,LW_THICK); labelCurveAuto(fine,"SPIRAL"); }}
     ];
     const cons=(r1-r0)/(2*Math.PI*N);
     const results=`<b>Final Results:</b><table>
       <tr><td>Shortest radius</td><td>${R1(r0)}</td><td>Greatest radius</td><td>${R1(r1)}</td></tr>
       <tr><td>Convolutions</td><td>${N}</td><td>Growth per turn</td><td>${R1((r1-r0)/N)}</td></tr>
+      <tr><td>Starts at</td><td>${START}</td><td>Radius vector turns</td><td>${CW}</td></tr>
       <tr><td>Constant of the spiral</td><td colspan="3">${R1(cons)} mm per radian</td></tr></table>`;
     return {steps,results};
   }
 
   /* ---------- involute of a regular polygon ---------- */
-  function buildPolyInv(v){
+  /* Two constructions, chosen by the string length:
+       - string = perimeter (the standard textbook case): the original construction - the string is UNWOUND
+         clockwise, one corner at a time, with arcs of radius a, 2a, ... na.
+       - string shorter or longer than the perimeter: the string is laid out straight along the produced last
+         side, at its full length, and then WOUND ON anticlockwise, corner by corner. The compass is set to the
+         free length still left (from the side-length marks on the string to its end P) and an arc is swung about
+         the corner reached until it meets the next side produced - with the radius one side shorter at every
+         corner, until the string runs out. A string that runs out part-way along a side finishes ON that side;
+         a string longer than the perimeter keeps going round for a second layer. */
+  function polyBase(v){
     const a=v.a, n=Math.max(3,Math.min(6,Math.round(v.n)));
     const NAME={3:"TRIANGLE",4:"SQUARE",5:"PENTAGON",6:"HEXAGON"}[n];
     const R=a/(2*Math.sin(Math.PI/n));
@@ -2201,6 +2504,68 @@
     // side V1-V2 horizontal (V1 left, V2 right), polygon sitting above it, vertices clockwise (V1 on the right, V2 on the left)
     const V=[]; for(let k=0;k<n;k++){ const ph=-Math.PI/2-Math.PI/n+k*2*Math.PI/n;
       V.push({x:-R*Math.cos(ph), y:R*Math.sin(ph)}); }
+    return {a,n,NAME,R,ext,inter,V,IDEG:R1(inter*180/Math.PI),EDEG:R1(ext*180/Math.PI),aTxt:R1(a)};
+  }
+  // the steps that construct the polygon itself (first side, protractor, compass) - shared by both constructions
+  function polyTutorialSteps(B,M,s,YDIM){
+    const {n,V,a,IDEG,NAME,aTxt}=B;
+    const A2P=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);          // canvas direction p -> q
+    const side=(i,j)=>{ const p=M(V[i]), q=M(V[j]); drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK); };
+    const dot=i=>{ const p=M(V[i]); drawPoint(p.x,p.y); };
+    const span=()=>{ const p=M(V[0]), q=M(V[1]); measureSpan(p.x,p.y,q.x,q.y); };   // compass = first side
+    const cutFrom=(i,j)=>{ const c=M(V[i]), t=M(V[j]); drawCut(c.x,c.y,a*s,A2P(c,t),COL_THIN); };
+    // protractor at corner i: base (0/180) line held along the existing line i -> ref, angle set out towards tgt
+    const protr=(i,ref,tgt,keep)=>{ const c=M(V[i]), p=M(V[ref]), q=M(V[tgt]);
+      const a1=A2P(c,p), a2=A2P(c,q);
+      let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
+      drawAngleDimOutward(c.x,c.y,22,keep?IDEG+"°":"",a1,a1+d,d<0,Math.sin(a1+d/2)<0,true,!keep); };
+    const steps=[
+     {text:`Mark the length of the first side = ${aTxt} and draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${IDEG}°.`,
+      d:()=>{ const p=M(V[0]), q=M(V[1]);
+        dimHExt(q.x,q.y,p.x,p.y,YDIM,aTxt);
+        drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK);
+        drawPoint(p.x,p.y); drawPoint(q.x,q.y); }}
+    ];
+    if(n===3){
+      steps.push(
+       {text:`Set the compass to the length of the first side, ${aTxt}, measuring it directly on the first line.`,
+        d:()=>{ span(); }},
+       {text:`Without altering the compass, put its point at the right end of the first line and draw an arc above the line.`,
+        d:()=>{ cutFrom(0,2); }},
+       {text:`With the same compass setting and the point at the left end of the first line, draw a second arc to cut the first one. Join the point of intersection to both ends of the first line. All three sides are equal and each angle is ${IDEG}°.`,
+        d:()=>{ cutFrom(1,2); protr(1,0,2,true); side(1,2); side(2,0); dot(2); }});
+    } else {
+      steps.push(
+       {text:`At the left end of the first line, hold the protractor with its 0° - 180° line along the first line and mark the interior angle of ${IDEG}°. Then set the compass to the length of the first side, ${aTxt}, measuring it directly on the first line.`,
+        d:()=>{ protr(1,0,2,true); span(); }},
+       {text:`Without altering the compass, put its point at the left end of the first line and cut the marked direction. Draw the second side up to the cut.`,
+        d:()=>{ cutFrom(1,2); side(1,2); dot(2); }},
+       {text:`At the right end of the first line, again hold the protractor with its 0° - 180° line along the first line and mark ${IDEG}° on the other side. With the compass still at ${aTxt}, cut the marked direction from the right end and draw the next side up to the cut.`,
+        d:()=>{ protr(0,1,n-1,false); cutFrom(0,n-1); side(0,n-1); dot(n-1); }});
+      if(n===4){
+        steps.push({text:`Join the upper ends of the two new sides. This side comes out equal to the first one, which completes the square.`,
+          d:()=>{ side(2,3); }});
+      } else if(n===5){
+        steps.push({text:`Keep the compass at ${aTxt}. With its point at the upper end of each of the two new sides, draw arcs cutting each other above. Join this point to both upper ends to complete the pentagon.`,
+          d:()=>{ cutFrom(2,3); cutFrom(4,3); side(2,3); side(3,4); dot(3); }});
+      } else {
+        steps.push(
+         {text:`At the upper end of the left side, hold the protractor with its 0° - 180° line along that side and mark ${IDEG}°. With the compass at ${aTxt}, cut the marked direction and draw the next side up to the cut.`,
+          d:()=>{ protr(2,1,3,false); cutFrom(2,3); side(2,3); dot(3); }},
+         {text:`In the same way, at the upper end of the right side, mark ${IDEG}° along that side and cut ${aTxt} with the compass. Join the two new points to complete the hexagon.`,
+          d:()=>{ protr(5,0,4,false); cutFrom(5,4); side(5,4); side(3,4); dot(4); }});
+      }
+    }
+    return steps;
+  }
+  function buildPolyInv(v){
+    const n=Math.max(3,Math.min(6,Math.round(v.n))), STR0=n*v.a, STR=(v.str>0)?v.str:STR0;
+    return (Math.abs(STR-STR0)<=0.5) ? buildPolyInvEqual(v) : buildPolyInvString(v);
+  }
+
+  /* string = perimeter: unwinding, clockwise (the standard construction) */
+  function buildPolyInvEqual(v){
+    const B=polyBase(v), {a,n,NAME,ext,inter,V,IDEG,EDEG,aTxt}=B;
     const arcs=[]; let Pp=V[0];
     for(let k=1;k<=n;k++){
       const c=V[k%n], rad=k*a;
@@ -2219,24 +2584,13 @@
     const NARROW=CANVAS_W<600, LS=NARROW?-1:1;      // narrow (portrait) sheet: the name goes inside the curve, not beside it
     if(!NARROW) box.push({x:anchor.x+Math.cos(tm)*38/F00.s+Math.sign(Math.cos(tm)||1)*330/F00.s, y:anchor.y+Math.sin(tm)*38/F00.s});
     const F0=fitBox(box,15), s=F0.s, M=F0.M;
+    const YDIM=Math.max(...box.map(p=>M(p).y))+MM10(s);    // side and string length: one line, 10 mm below the lowest part of the curve
     const cA=t=>-t;
     const STR=n*a;
-    const IDEG=R1(inter*180/Math.PI), EDEG=R1(ext*180/Math.PI), aTxt=R1(a);
-    const A2P=(p,q)=>Math.atan2(q.y-p.y,q.x-p.x);          // canvas direction p -> q
-    const side=(i,j)=>{ const p=M(V[i]), q=M(V[j]); drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK); };
-    const dot=i=>{ const p=M(V[i]); drawPoint(p.x,p.y); };
-    const span=()=>{ const p=M(V[0]), q=M(V[1]); measureSpan(p.x,p.y,q.x,q.y); };   // compass = first side
-    const cutFrom=(i,j)=>{ const c=M(V[i]), t=M(V[j]); drawCut(c.x,c.y,a*s,A2P(c,t),COL_THIN); };
-    // protractor at corner i: base (0/180) line held along the existing line i -> ref, angle set out towards tgt
-    const protr=(i,ref,tgt,keep)=>{ const c=M(V[i]), p=M(V[ref]), q=M(V[tgt]);
-      const a1=A2P(c,p), a2=A2P(c,q);
-      let d=a2-a1; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
-      drawAngleDimOutward(c.x,c.y,22,keep?IDEG+"°":"",a1,a1+d,d<0,Math.sin(a1+d/2)<0,true,!keep); };
     const ORD=["1st","2nd","3rd","4th","5th","6th"];
     const steps=[
-     {demo:true,
-      text:`First understand the curve. An INVOLUTE of a ${NAME.toLowerCase()} is the path traced by the free end of a taut string that is unwound from the polygon. Watch the animation: the string, whose length equals the perimeter ${n} × ${aTxt} = ${R1(STR)}, leaves the polygon and swings about one corner after another, always kept straight. Its end draws arcs of circles whose radii grow by one side length at every corner. Then construct the curve step by step.`,
-      d:()=>demoAnim(t=>{
+     ...demoSteps(`First understand the curve. An INVOLUTE of a ${NAME.toLowerCase()} is the path traced by the free end of a taut string that is unwound from the polygon. Watch the animation: the string, whose length equals the perimeter ${n} × ${aTxt} = ${R1(STR)}, leaves the polygon and swings about one corner after another, always kept straight. Its end draws arcs of circles whose radii grow by one side length at every corner. Then construct the curve step by step.`,
+      t=>{
         const Th=t*2*Math.PI;
         let k=Math.floor(Th/ext-1e-9); k=Math.max(0,Math.min(arcs.length-1,k));
         const A=arcs[k], sw=Math.min(ext,Th-k*ext), tt=A.t0-sw;
@@ -2245,9 +2599,9 @@
         ctx.save(); ctx.setLineDash([]);
         ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK;          // path traced so far
         ctx.beginPath(); ctx.moveTo(M(arcs[0].from).x,M(arcs[0].from).y);
-        for(let j=0;j<=k;j++){ const B=arcs[j], w=Math.min(ext,Th-j*ext); if(w<=0) break;
+        for(let j=0;j<=k;j++){ const B2=arcs[j], w=Math.min(ext,Th-j*ext); if(w<=0) break;
           const m=Math.max(2,Math.ceil(w/ext*24));
-          for(let q=1;q<=m;q++){ const u=pt(B.c,B.r,B.t0-w*q/m); ctx.lineTo(u.x,u.y); } }
+          for(let q=1;q<=m;q++){ const u=pt(B2.c,B2.r,B2.t0-w*q/m); ctx.lineTo(u.x,u.y); } }
         ctx.stroke();
         ctx.strokeStyle="#5b87ad"; ctx.lineWidth=2;                  // the polygon
         ctx.beginPath(); V.forEach((w,i)=>{ const u=M(w); if(i) ctx.lineTo(u.x,u.y); else ctx.moveTo(u.x,u.y); });
@@ -2261,58 +2615,25 @@
         ctx.restore();
         if(Th>0.05){ const dx=Math.sin(tt), dy=Math.cos(tt);       // direction in which the free end moves
           drawLine(p.x,p.y,p.x+dx*30,p.y+dy*30,COL_DIM,1.6,SOLID,"end"); }
-      },8000)},
-     {text:`Mark the length of the first side = ${aTxt} and draw it horizontally with the scale. A regular ${NAME.toLowerCase()} has ${n} equal sides and each interior angle is ${IDEG}°.`,
-      d:()=>{ const p=M(V[0]), q=M(V[1]), yb=p.y+26;
-        drawLine(p.x,p.y+3,p.x,yb+5,COL_DIM,LW_THIN);
-        drawLine(q.x,q.y+3,q.x,yb+5,COL_DIM,LW_THIN);
-        drawHorizontalDim(yb,q.x,p.x,aTxt);
-        drawSLine(p.x,p.y,q.x,q.y,COL_THICK,LW_THICK);
-        drawPoint(p.x,p.y); drawPoint(q.x,q.y); }}
+      },8000),
+     ...polyTutorialSteps(B,M,s,YDIM)
     ];
-    if(n===3){
-      steps.push(
-       {text:`Set the compass to the length of the first side ${aTxt} (measure it directly on the first line). With the compass point at the right end of the first line, draw an arc above the line.`,
-        d:()=>{ span(); cutFrom(0,2); }},
-       {text:`With the same compass setting and the point at the left end of the first line, draw a second arc to cut the first one. Join the point of intersection to both ends of the first line. All three sides are equal and each angle is ${IDEG}°.`,
-        d:()=>{ span(); cutFrom(1,2); protr(1,0,2,true); side(1,2); side(2,0); dot(2); }});
-    } else {
-      steps.push(
-       {text:`At the left end of the first line, hold the protractor with its 0° - 180° line along the first line and mark the interior angle of ${IDEG}°. Set the compass to the length of the first side ${aTxt} and, with its point at the left end, cut the marked direction. Draw the second side up to the cut.`,
-        d:()=>{ protr(1,0,2,true); span(); cutFrom(1,2); side(1,2); dot(2); }},
-       {text:`At the right end of the first line, again hold the protractor with its 0° - 180° line along the first line and mark ${IDEG}° on the other side. With the compass still at ${aTxt}, cut the marked direction from the right end and draw the next side up to the cut.`,
-        d:()=>{ protr(0,1,n-1,false); span(); cutFrom(0,n-1); side(0,n-1); dot(n-1); }});
-      if(n===4){
-        steps.push({text:`Join the upper ends of the two new sides. This side comes out equal to the first one, which completes the square.`,
-          d:()=>{ side(2,3); }});
-      } else if(n===5){
-        steps.push({text:`Keep the compass at ${aTxt}. With its point at the upper end of each of the two new sides, draw arcs cutting each other above. Join this point to both upper ends to complete the pentagon.`,
-          d:()=>{ span(); cutFrom(2,3); cutFrom(4,3); side(2,3); side(3,4); dot(3); }});
-      } else {
-        steps.push(
-         {text:`At the upper end of the left side, hold the protractor with its 0° - 180° line along that side and mark ${IDEG}°. With the compass at ${aTxt}, cut the marked direction and draw the next side up to the cut.`,
-          d:()=>{ protr(2,1,3,false); span(); cutFrom(2,3); side(2,3); dot(3); }},
-         {text:`In the same way, at the upper end of the right side, mark ${IDEG}° along that side and cut ${aTxt} with the compass. Join the two new points to complete the hexagon.`,
-          d:()=>{ protr(5,0,4,false); span(); cutFrom(5,4); side(5,4); side(3,4); dot(4); }});
-      }
-    }
     // all the tangent lines (the produced sides) are drawn first, with the string length dimensioned
     steps.push(
      {text:`Now draw all the tangent lines. Produce the sides of the polygon one after another in the clockwise direction, each from its corner: the first side ${aTxt} long, the next 2 × ${aTxt}, then 3 × ${aTxt} and so on, up to ${n} × ${aTxt} = ${R1(STR)} for the last one. This last length is the LENGTH OF THE STRING (equal to the perimeter of the polygon) and is shown by the dimension line.`,
       d:()=>{ arcs.forEach(A=>{ const c=M(A.c), t=M(A.to);
           drawSLine(c.x,c.y,t.x,t.y,COL_PROJ,LW_THIN); });
-        const LA2=arcs[arcs.length-1], c=M(LA2.c), t=M(LA2.to), yb=c.y+26;   // last tangent is horizontal
-        drawLine(c.x,c.y+3,c.x,yb+5,COL_DIM,LW_THIN);
-        drawLine(t.x,t.y+3,t.x,yb+5,COL_DIM,LW_THIN);
-        drawHorizontalDim(yb,c.x,t.x,"String length = "+R1(STR)); }}
+        const LA2=arcs[arcs.length-1], c=M(LA2.c), t=M(LA2.to);   // last tangent is horizontal
+        dimHExt(c.x,c.y,t.x,t.y,YDIM,"String length = "+R1(STR)); }}
     );
     arcs.forEach((A,k)=>{
       const centre=(k===0)?"the left end of the first line":`the corner from which the ${ORD[k]} tangent line starts`;
       const from=(k===0)?"the right end of the first line":("P"+k);
       steps.push(
-       {text:`Set the compass with its point at ${centre} and the pencil at ${from} (radius ${R1(A.r)}). With this centre swing an arc from ${from} through the exterior angle of ${EDEG}° until it meets the ${ORD[k]} tangent line. Mark P${k+1}.`,
-        d:()=>{ const c=M(A.c), t=M(A.to), f=M(A.from);
-          measureSpan(c.x,c.y,f.x,f.y);
+       {text:`Set the compass with its point at ${centre} and the pencil at ${from}: the radius is ${R1(A.r)}.`,
+        d:()=>{ const c=M(A.c), f=M(A.from); measureSpan(c.x,c.y,f.x,f.y); }},
+       {text:`Without altering the compass, swing an arc from ${from} through the exterior angle of ${EDEG}° until it meets the ${ORD[k]} tangent line. Mark P${k+1}.`,
+        d:()=>{ const c=M(A.c), t=M(A.to);
           drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),false,COL_THICK,LW_THICK);
           drawPoint(t.x,t.y,"P"+(k+1),radOff(c.x,c.y,t.x,t.y,14));
           if(k===arcs.length-1){ const ap=M(anchor), dx=Math.cos(-tm), dy=Math.sin(-tm);
@@ -2324,6 +2645,119 @@
       <tr><td>Interior angle</td><td>${R1(inter*180/Math.PI)}°</td><td>Arc (exterior) angle</td><td>${R1(ext*180/Math.PI)}°</td></tr>
       <tr><td>Radii used</td><td>${R1(a)} ... ${R1(n*a)}</td><td>Length of involute</td><td>${R1(total)}</td></tr>
       <tr><td>Length of string</td><td colspan="3">${n} × ${R1(a)} = ${R1(STR)} mm</td></tr></table>`;
+    return {steps,results};
+  }
+
+  /* string shorter or longer than the perimeter: winding on, anticlockwise, from the straight string */
+  function buildPolyInvString(v){
+    const B=polyBase(v), {a,n,NAME,ext,inter,V,IDEG,EDEG,aTxt}=B;
+    const STR0=n*a, STR=(v.str>0)?v.str:STR0, isLong=STR>STR0;
+    const nFull=Math.floor((STR+1e-6)/a), rem=STR-nFull*a, hasRem=rem>0.5;
+    // corners are numbered 1..n ANTICLOCKWISE, ending at corner n (=V[0], bottom right) where the string is fixed;
+    // winding pivots at corner n first, then 1, 2, ... - i.e. V[0], V[n-1], V[n-2], ...
+    const W=k=>V[((n-(k%n))%n)];
+    const cornerNo=i=>n-i;                                   // label of V[i]
+    const pivotNo=k=>(k%n===0)?n:(k%n);                      // label of the corner used for arc k
+    const Pfar={x:V[0].x+STR, y:V[0].y};                     // the free end P, string laid straight along the produced last side
+    const arcs=[]; let Pp=Pfar;
+    for(let k=0;;k++){
+      const rad=STR-k*a; if(rad<=0.5) break;
+      const c=W(k), nx=W(k+1);
+      const t0=Math.atan2(Pp.y-c.y,Pp.x-c.x);
+      let d=Math.atan2(nx.y-c.y,nx.x-c.x)-t0; while(d<=-Math.PI)d+=2*Math.PI; while(d>Math.PI)d-=2*Math.PI;
+      const t1=t0+d, to={x:c.x+rad*Math.cos(t1), y:c.y+rad*Math.sin(t1)};
+      arcs.push({c,r:rad,t0,t1,d,from:Pp,to,k,last:rad<a-0.5});
+      Pp=to;
+    }
+    const LAST=arcs[arcs.length-1], Pend=hasRem?LAST.to:W(nFull);   // final position of the free end (on a side, or at a corner)
+    const Pper={x:V[0].x+STR0, y:V[0].y};                   // one perimeter along the produced side (for its dimension)
+    const box=V.slice(); box.push(Pfar,Pper);
+    arcs.forEach(A=>{ for(let q=0;q<=12;q++){ const t=A.t0+(A.t1-A.t0)*q/12;
+      box.push({x:A.c.x+A.r*Math.cos(t), y:A.c.y+A.r*Math.sin(t)}); } });
+    const FA=arcs[0], tm=(FA.t0+FA.t1)/2;                    // curve label on the middle of the first (outermost) arc
+    const anchor={x:FA.c.x+FA.r*Math.cos(tm), y:FA.c.y+FA.r*Math.sin(tm)};
+    const F00=fitBox(box,15);
+    const NARROW=CANVAS_W<600, LS=NARROW?-1:1;
+    if(!NARROW) box.push({x:anchor.x+Math.cos(tm)*38/F00.s+Math.sign(Math.cos(tm)||1)*330/F00.s, y:anchor.y+Math.sin(tm)*38/F00.s});
+    const lowY=Math.min(...box.map(p=>p.y));                 // lowest part of the figure (local y is up)
+    box.push({x:V[0].x, y:lowY-(MM10(F00.s)+2*Math.max(DIM_STEP(),40)+20)/F00.s});   // room below for the three stacked dimensions
+    const F0=fitBox(box,15), s=F0.s, M=F0.M;
+    const YDIM=M({x:0,y:lowY}).y+MM10(s);
+    const cA=t=>-t;
+    const Bt=k=>M({x:V[0].x+k*a, y:V[0].y});                 // mark k on the string (k sides from corner n)
+    const totalSweep=arcs.reduce((sum,A)=>sum+Math.abs(A.d),0);
+    const steps=[
+     ...demoSteps(`First understand the curve. Here the string is ${R1(STR)} mm long - ${isLong?"LONGER":"SHORTER"} than the perimeter ${n} × ${aTxt} = ${R1(STR0)} mm - so it is drawn by WINDING the string on to the ${NAME.toLowerCase()}. The string is fixed at one corner and is first laid out straight, at its full length, along that corner's side produced; its free end P then swings about one corner after another as the string winds on anticlockwise, and traces the curve - arcs whose radii SHRINK by one side length at every corner${isLong?`. After one complete turn there is still ${R1(STR-STR0)} mm left, so it keeps going round for a second layer`:``}. The curve ends where the whole string has wound on. Then construct the curve step by step.`,
+      t=>{
+        const Th=t*totalSweep;
+        let k=0, acc=0; while(k<arcs.length-1 && acc+Math.abs(arcs[k].d)<Th){ acc+=Math.abs(arcs[k].d); k++; }
+        const A=arcs[k], sw=Math.min(Math.abs(A.d),Th-acc), tt=A.t0+Math.sign(A.d)*sw;
+        const pt=(C,rr,ang)=>M({x:C.x+rr*Math.cos(ang),y:C.y+rr*Math.sin(ang)});
+        const c=M(A.c), p=pt(A.c,A.r,tt);
+        ctx.save(); ctx.setLineDash([]);
+        ctx.strokeStyle=COL_THICK; ctx.lineWidth=LW_THICK;          // path traced so far
+        ctx.beginPath(); ctx.moveTo(M(Pfar).x,M(Pfar).y);
+        for(let j=0;j<=k;j++){ const B2=arcs[j], w=(j<k)?Math.abs(B2.d):sw; if(w<=0) break;
+          const m=Math.max(2,Math.ceil(w/ext*24));
+          for(let q=1;q<=m;q++){ const u=pt(B2.c,B2.r,B2.t0+Math.sign(B2.d)*w*q/m); ctx.lineTo(u.x,u.y); } }
+        ctx.stroke();
+        ctx.strokeStyle="#5b87ad"; ctx.lineWidth=2;                  // the polygon
+        ctx.beginPath(); V.forEach((w,i)=>{ const u=M(w); if(i) ctx.lineTo(u.x,u.y); else ctx.moveTo(u.x,u.y); });
+        ctx.closePath(); ctx.stroke();
+        ctx.strokeStyle="#c96a2b"; ctx.lineWidth=3;                  // string already wound on to the polygon
+        ctx.beginPath(); const w0=M(W(0)); ctx.moveTo(w0.x,w0.y);
+        for(let j=1;j<=Math.min(k,n);j++){ const u=M(W(j)); ctx.lineTo(u.x,u.y); }
+        ctx.stroke();
+        ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(p.x,p.y); ctx.stroke();   // taut string
+        ctx.fillStyle="#c96a2b"; ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill();
+        ctx.restore();
+        if(Th>0.05 && Th<totalSweep-0.05){ const q2=pt(A.c,A.r,tt+Math.sign(A.d)*0.03), dx=q2.x-p.x, dy=q2.y-p.y, L=Math.hypot(dx,dy)||1;
+          drawLine(p.x,p.y,p.x+dx/L*30,p.y+dy/L*30,COL_DIM,1.6,SOLID,"end"); }
+      },8000),
+     ...polyTutorialSteps(B,M,s,YDIM),
+     {text:`Number the corners 1 to ${n}, going ANTICLOCKWISE round the polygon and ending at corner ${n}, the right end of the first side - the string is fixed there, and it will wind on in this anticlockwise order of corners.`,
+      d:()=>{ const O=M({x:0,y:0}); V.forEach((w,i)=>{ const p=M(w); drawPoint(p.x,p.y,String(cornerNo(i)),radOff(O.x,O.y,p.x,p.y,13)); }); }},
+     {text:`Produce the first side beyond corner ${n}, horizontally to the right, and lay the string straight along it from corner ${n}: with the scale mark its free end P, ${R1(STR)} mm from the corner. This is the FIRST point of the curve - the string in its starting position.`,
+      d:()=>{ const c=M(V[0]), p=M(Pfar), e=M(Pper), far=isLong?p:e;
+        drawSLine(c.x,c.y,far.x,far.y,COL_AXIS,LW_THIN);
+        const gap=Math.max(DIM_STEP(),40), y1=YDIM+gap, y2=YDIM+2*gap;   // shorter dimension nearer the line
+        dimHExt(c.x,c.y,p.x,p.y,isLong?y2:y1,"String length = "+R1(STR));
+        dimHExt(c.x,c.y,e.x,e.y,isLong?y1:y2,`Perimeter ${n} × ${aTxt} = ${R1(STR0)}`);
+        drawPoint(p.x,p.y,"P",{x:7,y:-16}); }},
+     {text:`Set the compass to one side, ${aTxt}, and step it along the string from corner ${n}: marks 1${nFull>1?` to ${nFull}`:""}. Each corner the string passes uses up one side, so the free length left at corner ${n} is P itself (${R1(STR)} mm), at the next corner it is mark 1 to P (${R1(STR-a)} mm), and so on${hasRem?` - after mark ${nFull} only ${R1(rem)} mm is left`:` - the last mark lands exactly on P`}.`,
+      d:()=>{ const p0=M(V[0]), p1=M(V[1]); measureSpan(p0.x,p0.y,p1.x,p1.y);
+        for(let k=1;k<=nFull;k++){ const b0=Bt(k-1), b=Bt(k);
+          drawCut(b0.x,b0.y,a*s,0,COL_THIN);
+          drawText(b.x,b.y+16,String(k),COL_DIM,"11px Arial","center","middle"); } }},
+     {text:`Produce the sides of the polygon in the anticlockwise direction, each beyond the next corner, far enough to meet the arcs: from corner ${n} through corner 1, from corner 1 through corner 2, and so on. The free end of the string will lie along each of these lines in turn.`,
+      d:()=>{ arcs.forEach(A=>{ if(A.last) return; const c=M(A.c), t=M(A.to);
+          const dx=t.x-c.x, dy=t.y-c.y, L=Math.hypot(dx,dy)||1;
+          drawSLine(c.x,c.y,t.x+dx/L*12,t.y+dy/L*12,COL_PROJ,LW_THIN); }); }}
+    ];
+    arcs.forEach((A,k)=>{
+      const from=(k===0)?"P":("P"+k), cn=pivotNo(k), again=k>=n?" (the second time round)":"";
+      steps.push(
+       {text:`Set the compass with its point at corner ${cn}${again} and the pencil at ${from}: the radius is the free string left, mark ${k} to P = ${R1(A.r)} mm.`,
+        d:()=>{ const c=M(A.c), f=M(A.from); measureSpan(c.x,c.y,f.x,f.y); }},
+       A.last ?
+       {text:`Only ${R1(A.r)} mm of string is left - less than one side - so this last arc, swung anticlockwise from ${from} about corner ${cn}, ends ON the side from corner ${cn} to corner ${pivotNo(k+1)} itself, ${R1(A.r)} mm from corner ${cn}. That is P in its final position: the whole string has wound on and the curve ends there.`,
+        d:()=>{ const c=M(A.c), t=M(A.to);
+          drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),A.d>0,COL_THICK,LW_THICK);
+          drawPoint(t.x,t.y,"P",radOff(c.x,c.y,t.x,t.y,14)); }} :
+       {text:`Without altering the compass, swing an arc anticlockwise from ${from} through the exterior angle of ${EDEG}° until it meets the side produced through corner ${pivotNo(k+1)}. Mark P${k+1}.${(!hasRem&&k===arcs.length-1)?` The string has now wound on completely, so P${k+1} - at corner ${pivotNo(k+1)} itself - is the final position of the free end.`:""}`,
+        d:()=>{ const c=M(A.c), t=M(A.to);
+          drawArcPlain(c.x,c.y,A.r*s,cA(A.t0),cA(A.t1),A.d>0,COL_THICK,LW_THICK);
+          drawPoint(t.x,t.y,"P"+(k+1),radOff(c.x,c.y,t.x,t.y,14)); }});
+    });
+    steps.push({text:`The arcs P, P1, P2 ... together form the required INVOLUTE of the ${NAME.toLowerCase()}, drawn while winding the string on.`,
+      d:()=>{ const ap=M(anchor), dx=Math.cos(-tm), dy=Math.sin(-tm);
+        drawCurveLabel(ap.x,ap.y,ap.x+38*dx*LS,ap.y+38*dy*LS,"INVOLUTE OF "+NAME); }});
+    const curveLen=arcs.reduce((sum,A)=>sum+A.r*Math.abs(A.d),0);
+    const results=`<b>Final Results:</b><table>
+      <tr><td>Polygon</td><td>${NAME.toLowerCase()} (${n} sides)</td><td>Side</td><td>${R1(a)}</td></tr>
+      <tr><td>Interior angle</td><td>${R1(inter*180/Math.PI)}°</td><td>Arc (exterior) angle</td><td>${R1(ext*180/Math.PI)}°</td></tr>
+      <tr><td>Radii used</td><td>${R1(STR)} down to ${R1(LAST.r)}</td><td>Length of involute</td><td>${R1(curveLen)} mm</td></tr>
+      <tr><td>Length of string</td><td colspan="3">${R1(STR)} mm (${isLong?"longer":"shorter"} than the perimeter ${R1(STR0)} mm)</td></tr></table>`;
     return {steps,results};
   }
 
@@ -2400,10 +2834,19 @@
       build:buildCycloid },
 
     { title:"Problem 8 - Involute of a circle",
-      fields:[{id:"d",label:"Circle dia D",unit:"mm"}],
-      defaults:{d:50},
-      statement:v=>`Draw the involute of a circle of diameter ${R1(v.d)} mm for one complete turn, and state the length of the base tangent.`,
-      validate:v=>(v.d<=0?"The diameter must be positive.":null),
+      fields:[{id:"d",label:"Circle dia D",unit:"mm"},
+              {id:"str",label:"String length (0 = same as πD)",unit:"mm"}],
+      defaults:{d:50,str:0},
+      statement:v=>{ const CIR=Math.PI*v.d, STR=(v.str>0)?v.str:CIR;
+        const how=Math.abs(STR-CIR)<=0.5 ? "for one complete turn, and state the length of the base tangent"
+          : STR<CIR ? `when the string is ${R1(STR)} mm long - SHORTER than the circumference - by winding the string on to the circle`
+          : `when the string is ${R1(STR)} mm long - LONGER than the circumference - by winding the string on to the circle`;
+        return `Draw the involute of a circle of diameter ${R1(v.d)} mm ${how}.`; },
+      validate:v=>{ if(v.d<=0) return "The diameter must be positive.";
+        if(v.str<0) return "String length cannot be negative.";
+        if(v.str>0 && v.str<Math.PI*v.d/12-1e-6) return "String length must be at least one division of the circumference (πD/12), or left at 0 for the standard, circumference-length case.";
+        if(v.str>3*Math.PI*v.d) return "String length must not exceed three circumferences (3πD).";
+        return null; },
       build:buildInvolute },
 
     { title:"Problem 9 - Helix on a cylinder",
@@ -2426,9 +2869,11 @@
 
     { title:"Problem 11 - Archimedean spiral",
       fields:[{id:"r0",label:"Shortest radius",unit:"mm"},{id:"r1",label:"Greatest radius",unit:"mm"},
-              {id:"n",label:"Convolutions",unit:"",choices:[{v:1,t:"1 convolution"},{v:1.5,t:"1½ convolutions"},{v:2,t:"2 convolutions"}]}],
-      defaults:{r0:0,r1:70,n:1},
-      statement:v=>`Draw an Archimedean spiral of ${turnWords(NTURN(v.n),"convolution")}, the greatest radius being ${R1(v.r1)} mm and the shortest radius ${R1(v.r0)} mm. State the constant of the spiral.`,
+              {id:"n",label:"Convolutions",unit:"",choices:[{v:1,t:"1 convolution"},{v:1.5,t:"1½ convolutions"},{v:2,t:"2 convolutions"}]},
+              {id:"st",label:"Starting point",unit:"",choices:[{v:0,t:"O - moving outwards"},{v:1,t:"P - moving inwards"}]},
+              {id:"dir",label:"Rotation of the line",unit:"",choices:[{v:0,t:"Clockwise"},{v:1,t:"Anticlockwise"}]}],
+      defaults:{r0:0,r1:70,n:1,st:0,dir:0},
+      statement:v=>`Draw an Archimedean spiral of ${turnWords(NTURN(v.n),"convolution")}, the greatest radius being ${R1(v.r1)} mm and the shortest radius ${R1(v.r0)} mm. The point starts ${(+v.st===1)?"at P, the outer end, and moves inwards to the pole O":"at the pole O and moves outwards to P"}, while the line turns ${(+v.dir===1)?"anticlockwise":"clockwise"}. State the constant of the spiral.`,
       validate:v=>{ if(v.r1<=0) return "The greatest radius must be positive.";
         if(v.r0<0) return "The shortest radius cannot be negative.";
         if(v.r0>=v.r1) return "The shortest radius must be less than the greatest radius.";
@@ -2438,10 +2883,18 @@
     { title:"Problem 12 - Involute of a polygon",
       fields:[{id:"a",label:"Length of side",unit:"mm"},
               {id:"n",label:"Polygon",unit:"",choices:[{v:3,t:"Triangle (3 sides)"},{v:4,t:"Square (4 sides)"},
-                                                       {v:5,t:"Pentagon (5 sides)"},{v:6,t:"Hexagon (6 sides)"}]}],
-      defaults:{a:30,n:5},
-      statement:v=>`Construct a regular polygon of ${Math.round(v.n)} sides, each ${R1(v.a)} mm long, and draw the involute of the polygon for one complete turn.`,
+                                                       {v:5,t:"Pentagon (5 sides)"},{v:6,t:"Hexagon (6 sides)"}]},
+              {id:"str",label:"String length (0 = same as the perimeter)",unit:"mm"}],
+      defaults:{a:30,n:5,str:0},
+      statement:v=>{ const n=Math.round(v.n), STR0=n*v.a, STR=(v.str>0)?v.str:STR0;
+        const how=Math.abs(STR-STR0)<=0.5 ? "for one complete turn"
+          : STR<STR0 ? `when the string is ${R1(STR)} mm long - SHORTER than the perimeter - by winding the string on to the polygon`
+          : `when the string is ${R1(STR)} mm long - LONGER than the perimeter - by winding the string on to the polygon`;
+        return `Construct a regular polygon of ${n} sides, each ${R1(v.a)} mm long, and draw the involute of the polygon ${how}.`; },
       validate:v=>{ if(v.a<=0) return "The side must be positive.";
+        if(v.str<0) return "String length cannot be negative.";
+        if(v.str>0 && v.str<v.a) return "String length must be at least one side length (or left at 0 for the standard, perimeter-length case).";
+        if(v.str>3*Math.round(v.n)*v.a) return "String length must not exceed three times the perimeter.";
         return null; },
       build:buildPolyInv }
   ];
@@ -2465,11 +2918,11 @@
     gctx.textAlign=al||"center"; gctx.textBaseline=bl||"middle"; gctx.fillText(t,x,y);
   }
   function gLabel(x,y,t,color){
-    gctx.font="bold 22px Arial";
+    gctx.font="bold 17px Arial";
     const w=gctx.measureText(t).width+12;
     gctx.fillStyle="rgba(255,255,255,0.88)";
     gctx.fillRect(x-w/2,y-14,w,28);
-    gText(x,y,t,color||GINK,"bold 22px Arial");
+    gText(x,y,t,color||GINK,"bold 17px Arial");
   }
   function gArrow(x,y,a,color){
     gctx.fillStyle=color||GINK; gctx.beginPath(); gctx.moveTo(x,y);
@@ -2627,6 +3080,21 @@
 
 
   let probIndex=0, values={}, P=null, currentStep=1, started=false;
+
+  /* ---- optional usage tracking (see account.js) - a no-op unless a student is logged in ---- */
+  const EG_APP_KEY="curves";
+  let egFurthest=0, egCompleted=false, egViaShowAll=false;
+  if(window.EG) EG.trackDuration(EG_APP_KEY);
+  function egResetAttempt(viaShowAll){
+    egFurthest=0; egCompleted=false; egViaShowAll=!!viaShowAll;
+    if(window.EG) EG.track(EG_APP_KEY,(PROBLEMS[probIndex]||{}).title||"","open");
+  }
+  function egTrackStep(s,N){
+    if(!window.EG) return;
+    const title=(PROBLEMS[probIndex]||{}).title||"";
+    if(!egViaShowAll&&s>egFurthest){ egFurthest=s; EG.track(EG_APP_KEY,title,"progress",{step_num:s}); }
+    if(s>=N&&!egCompleted){ egCompleted=true; EG.track(EG_APP_KEY,title,egViaShowAll?"revealed":"complete"); }
+  }
   let viewZoom=1, viewPanX=0, viewPanY=0;
   const ZOOM_MIN=0.4, ZOOM_MAX=6;
 
@@ -2696,6 +3164,7 @@
   }
   function startDrawing(){
     if(!P) return;
+    egResetAttempt(false);
     started=true; currentStep=1; lastSpoken=-1; compassPose=null; syncStartUI(); drawStep(1,true);
   }
 
@@ -2719,6 +3188,7 @@
     syncStartUI();
     currentStep=Math.min(currentStep,P.steps.length);
     lastSpoken=-1;
+    autoLayout();
     renderStepList();
     resetView();
   }
@@ -2855,6 +3325,7 @@
       clearCanvasWhite();
       return;
     }
+    egTrackStep(s,N);
     speakCurrent();                 // narration and drawing run together
     renderGiven(P.steps[s-1].hl||[]);
 
@@ -2866,8 +3337,8 @@
   function nextStep(){ if(!P) return; if(!started){ startDrawing(); return; }
     if(currentStep<P.steps.length){currentStep++; drawStep(currentStep,true);} }
   function prevStep(){ if(P&&started&&currentStep>1){currentStep--; compassPose=null; drawStep(currentStep);} }
-  function restartSteps(){ if(P){started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
-  function showAll(){ if(P){started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
+  function restartSteps(){ if(P){egResetAttempt(false); started=true; syncStartUI(); currentStep=1; lastSpoken=-1; compassPose=null; drawStep(1,true);} }
+  function showAll(){ if(P){egResetAttempt(true); started=true; syncStartUI(); currentStep=P.steps.length; compassPose=null; drawStep(currentStep);} }
 
   /* ---------------- voice narration ---------------- */
   const voiceSupported=("speechSynthesis" in window);
@@ -2986,9 +3457,13 @@
   const fsWrap=document.getElementById("canvas-wrapper");
   let fsReal=false;
   function isFs(){ return fsWrap.classList.contains("fs-on"); }
-  function setCanvasSize(w,h){
-    w=Math.max(200,Math.round(w)); h=Math.max(160,Math.round(h));
-    if(w===CANVAS_W&&h===CANVAS_H) return;
+  // w x h is the room on screen; k (>= 1) is how many drawing units go to one screen pixel.
+  function setCanvasSize(w,h,k){
+    k=k||1;
+    w=Math.max(200,Math.round(w*k)); h=Math.max(160,Math.round(h*k));
+    const hd=Math.min((canvas._hdBase||1)/k, Math.sqrt(12e6/(w*h)));   // screen resolution or better, capped at ~12 megapixels so a big full screen stays quick
+    if(w===CANVAS_W&&h===CANVAS_H&&canvas._hdS===hd) return;
+    canvas._hdS=hd;
     CANVAS_W=w; CANVAS_H=h; canvas.width=w; canvas.height=h; compassPose=null;
     if(P&&document.getElementById("screen-solve").style.display!=="none"){
       rebuild(false);
@@ -2996,9 +3471,17 @@
       if(st&&st.demo){ lastSpoken=currentStep; drawStep(currentStep,true); }   // re-laid out mid-animation: play it again instead of jumping to its end
     } else clearCanvasWhite();
   }
-  // In full screen the drawing area takes exactly the room the layout gives it (1 canvas pixel = 1 screen pixel),
-  // so nothing is stretched in portrait or landscape; outside full screen it returns to 820 x 540.
-  function layoutCanvas(){ if(isFs()) setCanvasSize(canvas.clientWidth,canvas.clientHeight); else setCanvasSize(820,540); }
+  // In full screen the drawing area takes exactly the room the layout gives it, in the screen's own proportions,
+  // so nothing is stretched in portrait or landscape. On a small screen (a phone) the drawing is still laid out
+  // on at least the 820 x 540 of the normal view and shown scaled down to fit: drawn at one unit per screen pixel,
+  // the lines would be squeezed into a few hundred pixels while the text kept its size, and the labels would pile
+  // up on the drawing. Outside full screen it returns to 820 x 540.
+  function layoutCanvas(){
+    if(isFs()){
+      const cw=Math.max(1,canvas.clientWidth), ch=Math.max(1,canvas.clientHeight);
+      setCanvasSize(cw,ch,Math.max(1,820/cw,540/ch));
+    } else setCanvasSize(820,540,1);
+  }
   let layoutTimer=0;
   function layoutSoon(){ clearTimeout(layoutTimer); layoutTimer=setTimeout(layoutCanvas,120); }
   function setFsButton(){ document.getElementById("fsBtn").textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; }
@@ -3073,5 +3556,6 @@
 </script>
 
 <footer style="text-align:center;margin:20px 0 8px;font-size:.85rem;color:#6b7686;">Developed by <a href="mailto:jadhavkeshav@gmail.com" style="color:#2a5a86;font-weight:600;text-decoration:none;">Prof. Keshav M. Jadhav</a><br><span style="font-size:.8rem;">&copy; 2026 Keshav M. Jadhav &middot; All rights reserved</span></footer>
+<script src="tour.js"></script>  <!-- lets the "How to use" tour point at and click this page's buttons -->
 </body>
 </html>
